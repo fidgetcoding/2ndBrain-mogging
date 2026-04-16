@@ -1,0 +1,11 @@
+.DS_Store
+**/.DS_Store
+node_modules/
+*.log
+.env
+.env.*
+!.env.example
+tests/fixtures/sample-vault/Claude-Memory/*
+!tests/fixtures/sample-vault/Claude-Memory/.gitkeep
+install.sh.sha256
+install.sh.sig

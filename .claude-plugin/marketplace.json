@@ -1,0 +1,15 @@
+{
+  "name": "2ndbrain-mogging",
+  "description": "Obsidian + Claude Code second-brain pack",
+  "plugins": [
+    {
+      "name": "2ndbrain-mogging",
+      "source": {
+        "source": "github",
+        "repo": "<ORG-A>/2ndBrain-mogging",
+        "ref": "main"
+      },
+      "path": "."
+    }
+  ]
+}
