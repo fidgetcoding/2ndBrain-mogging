@@ -4,7 +4,7 @@ This file provides guidance to Claude Code when working with this Obsidian vault
 
 ## Vault Purpose
 
-This vault is your personal knowledge management system (PKM) — a "Second Brain" built on Zettelkasten principles for capturing, connecting, and retrieving knowledge. It holds conversations, sources (articles, videos, PDFs), concepts (atomic notes), indexes (maps of content), projects, and tasks. The goal is graph density: every note should connect to at least one other note, so retrieval works by association rather than search.
+This vault is your personal knowledge management system (PKM) — a "Second Brain" built on Zettelkasten principles for capt<person-i>ng, connecting, and retrieving knowledge. It holds conversations, sources (articles, videos, PDFs), concepts (atomic notes), indexes (maps of content), projects, and tasks. The goal is graph density: every note should connect to at least one other note, so retrieval works by association rather than search.
 
 ## Folder Structure (7 folders)
 

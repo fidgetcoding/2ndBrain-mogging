@@ -32,9 +32,9 @@
     </dict>
 
     <key>StandardOutPath</key>
-    <string>/Users/nathandavidovich/Library/Logs/mogging-nightly.log</string>
+    <string>$HOME/Library/Logs/mogging-nightly.log</string>
     <key>StandardErrorPath</key>
-    <string>/Users/nathandavidovich/Library/Logs/mogging-nightly.log</string>
+    <string>$HOME/Library/Logs/mogging-nightly.log</string>
 
     <key>RunAtLoad</key>
     <false/>

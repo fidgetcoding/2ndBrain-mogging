@@ -62,7 +62,7 @@ fi
 run_install() {
   HOME="$FAKE_HOME" \
   VAULT_DIR="$FAKE_VAULT" \
-    bash "$INSTALL_SH" --vault "$FAKE_VAULT" --non-interactive 2>&1
+    bash "$INSTALL_SH" --vault "$FAKE_VAULT" --apply --no-launchd --skip-tests 2>&1
 }
 
 # ---------------------------------------------------------------------------

@@ -33,7 +33,10 @@ CLAUDE_HOME="${CLAUDE_HOME:-$HOME/.claude}"
 BACKUP_DIR_ROOT="$CLAUDE_HOME/.backups"
 SETTINGS_PATH="$CLAUDE_HOME/settings.json"
 LAUNCHAGENTS_DIR="$HOME/Library/LaunchAgents"
-CLAUDE_MEMORY_SRC="$CLAUDE_HOME/projects/-Users-nathandavidovich-Desktop-WORK-OBSIDIAN-2ndBrain/memory"
+# CLAUDE_MEMORY_SRC is derived from $VAULT at runtime in link_claude_memory().
+# Claude Code encodes project paths as projects/<slashes→dashes>, so the
+# memory dir for a vault at /foo/bar is $CLAUDE_HOME/projects/-foo-bar/memory.
+CLAUDE_MEMORY_SRC=""
 
 # ---- flags -------------------------------------------------------------------
 
@@ -339,6 +342,11 @@ link_claude_memory() {
     vlog "vault not set — skipping Claude-Memory link"
     return 0
   fi
+  # Derive Claude Code's encoded project-memory dir from the vault path.
+  # Claude encodes /foo/bar/baz as projects/-foo-bar-baz.
+  local encoded="${VAULT//\//-}"
+  CLAUDE_MEMORY_SRC="$CLAUDE_HOME/projects/${encoded}/memory"
+  vlog "claude memory src: $CLAUDE_MEMORY_SRC"
   if [[ ! -d "$CLAUDE_MEMORY_SRC" ]]; then
     warn "Claude memory source not found; skipping: $CLAUDE_MEMORY_SRC"
     return 0
@@ -375,8 +383,11 @@ install_launchd() {
     tmp="$(mktemp -t mogging-plist.XXXXXX)"
 
     # Placeholder substitution — uses | delimiter because paths contain /.
+    # $HOME must be substituted BEFORE $REPO_ROOT/$VAULT in case those are
+    # themselves expressed relative to $HOME in future templates.
     # shellcheck disable=SC2016
-    sed -e "s|\$REPO_ROOT|$REPO_ROOT|g" \
+    sed -e "s|\$HOME|$HOME|g" \
+        -e "s|\$REPO_ROOT|$REPO_ROOT|g" \
         -e "s|\$VAULT|${VAULT:-}|g" \
         "$plist" > "$tmp"
 
@@ -409,17 +420,17 @@ run_tests() {
     warn "tests/test_onboarding.sh not found — skipping"
     return 0
   fi
-  log "step 11a: test_onboarding.sh --dry-run"
-  if ! bash "$t" --dry-run; then
-    err "tests failed in dry-run"
-    exit 30
+  # Tests require install.sh to actually run with --apply (writing files to
+  # a throwaway vault). They cannot meaningfully execute in dry-run mode, so
+  # step 11 is gated on APPLY. Pass --skip-tests to bypass even in apply mode.
+  if [[ "$APPLY" -ne 1 ]]; then
+    vlog "step 11: skipping tests in dry-run mode (run with --apply to execute)"
+    return 0
   fi
-  if [[ "$APPLY" -eq 1 ]]; then
-    log "step 11b: test_onboarding.sh (real)"
-    if ! bash "$t"; then
-      err "tests failed in real mode"
-      exit 30
-    fi
+  log "step 11: test_onboarding.sh"
+  if ! bash "$t"; then
+    err "tests failed"
+    exit 30
   fi
 }
 

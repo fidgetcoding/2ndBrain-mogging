@@ -12,7 +12,7 @@ LLM-Wiki-v2 is a straightforward evolution of the Karpathy gist with a slightly 
 
 **What I adopted:** the template-per-output-type idea, applied narrowly to `02-Literature/` entries. My literature template (source-page format) is derived from a combination of this project's template catalog and NicholasSpisak's source-page template.
 
-**What I did not adopt:** the full template catalog. Most of the templates in LLM-Wiki-v2 are specific to software documentation use cases, which is not the primary use case for this pack. For general-purpose permanent notes, template-per-output-type adds process without adding signal — the note finds its own structure during compilation.
+**What I did not adopt:** the full template catalog. Most of the templates in LLM-Wiki-v2 are specific to software documentation use cases, which is not the primary use case for this pack. For general-purpose permanent notes, template-per-output-type adds process without adding signal — the note finds its own structure d<person-i>ng compilation.
 
 ## NicholasSpisak/second-brain
 

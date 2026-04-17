@@ -9,3 +9,13 @@ tests/fixtures/sample-vault/Claude-Memory/*
 !tests/fixtures/sample-vault/Claude-Memory/.gitkeep
 install.sh.sha256
 install.sh.sig
+
+# git-filter-repo replacement map — contains real names on the left-hand
+# side, must never be committed. Commit the .example.txt template instead.
+.filter-repo-replacements.txt
+
+# Operator-specific secret-scan configs — contain literal PII patterns.
+# Commit the .example companion file instead.
+.gitleaks.private.toml
+config/nathan.pii
+config/nathan.pii.local
