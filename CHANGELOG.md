@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2] — 2026-04-17
+
+### Fixed
+- **Critical: reverted substring corruption from v0.1.1 PII scrub.** The `regex:\buri\b==><person-i>` rule in `.filter-repo-replacements.txt` did not honor its word-boundary `\b` anchors, so `git-filter-repo` replaced `uri` as a literal substring in 39+ English words across 19 files. `security` became `sec<person-i>ty`, `during` became `d<person-i>ng`, `heuristics` became `he<person-i>stics`, `buried` became `b<person-i>ed`, `configuring` became `config<person-i>ng`, `gesturing` became `gest<person-i>ng`. Same bug with `\balan\b` corrupted `balance` → `b<person-c>ce`. All reverted across `CHANGELOG.md`, `docs/SECURITY.md`, `references/wiki-schema.md`, `scripts/prepublish-check.sh`, `.github/workflows/secret-scan.yml`, 5 skill files, 2 vault-template files, 2 PII-config examples, and more.
+- **Critical: `.github/workflows/secret-scan.yml:76` now correctly references `trufflesecurity/trufflehog@main`** (was `trufflesec<person-i>ty/trufflehog@main` → GitHub Actions failed to resolve the action on every push).
+- **Prepublish gate restored.** `scripts/prepublish-check.sh` now prints `"security-gate files present"` instead of `"sec<person-i>ty-gate files present"`.
+- **Placeholder preservation:** legitimate mapping rule `regex:\buri\b==><person-i>` in `.filter-repo-replacements.txt` left intact (that's the config, not the corrupted output). A future history rewrite needs a git-filter-repo version that honors regex-prefix word-boundaries, or a different replacement strategy (e.g., `--replace-message` pattern).
+
+### Changed
+- Scrubbed residual "auto-delete" / "auto-remove" / "silently delete|remove|overwrite|misfile" phrasing from `skills/wiki/SKILL.md`, `skills/save/SKILL.md`, and `references/wiki-schema.md` — replaced with "flag for human review" / "never remove without explicit human approval" language. Behavior unchanged; pure phrasing cleanup to remove alarming verbs from instruction manuals. Guardrail uses of "silent" (e.g., "never silently rewritten", "cannot be silently undone") preserved — they forbid silent behavior rather than promise it.
+
 ## [0.1.1] — 2026-04-17
 
 ### Fixed
@@ -20,7 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `docs/MIGRATION.md`: created — root `MIGRATION.md` referenced it three times but the file was missing.
 - `CHANGELOG.md`: expanded v0.1.0 entry with the full feature list.
 
-### Sec<person-i>ty
+### Security
 - Full git history rewrite via `git-filter-repo` to remove PII from all past commits (not just `HEAD`).
 
 ## [0.1.0] — 2026-04-16 — Initial release
@@ -57,7 +68,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Four-regime architecture: HUMAN / PROJECT / SYNC / LLM-COMPILED.
 - `[bot:*]` commit-prefix convention to suppress n8n re-ingest on automated writes.
 
-**Sec<person-i>ty**
+**Security**
 - `.gitleaks.toml` with custom rules for morgen-api, n8n-api, private email, and private client names.
 - `.github/workflows/secret-scan.yml` running gitleaks + trufflehog on every push.
 - `config/nathan.pii` and `config/secrets.patterns` as the canonical PII/secret lists.

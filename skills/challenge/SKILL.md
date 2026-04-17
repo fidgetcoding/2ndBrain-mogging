@@ -70,7 +70,7 @@ Every evidence fragment gets one of seven labels:
 | `COST_PATTERN` | Evidence the operator consistently under/over-estimates cost/time/effort on similar work. |
 | `STAKEHOLDER_CONFLICT` | The idea involves someone (<PERSON-A>, <PERSON-C>, <PERSON-H>, Dad, <PERSON-D>, <PERSON-I>, <PERSON-F>) whose documented preferences push back. |
 | `DEPENDENCY_BROKEN` | The idea depends on something documented as broken/stalled (`google_workspace_mcp_oauth_broken`, `task-to-calendar API gap`, etc.). |
-| `SUPPORTS` | Past note agrees with the proposition. Still collect these — needed for the b<person-c>ce check. |
+| `SUPPORTS` | Past note agrees with the proposition. Still collect these — needed for the balance check. |
 | `IRRELEVANT` | Matched keyword but not meaningful. Drop from ranking. |
 
 ### 5. Rank
@@ -101,7 +101,7 @@ One-paragraph summary of the strongest counter-argument.
 ## Weak (flagged but thin)
 - [STAKEHOLDER_CONFLICT] ...
 
-## Supporting evidence (for b<person-c>ce)
+## Supporting evidence (for balance)
 - [SUPPORTS] ...
 
 ## Devil's advocate points (even if vault is silent)

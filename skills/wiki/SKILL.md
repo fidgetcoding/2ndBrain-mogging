@@ -63,7 +63,7 @@ Intake accepts any of: a URL, a local file path, a pasted blob, a YouTube URL, a
    ---
    ```
 3. **Extract**:
-   - Entities (named things: people, companies, products). Use regex + he<person-i>stics for proper nouns; cross-check against `Claude-Memory/aliases.yaml`.
+   - Entities (named things: people, companies, products). Use regex + heuristics for proper nouns; cross-check against `Claude-Memory/aliases.yaml`.
    - Concepts (ideas, techniques, frameworks). Maintain an internal scorer: multi-word noun phrases that repeat ≥ 2× inside the source.
    - Claims (testable assertions). Each claim = `{text, confidence, supports_or_refutes: <existing_claim_id?>}`.
 4. **Cross-reference `03-Concepts/`.** `Glob` for existing concept pages; match by frontmatter `aliases:` list before filename slug. This is CRITICAL — re-creating a slightly-differently-named page is the #1 graph-pollution failure.
@@ -78,7 +78,7 @@ Intake accepts any of: a URL, a local file path, a pasted blob, a YouTube URL, a
 
    Anything you want me to emphasize, reframe, or skip? (type notes, or `ok` to proceed)
    ```
-   The skill then WAITS. This is not optional. If the user says "skip 3", that takeaway does NOT become a concept page update. If the user says "emphasize 2", that takeaway's concept page gets a prominent lede block instead of a b<person-i>ed bullet.
+   The skill then WAITS. This is not optional. If the user says "skip 3", that takeaway does NOT become a concept page update. If the user says "emphasize 2", that takeaway's concept page gets a prominent lede block instead of a buried bullet.
 6. **Dry-run preview table.** After the user types `ok`, print the standard preview:
    ```
    ┌────────────────────────────────────────────┬──────────────────────────────────────────────────────┬─────────┐
@@ -331,14 +331,14 @@ A critical FIND rule: the skill MUST NOT emit a `[[wikilink]]` to a page that is
 - `wiki` does not manage tasks. Tasks live in `06-Tasks/` + Obsidian Tasks plugin + the n8n 3-way sync.
 - `wiki` does not deploy anything, run migrations, or modify `.env*`, `.claude/`, or `node_modules/`.
 - `wiki` does not delete files. Even in HEAL, deletion requires a human.
-- `wiki` does not call external paid services d<person-i>ng AUDIT — AUDIT is pure regex + graph arithmetic.
+- `wiki` does not call external paid services during AUDIT — AUDIT is pure regex + graph arithmetic.
 
 ## 9. Cross-skill handoff
 
 `wiki` and `save` are peers, not hierarchy. They hand off at two seams:
 
 - **FIND → save.** FIND can propose saving a synthesis; the actual write is delegated to `/save` branch 3.
-- **ADD "discuss before write" residue → save.** If d<person-i>ng DISCUSS the user says "this is really a fleeting thought, not a source," the ADD run aborts cleanly and suggests `/save` branch 3.
+- **ADD "discuss before write" residue → save.** If during DISCUSS the user says "this is really a fleeting thought, not a source," the ADD run aborts cleanly and suggests `/save` branch 3.
 
 Both skills read the same `../references/wiki-schema.md` and the same `Claude-Memory/aliases.yaml`. If those two files ever drift, fix the schema first — it's the source of truth, and both skills are downstream.
 
