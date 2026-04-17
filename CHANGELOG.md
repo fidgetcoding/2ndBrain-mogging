@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.4] — 2026-04-17
+
+### Added — `install.sh` now applies the CLAUDE.md patch (closes v0.1.3 known gap)
+
+Previously `docs/CLAUDE-MD-PATCH.md` was the canonical post-mogging contract that was supposed to be appended to every user vault's `CLAUDE.md` at install time, but the installer didn't actually consume it — the file was documentation-only. New users who ran `install.sh --apply` got skills, agents, and launchd plists wired up, but their vault's `CLAUDE.md` still described whatever layout they had before install. This closes that gap.
+
+- **New install step: `apply_claude_md_patch` (step 9.5)** — runs between `link_claude_memory` and `install_launchd` in the main install sequence. Extracts the canonical block (between `<!-- 2ndbrain-mogging:start -->` and `<!-- 2ndbrain-mogging:end -->` markers) from `docs/CLAUDE-MD-PATCH.md` and writes it to `$VAULT/CLAUDE.md`.
+- **Idempotent** — re-running `install.sh --apply` detects existing markers and replaces the block between them, never duplicating.
+- **Legacy migration** — vaults that have the pre-namespaced `<!-- mogging:start -->` / `<!-- mogging:end -->` marker pair from older installs get their legacy block stripped and replaced with the new namespaced block. No manual migration required.
+- **Backup-before-mutation** (non-negotiable #1 enforced) — the existing vault `CLAUDE.md` is copied to `$VAULT/Claude-Memory/backups/YYYY-MM-DD-HHMMSS/CLAUDE.md.bak` before any write.
+- **Fresh vaults handled** — if the vault has no `CLAUDE.md`, a minimal header is created and the patch is appended below it.
+- **Honors `--dry-run`** — logs the intended patch in dry-run mode; only writes on `--apply`.
+- **New exit code 41** — reserved for patch extraction failures (missing markers in source file).
+
+No behavior change for users who don't re-run the installer. Next `install.sh --apply` on any existing install will migrate the CLAUDE.md block to the current canonical contract.
+
 ## [0.1.3] — 2026-04-17
 
 ### Fixed — post-mogging contract sync across skills, docs, schema
