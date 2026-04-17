@@ -2,8 +2,9 @@
 # .gitleaks.toml — 2ndBrain-mogging public repo secret scan config
 # ----------------------------------------------------------------------------
 # Extends gitleaks' default ruleset and adds project-specific custom rules
-# for Morgen API keys, n8n PATs, Nathan's email, and private client names
-# that must never surface in a public artifact.
+# for Morgen API keys and n8n PATs. Operator-specific PII rules (owner
+# email + private collaborator names) live in a gitignored local-only
+# companion config — see the block at the bottom of this file.
 #
 # Invocation:
 #   gitleaks detect --config .gitleaks.toml --no-git
@@ -41,30 +42,15 @@ tags        = ["key", "n8n", "critical"]
 keywords    = ["n8n_api_"]
 
 # ----------------------------------------------------------------------------
-# Custom rule: Nathan's email
+# Operator-specific PII rules (owner email + private collaborator names)
 # ----------------------------------------------------------------------------
-# Owner's personal operational email should never appear in the public repo.
-[[rules]]
-id          = "nathan-email"
-description = "Owner email (nate@lorecraft.io) — must be scrubbed from public artifacts"
-regex       = '''nate@lorecraft\.io'''
-tags        = ["pii", "owner", "critical"]
-keywords    = ["nate@lorecraft"]
-
-# ----------------------------------------------------------------------------
-# Custom rule: private client / collaborator names
-# ----------------------------------------------------------------------------
-# Never reference these first names in READMEs, migration notes, release
-# notes, or any other public repo artifact. Historical figures sharing
-# the first name "<PERSON-C>" (Turing, Kay, Watts) are allowlisted below via
-# a negative lookahead in config/nathan.pii; in the gitleaks regex we
-# broad-match and rely on the allowlist + manual review.
-[[rules]]
-id          = "private-client-names"
-description = "Private client/collaborator first names — must not appear in public artifacts"
-regex       = '''(?i)\b(<person-a>|<person-b>|<person-c>|<person-d>|<person-e>|<person-f>\s?<person-f-surname>|<person-g>\s?<person-g-surname>|<person-h>\s?<person-h-surname>)\b'''
-tags        = ["pii", "clients", "critical"]
-keywords    = ["<person-a>", "<person-b>", "<person-c>", "<person-d>", "<PERSON-E>", "<person-f-surname>", "<person-g-surname>", "<person-h-surname>"]
+# These rules live in a LOCAL-ONLY config so the public repo does not itself
+# leak the literal names the rules are protecting. To enable full local
+# scanning, copy `.gitleaks.private.toml.example` to `.gitleaks.private.toml`,
+# fill in your real patterns, and invoke gitleaks with:
+#   gitleaks detect --config .gitleaks.toml --no-git
+#   gitleaks detect --config .gitleaks.private.toml --no-git   # additional pass
+# The private file is gitignored and must never be committed.
 
 # ============================================================================
 # Allowlist — self-referential, docs, and synthetic test data
@@ -75,9 +61,4 @@ paths = [
   '''(^|/)\.gitleaks\.toml$''',
   '''(^|/)docs/placeholder-names\.md$''',
   '''(^|/)tests/fixtures/''',
-]
-# Extra regex allowlist — <PERSON-C> Turing / <PERSON-C> Kay / <PERSON-C> Watts are historical
-# figures and are not the private collaborator "<PERSON-C>".
-regexes = [
-  '''(?i)\balan\s+(turing|kay|watts)\b''',
 ]

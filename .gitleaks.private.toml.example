@@ -1,0 +1,50 @@
+# ============================================================================
+# .gitleaks.private.toml.example — template for operator-specific gitleaks rules
+# ----------------------------------------------------------------------------
+# The real config lives at .gitleaks.private.toml, which is GITIGNORED so the
+# public repo does not itself leak the literal names the rules are protecting.
+#
+# To enable local scanning of owner email + private collaborator names:
+#   cp .gitleaks.private.toml.example .gitleaks.private.toml
+#   # edit .gitleaks.private.toml to add real regexes
+#
+# Invocation:
+#   gitleaks detect --config .gitleaks.toml --no-git          # public rules
+#   gitleaks detect --config .gitleaks.private.toml --no-git  # private rules
+#
+# Never commit the real .gitleaks.private.toml.
+# ============================================================================
+
+title = "2ndBrain-mogging operator-local secret scan"
+
+# Owner / operator email — never surface in the public repo.
+[[rules]]
+id          = "owner-email-example"
+description = "Owner operational email"
+regex       = '''owner@example\.com'''
+tags        = ["pii", "owner", "critical"]
+keywords    = ["owner@example"]
+
+# Private collaborator first names. Historical figures sharing a common first
+# name can be allowlisted below; in the regex, word-boundary broad-match and
+# rely on manual review.
+[[rules]]
+id          = "private-collaborator-names-example"
+description = "Private collaborator first names — must not appear in public artifacts"
+regex       = '''(?i)\b(example_first_name_1|example_first_name_2)\b'''
+tags        = ["pii", "clients", "critical"]
+keywords    = ["example_first_name_1", "example_first_name_2"]
+
+[allowlist]
+description = "Allow matches inside this config and tests fixtures"
+paths = [
+  '''(^|/)\.gitleaks\.private\.toml$''',
+  '''(^|/)\.gitleaks\.private\.toml\.example$''',
+  '''(^|/)tests/fixtures/''',
+]
+
+# Extra regex allowlist — historical figures sharing a common first name
+# (e.g. "<PERSON-C>" shared by T<person-i>ng, Kay, Watts) can be excluded here.
+regexes = [
+  # '''(?i)\bexample_first_name_2\s+(t<person-i>ng|kay|watts)\b''',
+]

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ============================================================================
-# scripts/prepublish-check.sh — local security gate, run before every release.
+# scripts/prepublish-check.sh — local sec<person-i>ty gate, run before every release.
 # ----------------------------------------------------------------------------
 # Seven checks, fail-closed, in order:
 #   1. gitleaks detect (custom config, no-git mode)
@@ -64,35 +64,43 @@ fi
 ok "trufflehog clean"
 
 # ----------------------------------------------------------------------------
-# Step 3 — owner/client PII sweep
+# Step 3 — owner/client PII sweep (uses local-only config/nathan.pii)
+# ----------------------------------------------------------------------------
+# The pattern list itself contains literal PII, so config/nathan.pii is
+# gitignored. Contributors scaffold it from config/nathan.pii.example. If the
+# local file is absent, the sweep is skipped with a loud warning — do NOT
+# publish without running this sweep against a real pattern list.
 # ----------------------------------------------------------------------------
 step 3 "nathan.pii grep sweep"
 if [[ ! -f config/nathan.pii ]]; then
-  fail "missing config/nathan.pii"
+  warn "config/nathan.pii not found — SKIPPING operator-specific PII sweep"
+  warn "scaffold a local copy via: cp config/nathan.pii.example config/nathan.pii"
+else
+  # Strip comments + blank lines to a temp pattern file so grep -Ef doesn't
+  # try to match literal `#` lines. mktemp is portable on macOS + Linux.
+  PII_TMP="$(mktemp -t nathan-pii.XXXXXX)"
+  trap 'rm -f "${PII_TMP}"' EXIT
+  grep -vE '^\s*(#|$)' config/nathan.pii > "${PII_TMP}" || true
+
+  # -I skips binary, --exclude-dir drops .git + fixtures, --exclude drops
+  # the gitleaks config (which legitimately references these patterns).
+  if grep -rIEn -f "${PII_TMP}" . \
+        --exclude-dir=.git \
+        --exclude-dir=tests/fixtures \
+        --exclude-dir=node_modules \
+        --exclude=.gitleaks.toml \
+        --exclude=.gitleaks.private.toml \
+        --exclude=nathan.pii \
+        --exclude=.filter-repo-replacements.txt; then
+    fail "nathan.pii patterns matched — scrub before publishing"
+  fi
+  ok "nathan.pii sweep clean"
 fi
 
-# Strip comments + blank lines to a temp pattern file so grep -Ef doesn't
-# try to match literal `#` lines. mktemp is portable on macOS + Linux.
-PII_TMP="$(mktemp -t nathan-pii.XXXXXX)"
-trap 'rm -f "${PII_TMP}"' EXIT
-grep -vE '^\s*(#|$)' config/nathan.pii > "${PII_TMP}" || true
-
-# -I skips binary, --exclude-dir drops .git + fixtures, --exclude drops
-# the gitleaks config (which legitimately references these patterns).
-if grep -rIEn -f "${PII_TMP}" . \
-      --exclude-dir=.git \
-      --exclude-dir=tests/fixtures \
-      --exclude-dir=node_modules \
-      --exclude=.gitleaks.toml \
-      --exclude=nathan.pii; then
-  fail "nathan.pii patterns matched — scrub before publishing"
-fi
-ok "nathan.pii sweep clean"
-
 # ----------------------------------------------------------------------------
-# Step 4 — required security-gate files
+# Step 4 — required sec<person-i>ty-gate files
 # ----------------------------------------------------------------------------
-step 4 "required security-gate files present"
+step 4 "required sec<person-i>ty-gate files present"
 required_files=(
   ".gitleaks.toml"
   ".github/workflows/secret-scan.yml"
@@ -100,7 +108,7 @@ required_files=(
 for f in "${required_files[@]}"; do
   [[ -f "$f" ]] || fail "missing required file: $f"
 done
-ok "security-gate files present"
+ok "sec<person-i>ty-gate files present"
 
 # ----------------------------------------------------------------------------
 # Step 5 — .gitignore contains Claude-Memory

@@ -63,7 +63,7 @@ Intake accepts any of: a URL, a local file path, a pasted blob, a YouTube URL, a
    ---
    ```
 3. **Extract**:
-   - Entities (named things: people, companies, products). Use regex + heuristics for proper nouns; cross-check against `Claude-Memory/aliases.yaml`.
+   - Entities (named things: people, companies, products). Use regex + he<person-i>stics for proper nouns; cross-check against `Claude-Memory/aliases.yaml`.
    - Concepts (ideas, techniques, frameworks). Maintain an internal scorer: multi-word noun phrases that repeat ≥ 2× inside the source.
    - Claims (testable assertions). Each claim = `{text, confidence, supports_or_refutes: <existing_claim_id?>}`.
 4. **Cross-reference `03-Concepts/`.** `Glob` for existing concept pages; match by frontmatter `aliases:` list before filename slug. This is CRITICAL — re-creating a slightly-differently-named page is the #1 graph-pollution failure.
@@ -78,21 +78,21 @@ Intake accepts any of: a URL, a local file path, a pasted blob, a YouTube URL, a
 
    Anything you want me to emphasize, reframe, or skip? (type notes, or `ok` to proceed)
    ```
-   The skill then WAITS. This is not optional. If the user says "skip 3", that takeaway does NOT become a concept page update. If the user says "emphasize 2", that takeaway's concept page gets a prominent lede block instead of a buried bullet.
+   The skill then WAITS. This is not optional. If the user says "skip 3", that takeaway does NOT become a concept page update. If the user says "emphasize 2", that takeaway's concept page gets a prominent lede block instead of a b<person-i>ed bullet.
 6. **Dry-run preview table.** After the user types `ok`, print the standard preview:
    ```
    ┌────────────────────────────────────────────┬──────────────────────────────────────────────────────┬─────────┐
    │ Write                                      │ Path                                                 │ Op      │
    ├────────────────────────────────────────────┼──────────────────────────────────────────────────────┼─────────┤
-   │ Source page                                │ 02-Sources/SRC-2026-04-16-<PERSON-E>-morgen-mcp.md      │ create  │
+   │ Source page                                │ 02-Sources/SRC-2026-04-16-<person-e>-morgen-mcp.md   │ create  │
    │ Concept: "first-party MCP"                 │ 03-Concepts/first-party-mcp.md                       │ update  │
    │ Concept: "rate limit 300/15min"            │ 03-Concepts/morgen-rate-limit.md                     │ create  │
-   │ Entity: "<PERSON-E>"                     │ 03-Concepts/john-<PERSON-E>.md                          │ create  │
+   │ Entity: "<PERSON-E>"                       │ 03-Concepts/<person-e>.md                            │ create  │
    │ Index update                               │ 04-Index/Index.md                                    │ append  │
    │ Log entry                                  │ 04-Index/log.md                                      │ append  │
    └────────────────────────────────────────────┴──────────────────────────────────────────────────────┴─────────┘
 
-   Git branch: wiki-add/2026-04-16-<PERSON-E>-morgen-mcp
+   Git branch: wiki-add/2026-04-16-<person-e>-morgen-mcp
    Expected touch count: 10–15 pages
    Proceed? (y/n)
    ```
@@ -135,7 +135,7 @@ Interpretation, synthesis, and Nathan-voice live in concept pages (`03-Concepts/
 ### 3.3 Concept page updates (prefer update)
 
 When a concept already exists, UPDATE instead of CREATE. "Update" means:
-- Append a line to the concept's `Evidence` section linking back to the source: `- [[SRC-2026-04-16-<PERSON-E>-morgen-mcp]] — confirms rate limit raised 100→300/15min as of 2026-04-15.`
+- Append a line to the concept's `Evidence` section linking back to the source: `- [[SRC-2026-04-16-<person-e>-morgen-mcp]] — confirms rate limit raised 100→300/15min as of 2026-04-15.`
 - Update `last_confirmed:` in frontmatter to today.
 - If the new source CONTRADICTS an existing claim, add a `## Contradictions` section rather than silently overwriting. Human reviews contradictions; skill never adjudicates.
 
@@ -146,7 +146,7 @@ Only create a new concept page if `Glob` + alias resolution truly returns zero m
 - `04-Index/Index.md` gets one new line per new concept or entity page, sorted into its topical section.
 - `04-Index/log.md` gets an append-only entry:
   ```
-  2026-04-16 ADD source=SRC-2026-04-16-<PERSON-E>-morgen-mcp created=2 updated=3 branch=wiki-add/2026-04-16-<PERSON-E>-morgen-mcp
+  2026-04-16 ADD source=SRC-2026-04-16-<person-e>-morgen-mcp created=2 updated=3 branch=wiki-add/2026-04-16-<person-e>-morgen-mcp
   ```
 
 Expected touch count per ADD run: **10–15 pages** (1 source + 3–8 concepts + 2–5 entities + index + log). If a run is projecting > 20 touches, pause and ask the user to confirm — large writes are usually a symptom of missed alias matches.
@@ -194,7 +194,7 @@ owner: wiki
 - Suggested action: run `/wiki` → 3 (Heal) to clear 19 of 23 mechanically; 4 require human review (listed below).
 
 ## Contradictions (1) — HUMAN REVIEW REQUIRED
-- [[morgen-rate-limit]] states "100/15min" in one block and "300/15min" in another. Source conflict: [[SRC-2026-03-20-morgen-launch]] vs [[SRC-2026-04-15-<PERSON-E>-email]].
+- [[morgen-rate-limit]] states "100/15min" in one block and "300/15min" in another. Source conflict: [[SRC-2026-03-20-morgen-launch]] vs [[SRC-2026-04-15-<person-e>-email]].
 
 ## Stale (12) — safe to auto-mark needs_review
 <bulleted list with last_confirmed date>
@@ -331,14 +331,14 @@ A critical FIND rule: the skill MUST NOT emit a `[[wikilink]]` to a page that is
 - `wiki` does not manage tasks. Tasks live in `06-Tasks/` + Obsidian Tasks plugin + the n8n 3-way sync.
 - `wiki` does not deploy anything, run migrations, or modify `.env*`, `.claude/`, or `node_modules/`.
 - `wiki` does not delete files. Even in HEAL, deletion requires a human.
-- `wiki` does not call external paid services during AUDIT — AUDIT is pure regex + graph arithmetic.
+- `wiki` does not call external paid services d<person-i>ng AUDIT — AUDIT is pure regex + graph arithmetic.
 
 ## 9. Cross-skill handoff
 
 `wiki` and `save` are peers, not hierarchy. They hand off at two seams:
 
 - **FIND → save.** FIND can propose saving a synthesis; the actual write is delegated to `/save` branch 3.
-- **ADD "discuss before write" residue → save.** If during DISCUSS the user says "this is really a fleeting thought, not a source," the ADD run aborts cleanly and suggests `/save` branch 3.
+- **ADD "discuss before write" residue → save.** If d<person-i>ng DISCUSS the user says "this is really a fleeting thought, not a source," the ADD run aborts cleanly and suggests `/save` branch 3.
 
 Both skills read the same `../references/wiki-schema.md` and the same `Claude-Memory/aliases.yaml`. If those two files ever drift, fix the schema first — it's the source of truth, and both skills are downstream.
 

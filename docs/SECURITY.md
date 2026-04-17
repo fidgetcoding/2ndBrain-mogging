@@ -1,6 +1,6 @@
-# Security Policy
+# Sec<person-i>ty Policy
 
-This document describes how security is handled for the `2ndBrain-mogging`
+This document describes how sec<person-i>ty is handled for the `2ndBrain-mogging`
 public plugin. It covers disclosure, the install-time trust boundary, the
 automated secret-scrub coverage, known residual risks, and the mandatory
 pre-publish checks that every release must pass.
@@ -9,10 +9,10 @@ pre-publish checks that every release must pass.
 
 ## 1. Reporting a vulnerability
 
-Please **do not** open a public GitHub issue for suspected security
+Please **do not** open a public GitHub issue for suspected sec<person-i>ty
 vulnerabilities.
 
-- Email: `security@lorecraft.io` (placeholder — replace with the actual
+- Email: `sec<person-i>ty@lorecraft.io` (placeholder — replace with the actual
   disclosure inbox before first public release)
 - Expected first response: within **72 hours** on weekdays
 - Please include:
@@ -128,7 +128,7 @@ scanning for this repo.
   before the first signed release must be considered exposed forever.
   Rotate rather than rewrite history.
 - **Third-party dependencies.** Supply-chain risk in GitHub Actions
-  (`gitleaks/gitleaks-action@v2`, `trufflesecurity/trufflehog@main`) is
+  (`gitleaks/gitleaks-action@v2`, `trufflesec<person-i>ty/trufflehog@main`) is
   pinned to tags/branches rather than immutable SHAs to keep
   maintenance simple. Forks with stricter supply-chain requirements
   should pin to full commit SHAs.

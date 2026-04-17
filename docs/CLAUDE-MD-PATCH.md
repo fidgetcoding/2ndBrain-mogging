@@ -1,6 +1,6 @@
 # CLAUDE.md Patch — 2ndBrain-mogging
 
-This document contains the **canonical text** that `2ndBrain-mogging` appends to a vault's `CLAUDE.md` during install (or via `/aliases init`). Agent 1 of the `/rswarmmax` refactor swarm performs the actual append in Phase B10 — this file is the reference source of truth that agent reads from.
+This document contains the **canonical text** that `2ndBrain-mogging` appends to a vault's `CLAUDE.md` d<person-i>ng install (or via `/aliases init`). Agent 1 of the `/rswarmmax` refactor swarm performs the actual append in Phase B10 — this file is the reference source of truth that agent reads from.
 
 ## Contract
 
@@ -131,7 +131,7 @@ The plugin enforces these invariants on every write. Violations abort the write 
 Phase B10 of the `/rswarmmax` vault refactor:
 
 1. Read the source file at `docs/CLAUDE-MD-PATCH.md` in this repo.
-2. Read `/Users/nathandavidovich/Desktop/WORK/OBSIDIAN/2ndBrain/CLAUDE.md`.
+2. Read `$HOME/Desktop/WORK/OBSIDIAN/2ndBrain/CLAUDE.md`.
 3. If the vault's CLAUDE.md already contains `<!-- mogging:start -->`, replace everything between the two markers (inclusive) with the new block. If not, append a single blank line followed by the entire block from this doc.
 4. Do NOT touch any text outside the markers.
 5. Run `python3 -c "import yaml; yaml.safe_load(open('Claude-Memory/aliases.yaml'))"` to verify the registry is valid after the vault refactor.

@@ -1,0 +1,38 @@
+# ============================================================================
+# config/nathan.pii.example — template for the local PII sweep pattern list
+# ----------------------------------------------------------------------------
+# The real patterns live in config/nathan.pii, which is GITIGNORED so the
+# public repo does not itself leak the literal names the rules are protecting.
+#
+# To enable the nathan.pii sweep step in scripts/prepublish-check.sh:
+#   cp config/nathan.pii.example config/nathan.pii
+#   # edit config/nathan.pii to add real patterns
+#
+# Format:
+#   - One ERE pattern per line
+#   - Lines starting with # or blank lines are ignored
+#   - Each pattern is grep-matched across the repo (excluding .git/,
+#     tests/fixtures/, node_modules/, and .gitleaks.toml itself)
+#
+# Invocation:
+#   bash scripts/prepublish-check.sh
+# ============================================================================
+
+# Owner attribution (keep your public author email here, for reference; the
+# prepublish sweep allowlists it — this is not an exclusion list for secrets,
+# just a collaborator/entity name list).
+# EXAMPLE: (?i)owner@example\.com
+
+# Full names (first-last variants come first so they match before first-name
+# alone). Use the non-capt<person-i>ng (?i) for case-insensitive.
+# EXAMPLE: (?i)example\s?firstname\s+example\s?lastname
+
+# First names — anything you don't want appearing in READMEs, migration
+# notes, release notes, commit messages, or any other public artifact.
+# EXAMPLE: (?i)\bexample_first_name_1\b
+# EXAMPLE: (?i)\bexample_first_name_2\b(?!\s+(t<person-i>ng|kay|watts))
+
+# Private project / client codenames (hyphenated + spaced variants).
+# EXAMPLE: (?i)\bexample[-_ ]project[-_ ]name\b
+
+# End of template — copy to config/nathan.pii and edit in place.

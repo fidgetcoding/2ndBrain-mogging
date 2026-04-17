@@ -1,6 +1,6 @@
 ---
 name: save
-description: Capture conversation content into the 2ndBrain Obsidian vault with alias-driven classification, dry-run previews, and safe routing. Supports four entry branches — whole conversation, specific passage, dictated note, and ADR — plus a `--backfill` mode that ingests historical session-*.jsonl transcripts. Every write is security-scrubbed, classification-transparent, and commit-prefixed `[bot:save]` so n8n W1 does not re-fire.
+description: Capture conversation content into the 2ndBrain Obsidian vault with alias-driven classification, dry-run previews, and safe routing. Supports four entry branches — whole conversation, specific passage, dictated note, and ADR — plus a `--backfill` mode that ingests historical session-*.jsonl transcripts. Every write is sec<person-i>ty-scrubbed, classification-transparent, and commit-prefixed `[bot:save]` so n8n W1 does not re-fire.
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash
 ---
 
@@ -32,7 +32,7 @@ Before routing any content, load `Claude-Memory/aliases.yaml` from the vault roo
 ```yaml
 aliases:
   - key: <person-h>
-    names: [<person-h>, <person-h> <person-h-surname>, <project-b>, <PROJECT-C>]
+    names: [<person-h>, <person-h>, <project-b>, <project-c>]
     destination: 07-Projects/MMA/<PROJECT-B>/<PROJECT-B>.md
     tags: [mma, client, <person-h>]
     confidence_boost: 0.15
@@ -69,7 +69,7 @@ Before any `Write` or `Edit`, print a table:
 ┌───────────────────────────────┬────────────────────────────────────────────────────┬──────────────┐
 │ Signal                        │ Destination                                        │ Confidence   │
 ├───────────────────────────────┼────────────────────────────────────────────────────┼──────────────┤
-│ "<person-h>", "<PROJECT-C>"     │ 07-Projects/MMA/<PROJECT-B>/…/2026-04-16.md    │ 0.88         │
+│ "<person-h>", "<project-c>"   │ 07-Projects/MMA/<PROJECT-B>/…/2026-04-16.md        │ 0.88         │
 │ "stripe webhook" (ambiguous)  │ 07-Projects/LORECRAFT-HQ/stripe-notes.md  [stub]   │ 0.41         │
 │ "tax deduction"               │ 07-Projects/LEGAL : FINANCE/tax-notes-2025.md      │ 0.72         │
 └───────────────────────────────┴────────────────────────────────────────────────────┴──────────────┘
@@ -155,7 +155,7 @@ uuidgen | tr '[:upper:]' '[:lower:]'
 
 Insert it as the final trailing token after the date/recurrence tokens. Never as a prefix, never inside the body.
 
-## 9. Security scrub (every write, every branch, no exceptions)
+## 9. Sec<person-i>ty scrub (every write, every branch, no exceptions)
 
 Before any content is written, pipe it through this regex panel and replace matches with `[REDACTED:<TYPE>]`:
 
@@ -174,7 +174,7 @@ Before any content is written, pipe it through this regex panel and replace matc
 If ANY match fires, the preview table MUST add a row:
 
 ```
-⚠ Security scrub: 3 secrets redacted (ANTHROPIC_KEY×1, GITHUB_PAT×2). Content sanitized before write.
+⚠ Sec<person-i>ty scrub: 3 secrets redacted (ANTHROPIC_KEY×1, GITHUB_PAT×2). Content sanitized before write.
 ```
 
 Redactions apply to BOTH file content and commit messages. The skill never emits a real secret to git, even in a message.
@@ -204,7 +204,7 @@ which records intent for the CURRENT session only and prints a one-line confirma
 `/save --backfill` ingests historical Claude CLI transcripts into the vault. Source path:
 
 ```
-~/.claude/projects/-Users-nathandavidovich-Desktop-WORK-OBSIDIAN-2ndBrain/session-*.jsonl
+$HOME/.claude/projects/-$HOME-Desktop-WORK-OBSIDIAN-2ndBrain/session-*.jsonl
 ```
 
 Pipeline:
@@ -221,7 +221,7 @@ Pipeline:
    Apply? (y/n)
    ```
    Nothing runs until the user types `y`.
-7. **`--resume` for kill-9 recovery.** The manifest at `Claude-Memory/backfill-manifest.jsonl` is append-only — one line per (session-id, chunk-index, sha256, destination). On `--resume`, the skill reads the manifest, skips everything already captured, and picks up from the first un-captured chunk. A kill during step 4 or 5 is safe; the next run continues cleanly.
+7. **`--resume` for kill-9 recovery.** The manifest at `Claude-Memory/backfill-manifest.jsonl` is append-only — one line per (session-id, chunk-index, sha256, destination). On `--resume`, the skill reads the manifest, skips everything already captured, and picks up from the first un-captured chunk. A kill d<person-i>ng step 4 or 5 is safe; the next run continues cleanly.
 
 Backfill commits use `[bot:save --backfill]` as the prefix so they're still W1-transparent but trivially filterable in `git log`.
 

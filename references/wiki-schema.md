@@ -1,6 +1,6 @@
 # wiki-schema.md — canonical rules for 2ndBrain-mogging
 
-This file is the single source of truth for every skill in `skills/*/SKILL.md`. Any skill that writes, reads, or audits the vault must resolve its folder targets, frontmatter keys, link grammar, security posture, and git contract from here. If a skill contradicts this doc, the doc wins.
+This file is the single source of truth for every skill in `skills/*/SKILL.md`. Any skill that writes, reads, or audits the vault must resolve its folder targets, frontmatter keys, link grammar, sec<person-i>ty posture, and git contract from here. If a skill contradicts this doc, the doc wins.
 
 Downstream consumers (all required to reference this file):
 
@@ -137,7 +137,7 @@ Glyphs:
 2. **Edits preserve 🆔 byte-for-byte.** A rewrite that changes or drops the UUID creates a duplicate task in Morgen and Notion that cannot be silently undone. The fix costs Nathan 15+ minutes of manual deduping.
 3. **Missing UUID on a legacy task = mint + log.** If a skill touches a task line that lacks 🆔, it mints one AND appends a line to `Claude-Memory/task-uuid-mints.log` recording (file, line, uuid, timestamp). The mint is a side effect, so it must be auditable.
 
-## 6. Security scrub
+## 6. Sec<person-i>ty scrub
 
 Every write path — file body AND commit message — passes through this regex panel first. Matches are replaced in-place with `[REDACTED:<TYPE>]`. Matches in commit messages also cause a preview warning row so the user sees what got swapped out.
 
@@ -163,7 +163,7 @@ Every write path — file body AND commit message — passes through this regex 
 ### Nathan-specific PII
 
 - `nate@lorecraft.io` stays as-is in plugin code but is redacted from any note body that would land in a public-sync branch.
-- `<PERSON-A>`, `<PERSON-B>`, and any other named collaborators identified as `internal_only: true` in `Claude-Memory/pii-allowlist.yaml` MUST be redacted from READMEs, release notes, migration docs, or any commit subject. (Memory rule: "Never reference <PERSON-A> or <PERSON-B> by name in any public repo artifact.")
+- Named collaborators identified as `internal_only: true` in the private aliases registry MUST be redacted from READMEs, release notes, migration docs, or any commit subject. (Memory rule: never reference internal-only collaborators by name in any public repo artifact.)
 - Client names flagged `visibility: private` in the same allowlist are redacted the same way. Public mentions are fine only when the allowlist marks them `visibility: public`.
 
 Scrub failure closed: if the regex engine errors (malformed pattern, OOM on huge paste), the write is refused rather than proceeding with partial scrub.

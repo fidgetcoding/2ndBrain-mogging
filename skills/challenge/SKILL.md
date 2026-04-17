@@ -46,8 +46,8 @@ Parse the idea string into (a) a one-line proposition and (b) 3-6 keyword anchor
 ### 2. Scope the search
 
 If `--scope` given, restrict to that folder. Otherwise search the full vault. Always include:
-- `~/.claude/projects/-Users-nathandavidovich-Desktop-WORK-OBSIDIAN-2ndBrain/memory/MEMORY.md` (Claude-Memory auto-memory)
-- `~/.claude/projects/-Users-nathandavidovich-Desktop-WORK-OBSIDIAN-2ndBrain/memory/` individual `feedback_*.md` and `project_*.md` files
+- `~/.claude/projects/-2ndBrain/memory/MEMORY.md` (Claude-Memory auto-memory)
+- `~/.claude/projects/-2ndBrain/memory/` individual `feedback_*.md` and `project_*.md` files
 - `03-Concepts/` and `03-Permanent/` (refined positions)
 - `07-Projects/<scoped>/` (project-local decisions)
 
@@ -70,7 +70,7 @@ Every evidence fragment gets one of seven labels:
 | `COST_PATTERN` | Evidence Nathan consistently under/over-estimates cost/time/effort on similar work. |
 | `STAKEHOLDER_CONFLICT` | The idea involves someone (<PERSON-A>, <PERSON-C>, <PERSON-H>, Dad, <PERSON-D>, <PERSON-I>, <PERSON-F>) whose documented preferences push back. |
 | `DEPENDENCY_BROKEN` | The idea depends on something documented as broken/stalled (`google_workspace_mcp_oauth_broken`, `task-to-calendar API gap`, etc.). |
-| `SUPPORTS` | Past note agrees with the proposition. Still collect these — needed for the balance check. |
+| `SUPPORTS` | Past note agrees with the proposition. Still collect these — needed for the b<person-c>ce check. |
 | `IRRELEVANT` | Matched keyword but not meaningful. Drop from ranking. |
 
 ### 5. Rank
@@ -101,7 +101,7 @@ One-paragraph summary of the strongest counter-argument.
 ## Weak (flagged but thin)
 - [STAKEHOLDER_CONFLICT] ...
 
-## Supporting evidence (for balance)
+## Supporting evidence (for b<person-c>ce)
 - [SUPPORTS] ...
 
 ## Devil's advocate points (even if vault is silent)

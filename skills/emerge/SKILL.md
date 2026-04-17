@@ -50,7 +50,7 @@ Per file, extract:
 - **Entities**: capitalized multi-word strings, `[[wikilinks]]`, frontmatter `related:` list.
 - **Concepts**: noun phrases appearing ≥2 times or in H1/H2 headings.
 - **Tags**: frontmatter tags + inline `#tag` mentions.
-- **Actions**: verbs attached to project names (e.g. "shipped Morgen", "killed <PROJECT-A> Report").
+- **Actions**: verbs attached to project names (e.g. "shipped Morgen", "killed <project-a-report>").
 - **Sentiment markers**: Nathan's loaded language — "panic", "theater", "clean", "mogging", "janky", "ship-and-fix-forward", all caps emphasis.
 
 Signals are stored as `(file_path, signal_type, signal_value, weight)` tuples.
