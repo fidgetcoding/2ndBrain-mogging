@@ -1,6 +1,7 @@
 ---
 name: emerge
 description: Pattern-miner across recent vault activity. Scans files modified in the last N days, extracts signals, clusters them semantically, and names each cluster as a candidate concept — short, concrete, anti-jargon. Powers weekly vault review. Use when the user says /emerge, asks "what themes have been showing up lately", wants a weekly digest, or is looking for latent patterns they haven't named yet.
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash
 ---
 
 # /emerge — Pattern Mining Across Recent Activity
