@@ -40,7 +40,7 @@ Given a claim in your vault (either a specific note or a specific quoted passage
 
 ### `/emerge`
 
-Given a set of N notes (or a tag, or a folder), surface patterns that connect them. Output is a dated `EMERGE-<topic>.md` containing identified clusters, explicit contradictions, half-formed arguments visible across multiple notes, and questions the corpus is gest<person-i>ng at but not answering.
+Given a set of N notes (or a tag, or a folder), surface patterns that connect them. Output is a dated `EMERGE-<topic>.md` containing identified clusters, explicit contradictions, half-formed arguments visible across multiple notes, and questions the corpus is gesturing at but not answering.
 
 **Why it works:** humans are bad at holding N > 5 notes in working memory simultaneously. LLMs are strictly better at this kind of multi-document pattern recognition, which makes `/emerge` one of the few places where the LLM is doing cognitive work the human literally cannot do.
 

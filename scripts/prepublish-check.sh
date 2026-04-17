@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 ***REMOVED***
-# scripts/prepublish-check.sh — local sec<person-i>ty gate, run before every release.
+# scripts/prepublish-check.sh — local security gate, run before every release.
 # ----------------------------------------------------------------------------
 # Seven checks, fail-closed, in order:
 #   1. gitleaks detect (custom config, no-git mode)
@@ -98,9 +98,9 @@ else
 fi
 
 # ----------------------------------------------------------------------------
-# Step 4 — required sec<person-i>ty-gate files
+# Step 4 — required security-gate files
 # ----------------------------------------------------------------------------
-step 4 "required sec<person-i>ty-gate files present"
+step 4 "required security-gate files present"
 required_files=(
   ".gitleaks.toml"
   ".github/workflows/secret-scan.yml"
@@ -108,7 +108,7 @@ required_files=(
 for f in "${required_files[@]}"; do
   [[ -f "$f" ]] || fail "missing required file: $f"
 done
-ok "sec<person-i>ty-gate files present"
+ok "security-gate files present"
 
 # ----------------------------------------------------------------------------
 # Step 5 — .gitignore contains Claude-Memory

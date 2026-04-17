@@ -1,6 +1,6 @@
 # wiki-schema.md — canonical rules for 2ndBrain-mogging
 
-This file is the single source of truth for every skill in `skills/*/SKILL.md`. Any skill that writes, reads, or audits the vault must resolve its folder targets, frontmatter keys, link grammar, sec<person-i>ty posture, and git contract from here. If a skill contradicts this doc, the doc wins.
+This file is the single source of truth for every skill in `skills/*/SKILL.md`. Any skill that writes, reads, or audits the vault must resolve its folder targets, frontmatter keys, link grammar, security posture, and git contract from here. If a skill contradicts this doc, the doc wins.
 
 Downstream consumers (all required to reference this file):
 
@@ -48,7 +48,7 @@ These override every skill-local policy. A skill that skips one of these must be
 
 Graph density is the product. Each rule below exists to prevent an orphan.
 
-- **Wikilinks only.** Always `[[Note Name]]` or `[[Note Name|Alias]]`. Never raw vault paths (`02-Sources/2026-04-16-<person-i>.md`) in body text — Obsidian renders them but they break on rename.
+- **Wikilinks only.** Always `[[Note Name]]` or `[[Note Name|Alias]]`. Never raw vault paths (`02-Sources/2026-04-16-uri.md`) in body text — Obsidian renders them but they break on rename.
 - **Inbound + outbound minimum.** Every new concept page (anything written into `03-Concepts/`) needs at least one inbound wikilink from its source(s) AND at least one outbound wikilink to a `04-Index/` MOC. Zero-inbound or zero-outbound concept pages fail `/wiki audit` and get flagged in the nightly report.
 - **50/50 ambiguity.** If alias classification scores the top two candidates within 10% of each other, the content is ambiguous. Primary file is written to the higher-confidence target with full content. Stub file is written at the secondary target with `stub_of: "[[primary]]"` in frontmatter and a one-line body: `> See [[primary-basename]] — classification was 50/50. Resolved to primary on {{date}}.` Both files carry tag `#ambiguous-routing` so they can be reviewed via query. See §9 for the full rule.
 - **Dead-link handling.** When `/wiki heal` or any audit detects a wikilink target that does not resolve (file removed, renamed without update), the link is rewritten to `~~[[orphaned-target]]~~ <!-- dead: YYYY-MM-DD -->` — strike-through in Obsidian rendering plus an HTML comment carrying the detection date. The comment lets us diff history. Never remove the link itself without flagging it for human review — removal is a human-only action.
@@ -137,7 +137,7 @@ Glyphs:
 2. **Edits preserve 🆔 byte-for-byte.** A rewrite that changes or drops the UUID creates a duplicate task in Morgen and Notion that cannot be silently undone. The fix costs the operator 15+ minutes of manual deduping.
 3. **Missing UUID on a legacy task = mint + log.** If a skill touches a task line that lacks 🆔, it mints one AND appends a line to `Claude-Memory/task-uuid-mints.log` recording (file, line, uuid, timestamp). The mint is a side effect, so it must be auditable.
 
-## 6. Sec<person-i>ty scrub
+## 6. Security scrub
 
 Every write path — file body AND commit message — passes through this regex panel first. Matches are replaced in-place with `[REDACTED:<TYPE>]`. Matches in commit messages also cause a preview warning row so the user sees what got swapped out.
 

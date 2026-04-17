@@ -24,13 +24,13 @@
 # EXAMPLE: (?i)owner@example\.com
 
 # Full names (first-last variants come first so they match before first-name
-# alone). Use the non-capt<person-i>ng (?i) for case-insensitive.
+# alone). Use the non-capturing (?i) for case-insensitive.
 # EXAMPLE: (?i)example\s?firstname\s+example\s?lastname
 
 # First names — anything you don't want appearing in READMEs, migration
 # notes, release notes, commit messages, or any other public artifact.
 # EXAMPLE: (?i)\bexample_first_name_1\b
-# EXAMPLE: (?i)\bexample_first_name_2\b(?!\s+(t<person-i>ng|kay|watts))
+# EXAMPLE: (?i)\bexample_first_name_2\b(?!\s+(turing|kay|watts))
 
 # Private project / client codenames (hyphenated + spaced variants).
 # EXAMPLE: (?i)\bexample[-_ ]project[-_ ]name\b

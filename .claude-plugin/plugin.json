@@ -1,7 +1,7 @@
 {
   "$schema": "https://claude.ai/schemas/plugin.json",
   "name": "2ndbrain-mogging",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Obsidian vault automation for Claude Code. Save conversations, compile sources into a living wiki, audit the graph, challenge your own thinking. Amalgamation of Karpathy's LLM Wiki + Jens + eugeniu + AgriciDaniel + NicholasSpisak, hardened for operator vaults with live sync.",
   "author": {
     "name": "<ORG-A>",

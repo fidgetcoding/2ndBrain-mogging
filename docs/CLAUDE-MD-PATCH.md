@@ -1,6 +1,6 @@
 # CLAUDE.md Patch — 2ndBrain-mogging
 
-This document contains the **canonical text** that `2ndBrain-mogging` appends to a vault's `CLAUDE.md` d<person-i>ng install (or via `/aliases init`). Agent 1 of the `/rswarmmax` refactor swarm performs the actual append in Phase B10 — this file is the reference source of truth that agent reads from.
+This document contains the **canonical text** that `2ndBrain-mogging` appends to a vault's `CLAUDE.md` during install (or via `/aliases init`). Agent 1 of the `/rswarmmax` refactor swarm performs the actual append in Phase B10 — this file is the reference source of truth that agent reads from.
 
 ## Contract
 

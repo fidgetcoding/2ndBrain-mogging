@@ -44,7 +44,7 @@ paths = [
 ]
 
 # Extra regex allowlist — historical figures sharing a common first name
-# (e.g. "<PERSON-C>" shared by T<person-i>ng, Kay, Watts) can be excluded here.
+# (e.g. "<PERSON-C>" shared by Turing, Kay, Watts) can be excluded here.
 regexes = [
-  # '''(?i)\bexample_first_name_2\s+(t<person-i>ng|kay|watts)\b''',
+  # '''(?i)\bexample_first_name_2\s+(turing|kay|watts)\b''',
 ]

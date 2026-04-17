@@ -104,7 +104,7 @@
 - The reserved frontmatter slots for tier-3 bi-temporal facts (`asof:`, `seenat:`, `bi-temporal:`)
 - The migration runbook in `docs/MIGRATION.md`
 
-These are the load-bearing additions that justify shipping a new pack rather than config<person-i>ng one of the upstream sources. Everything else in this pack is a credited borrow.
+These are the load-bearing additions that justify shipping a new pack rather than configuring one of the upstream sources. Everything else in this pack is a credited borrow.
 
 ## License notes
 

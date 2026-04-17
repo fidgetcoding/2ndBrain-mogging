@@ -55,7 +55,7 @@ For each session that clears the `--since` filter and is not already in `backfil
    - `< 2,000 tokens` → **skip**. Signal density is too low to warrant a conversation note. Log as `skipped: tiny`.
    - `2,000–20,000 tokens` → **extract directly**. Feed the raw turns to the signal extractor without a summarization pass.
    - `> 20,000 tokens` → **chunked-summarize first**. Split at natural turn boundaries, summarize each chunk via Haiku (Tier 2), then feed the summarized transcript to the extractor.
-3. **Sec<person-i>ty scrub BEFORE summarization.** Always run the scrub pass on raw transcript text *before* any sub-model call. Never feed secrets to Haiku (or any external model), even transiently. See Sec<person-i>ty below.
+3. **Security scrub BEFORE summarization.** Always run the scrub pass on raw transcript text *before* any sub-model call. Never feed secrets to Haiku (or any external model), even transiently. See Security below.
 4. **Signal extraction.** Pull the same 8 signal types as `/save`:
    1. Decisions
    2. Tasks
@@ -105,7 +105,7 @@ Write this file after **every** session completes (success or error). On `--resu
 2. Print: `N sessions | M tokens | ~$X.XX estimated`.
 3. Read from stdin. Require literal `yes` to proceed. Any other input aborts.
 
-`--cost-cap` is checked *d<person-i>ng* the run before each chunked-summarize call. Sessions that would push cumulative cost over the cap are deferred — logged to state with `reason: "cost-cap deferred"` and surfaced in the run summary.
+`--cost-cap` is checked *during* the run before each chunked-summarize call. Sessions that would push cumulative cost over the cap are deferred — logged to state with `reason: "cost-cap deferred"` and surfaced in the run summary.
 
 ## Rate limit
 
@@ -166,7 +166,7 @@ related: [[<ORG-B>]]
 - 2026-04-16 18:05 · session-ghi789 · <ORG-E>/2026-04-10-marketing-engagement.md · chunked-summarize · 42k tokens · $0.018
 ```
 
-## Sec<person-i>ty
+## Security
 
 Run a regex scrub pass on every line **before** it leaves local context. Matches are replaced with `[REDACTED:<type>]`. Scrub list matches `/save`:
 
