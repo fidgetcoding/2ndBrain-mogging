@@ -71,6 +71,7 @@ Exit codes:
   21  --vault not a directory
   30  test failure
   40  jq merge failure
+  41  CLAUDE.md patch extraction failure
 USAGE
 }
 
@@ -359,6 +360,96 @@ link_claude_memory() {
   run ln -s "$CLAUDE_MEMORY_SRC" "$dest"
 }
 
+# ---- step 9.5: apply CLAUDE.md patch to vault -------------------------------
+#
+# Reads docs/CLAUDE-MD-PATCH.md in this repo and applies the canonical post-
+# mogging contract block to the vault's CLAUDE.md. Idempotent: re-running
+# replaces the existing marker block, never duplicates. Also migrates legacy
+# installs that used the pre-namespaced `<!-- mogging:* -->` markers by
+# stripping the old block and writing a fresh `<!-- 2ndbrain-mogging:* -->`
+# block in its place.
+#
+# Honors the 3-non-negotiables: backs up the existing CLAUDE.md to
+# $VAULT/Claude-Memory/backups/YYYY-MM-DD-HHMMSS/ before any write.
+
+apply_claude_md_patch() {
+  log "step 9.5: apply CLAUDE.md patch"
+  if [[ -z "$VAULT" ]]; then
+    vlog "vault not set — skipping CLAUDE.md patch"
+    return 0
+  fi
+
+  local patch_src="$REPO_ROOT/docs/CLAUDE-MD-PATCH.md"
+  local vault_claude="$VAULT/CLAUDE.md"
+
+  if [[ ! -f "$patch_src" ]]; then
+    warn "patch source missing: $patch_src — skipping"
+    return 0
+  fi
+
+  local patch_block working
+  patch_block="$(mktemp -t mogging-patch-block.XXXXXX)"
+  working="$(mktemp -t mogging-claude-working.XXXXXX)"
+
+  # Extract block (markers inclusive) from patch source. The patch file wraps
+  # the canonical block in a ```markdown fence; we only care about the lines
+  # between the start and end markers.
+  awk '
+    /^<!-- 2ndbrain-mogging:start -->$/ { on = 1 }
+    on { print }
+    /^<!-- 2ndbrain-mogging:end -->$/ { on = 0 }
+  ' "$patch_src" > "$patch_block"
+
+  if [[ ! -s "$patch_block" ]]; then
+    err "could not extract patch block from $patch_src (markers not found)"
+    rm -f "$patch_block" "$working"
+    exit 41
+  fi
+
+  if [[ -f "$vault_claude" ]]; then
+    # Backup per non-negotiable #1 (backup-before-mutation).
+    if [[ "$APPLY" -eq 1 ]]; then
+      local ts backup_dir
+      ts="$(date +%Y-%m-%d-%H%M%S)"
+      backup_dir="$VAULT/Claude-Memory/backups/$ts"
+      mkdir -p "$backup_dir"
+      cp -p "$vault_claude" "$backup_dir/CLAUDE.md.bak"
+      vlog "backed up CLAUDE.md to $backup_dir/CLAUDE.md.bak"
+    fi
+
+    # Strip any existing namespaced OR legacy marker block (inclusive), then
+    # drop trailing blank lines. Anything outside the markers is preserved
+    # byte-for-byte.
+    awk '
+      /^<!-- 2ndbrain-mogging:start -->$/ { skip = 1; next }
+      /^<!-- mogging:start -->$/          { skip = 1; next }
+      skip && /^<!-- 2ndbrain-mogging:end -->$/ { skip = 0; next }
+      skip && /^<!-- mogging:end -->$/          { skip = 0; next }
+      skip { next }
+      { lines[++n] = $0; if ($0 !~ /^[[:space:]]*$/) last = n }
+      END { for (i = 1; i <= last; i++) print lines[i] }
+    ' "$vault_claude" > "$working"
+  else
+    # No existing CLAUDE.md — create a minimal header so the patch has
+    # something to anchor below.
+    log "vault CLAUDE.md not found — creating with minimal header"
+    printf '# CLAUDE.md\n\nThis file provides guidance to Claude Code when working in this vault.\n' > "$working"
+  fi
+
+  # Append a single blank line, then the canonical patch block.
+  printf '\n' >> "$working"
+  cat "$patch_block" >> "$working"
+
+  if [[ "$APPLY" -eq 1 ]]; then
+    cp "$working" "$vault_claude"
+    log "CLAUDE.md patched: $vault_claude"
+  else
+    log "would patch $vault_claude (block: $(wc -l < "$patch_block" | tr -d ' ') lines between markers)"
+  fi
+
+  rm -f "$patch_block" "$working"
+}
+
 # ---- step 10: launchd plists ------------------------------------------------
 
 install_launchd() {
@@ -460,6 +551,7 @@ main() {
   symlink_dir "commands"
   symlink_dir "agents"
   link_claude_memory
+  apply_claude_md_patch
   install_launchd
   run_tests
   run_doctor
