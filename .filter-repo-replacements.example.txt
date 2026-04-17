@@ -1,0 +1,67 @@
+# .filter-repo-replacements.example.txt
+#
+# Example / template for the real `.filter-repo-replacements.txt` file used by
+# `git-filter-repo --replace-text` to scrub personal names and private
+# project names from the repo's git history before going public.
+#
+# The real file is git-ignored (see .gitignore) and lives only on the
+# operator's local machine. This example shows the format with fake names
+# so you can build your own replacements file if you fork this pack.
+#
+# ---------------------------------------------------------------------------
+# Format rules
+# ---------------------------------------------------------------------------
+#
+# - Each line is OLD==>NEW (exact string match, not regex).
+# - Comments start with `#`. Blank lines are ignored.
+# - More specific patterns must come BEFORE shorter, more general ones
+#   or they'll be shadowed by the shorter pattern.
+# - If a real name is a substring of a brand name you want to preserve
+#   (e.g. a first name that also appears inside a trademarked compound),
+#   add a self-preserving "Brand==>Brand" no-op line BEFORE the short
+#   pattern so the brand survives unchanged.
+# - Placeholders on the right-hand side should be stable across all files
+#   and documented in docs/placeholder-names.md.
+#
+# ---------------------------------------------------------------------------
+# Example entries (FAKE names — replace with your own)
+# ---------------------------------------------------------------------------
+
+# Full names first, so they match before the short forms below
+ExampleFirstname ExampleLastname==><PERSON-X>
+AnotherFirstname AnotherLastname==><PERSON-Y>
+
+# Self-preserving brand rule (protects a brand that starts with a first name
+# you're about to rewrite — e.g. if you're rewriting "Taylor" but want
+# "Taylor-Made" to stay intact, put the brand rule BEFORE the short rule).
+ExampleBrand-Compound==>ExampleBrand-Compound
+
+# Short forms (first name only, last name only). These match anything the
+# full-name line above didn't already catch.
+ExampleFirstname==><PERSON-X>
+ExampleLastname==><PERSON-X>
+AnotherFirstname==><PERSON-Y>
+AnotherLastname==><PERSON-Y>
+
+# Private project / codename
+ExampleProject==><PROJECT-X>
+ExampleProject Codename==><PROJECT-X>
+
+# ---------------------------------------------------------------------------
+# Usage
+# ---------------------------------------------------------------------------
+#
+# 1. Copy this file to `.filter-repo-replacements.txt` (git-ignored).
+# 2. Replace the example entries with your real mappings.
+# 3. Run:
+#
+#      git filter-repo --replace-text .filter-repo-replacements.txt --force
+#
+# 4. Force-push:
+#
+#      git push origin --force --all
+#      git push origin --force --tags
+#
+# 5. After the push succeeds, the real `.filter-repo-replacements.txt` can
+#    be deleted — the mapping should live only in your private
+#    `Claude-Memory/aliases.yaml`.

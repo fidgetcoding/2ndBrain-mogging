@@ -1,10 +1,12 @@
 ---
 name: aliases
-description: Bootstrap and maintain `Claude-Memory/aliases.yaml` — the canonical entity→project disambiguation file used by `/backfill`, `/save`, and `/tether` to route mentions to the right project folder. Handles people (<PERSON-C> vs <PERSON-B>, <PERSON-A>, <PERSON-D>, <PERSON-H>, <PERSON-E>, <PERSON-I>, <PERSON-F>), concepts ("tribecoding", "<PROJECT-C>", "<project-a>"), organizations, and alternate spellings. Never overwrites canonical without review.
+description: Bootstrap and maintain `Claude-Memory/aliases.yaml` — the canonical entity→project disambiguation file used by `/backfill`, `/save`, and `/tether` to route mentions to the right project folder. Handles people (<PERSON-C> vs <PERSON-B>, <PERSON-A>, <PERSON-D>, <PERSON-H>, <PERSON-E>, <PERSON-I>, <PERSON-F>), concepts ("tribecoding", "<PROJECT-C>", "<PROJECT-A>"), organizations, and alternate spellings. Never overwrites canonical without review.
 allowed-tools: Read, Write, Edit, Glob, Grep
 ---
 
 # aliases — entity disambiguation registry
+
+> All example names in this file are placeholders. The real-name mapping is private. See docs/placeholder-names.md.
 
 Downstream skills can only route transcripts to the correct project if they know that "<PERSON-C>" means <ORG-B>/<PROJECT-A> and "<PERSON-B>" is a different person entirely. This skill owns the registry that makes that call.
 
@@ -39,14 +41,14 @@ projects:
     aliases: ["<ORG-B>", "<ORG-B>"]
   <ORG-B>/<PROJECT-A>:
     path: 05-Projects/<ORG-B>/<PROJECT-A>
-    aliases: ["<project-a>", "<PROJECT-A>", "<project-a-colloquial>"]
+    aliases: ["<project-a-lower>", "<PROJECT-A>", "<project-a-colloquial>"]
   MMA/<PROJECT-B>:
     path: 05-Projects/MMA/<PROJECT-B>
-    aliases: ["<project-b>", "<project-b> jiu jitsu", "<PROJECT-C>", "<project-c>", "<PERSON-H>'s funnel"]
+    aliases: ["<project-b-short>", "<project-b-lower>", "<PROJECT-C>", "<project-c-amp>", "<PERSON-H>'s funnel"]
   # ...one entry per 05-Projects folder
 
 people:
-  person_alan_<ORG-B>:
+  person_a_<ORG-B>:
     canonical: <PERSON-C>
     project: <ORG-B>/<PROJECT-A>
     aliases: ["<PERSON-C>"]
@@ -58,36 +60,36 @@ people:
     aliases: ["<PERSON-B>"]
     disambig_note: "<PERSON-B> (with two L's) — distinct from <PERSON-C>. Public_safe=false (see feedback_no_public_placeholders)."
     public_safe: false
-  person_a:
+  person_a_placeholder:
     canonical: <PERSON-A>
     project: MISC-CLAUDE
     aliases: ["<PERSON-A>"]
     public_safe: false
-  person_d:
+  person_d_placeholder:
     canonical: <PERSON-D>
     project: <ORG-B>
     aliases: ["<PERSON-D>"]
     public_safe: true
-  person_h_velazquez:
+  person_h_placeholder:
     canonical: <PERSON-H>
     project: MMA/<PROJECT-B>
-    aliases: ["<PERSON-H>", "<PERSON-H>", "<person-h> v"]
+    aliases: ["<PERSON-H>", "<person-h-short>"]
     public_safe: true
-  person_john_<PERSON-E>:
+  person_e_placeholder:
     canonical: <PERSON-E>
     project: MORGEN-MCP
-    aliases: ["John", "<PERSON-E>", "JM@morgen"]
+    aliases: ["<PERSON-E>", "JM@morgen"]
     public_safe: true
-  person_i:
+  person_i_placeholder:
     canonical: <PERSON-I>
     project: <ORG-C>/content
     aliases: ["<PERSON-I>"]
     disambig_note: "<PERSON-I> — NFX AI Bigger Than SaaS article author. Tied to SaaS Death Video idea."
     public_safe: true
-  person_f_perez:
+  person_f_placeholder:
     canonical: <PERSON-F>
     project: <ORG-D>
-    aliases: ["<PERSON-F>", "<PERSON-F>"]
+    aliases: ["<PERSON-F>"]
     public_safe: true
 
 concepts:
@@ -98,11 +100,11 @@ concepts:
   concept_project_c:
     canonical: <PROJECT-C>
     project: MMA/<PROJECT-B>
-    aliases: ["<PROJECT-C>", "<project-c>", "c&w funnel"]
+    aliases: ["<project-c-lower>", "<project-c-amp>", "c&w funnel"]
   concept_project_a:
     canonical: <PROJECT-A>
     project: <ORG-B>/<PROJECT-A>
-    aliases: ["<project-a>", "<project-a-colloquial>"]
+    aliases: ["<project-a-lower>", "<project-a-colloquial>"]
   concept_fidgetcoding:
     canonical: <ORG-C>
     project: <ORG-C>
@@ -130,7 +132,7 @@ aliases:
 
 Two distinct people. Never collapse.
 
-- **<PERSON-C>** (one L) → `person_alan_<ORG-B>` → <ORG-B>/<PROJECT-A>. the operator's collaborator on the <PROJECT-A> pitch.
+- **<PERSON-C>** (one L) → `person_a_<ORG-B>` → <ORG-B>/<PROJECT-A>. the operator's collaborator on the <PROJECT-A> pitch.
 - **<PERSON-B>** (two L's) → `person_b_unknown` → project unknown (TBD).
 
 **Rules:**

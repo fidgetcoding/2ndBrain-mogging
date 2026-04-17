@@ -6,7 +6,7 @@ If you are Claude Code, read `CLAUDE.md` instead — this file will not be loade
 
 ## Vault Purpose
 
-This vault is a personal knowledge management system (PKM) — a "Second Brain" built on Zettelkasten principles for capturing, connecting, and retrieving knowledge. Notes live in an Obsidian-compatible folder structure. The file format is plain Markdown with YAML frontmatter and `[[wikilinks]]`. The goal is graph density: every note should connect to at least one other note.
+This vault is a personal knowledge management system (PKM) — a "Second Brain" built on Zettelkasten principles for capt<person-i>ng, connecting, and retrieving knowledge. Notes live in an Obsidian-compatible folder structure. The file format is plain Markdown with YAML frontmatter and `[[wikilinks]]`. The goal is graph density: every note should connect to at least one other note.
 
 ## Folder Structure (7 folders)
 
