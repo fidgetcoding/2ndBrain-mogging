@@ -12,7 +12,7 @@
 # Format rules
 # ---------------------------------------------------------------------------
 #
-# - Each line is OLD==>NEW (exact string match, not regex).
+# - Each line is OLD==>NEW (exact LITERAL string match — see warning below).
 # - Comments start with `#`. Blank lines are ignored.
 # - More specific patterns must come BEFORE shorter, more general ones
 #   or they'll be shadowed by the shorter pattern.
@@ -22,6 +22,22 @@
 #   pattern so the brand survives unchanged.
 # - Placeholders on the right-hand side should be stable across all files
 #   and documented in docs/placeholder-names.md.
+#
+# ---------------------------------------------------------------------------
+# WARNING — do NOT use `regex:\bNAME\b==><replacement>` rules
+# ---------------------------------------------------------------------------
+#
+# v0.1.1 of this pack attempted word-boundary regex rules to scrub lowercase
+# short names (e.g. `regex:\buri\b==><person-i>`). The `regex:` prefix was
+# silently ignored by the installed git-filter-repo version, and the scrub
+# degenerated into a literal substring replacement of `\buri\b`, which in
+# turn mangled every English word containing `uri` (`security`, `during`,
+# `heuristics`, `buried`, `configuring`, `gesturing`, etc.).
+#
+# Defensive rule: use ONLY literal matches in this file. For short names
+# that coincide with English word fragments, rely on the capitalized form
+# (`<PERSON-I>==><PERSON-I>`) and accept that lowercase standalone prose mentions
+# will not be scrubbed. That is far safer than corrupting the codebase.
 #
 # ---------------------------------------------------------------------------
 # Example entries (FAKE names — replace with your own)

@@ -24,7 +24,7 @@ Create `04-Index/canvases/{name}.canvas` with an empty `{ "nodes": [], "edges": 
 
 ### /canvas add image `<path-or-url>`
 
-- If `<path>` is an `https://` URL, download to `06-Assets/canvas-imports/{slug}-{ts}.{ext}` (scheme whitelist, 5 MB cap, 30 s timeout).
+- If `<path>` is an `https://` URL, download to `04-Index/canvases/.imports/{slug}-{ts}.{ext}` (scheme whitelist, 5 MB cap, 30 s timeout). The pre-mogging `06-Assets/` folder was killed on 2026-04-16 in favor of Obsidian's default attachment handling — canvas-scoped downloads now sit next to the canvas files themselves.
 - If `<path>` is a local vault-relative path, verify it resolves inside the vault (reject directory traversal) and reference it directly — no copy needed.
 - Read image dimensions; size the node aspect-ratio-aware, capped at 600 × 800. Small images (<200 px side) get upscaled to 300 px minimum so they're readable.
 - Auto-layout: append at `max_x + 40` of the target zone (default: active canvas root).

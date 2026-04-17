@@ -21,7 +21,7 @@ Do NOT auto-run `/emerge` inside another skill's pipeline except the scheduled a
 ```
 /emerge
 /emerge --days 14
-/emerge --days 7 --scope 07-Projects/<ORG-C> --min-cluster 2
+/emerge --days 7 --scope 05-Projects/<ORG-C> --min-cluster 2
 /emerge --days 7 --audit
 /emerge --promote cluster-3
 ```
@@ -31,7 +31,7 @@ Do NOT auto-run `/emerge` inside another skill's pipeline except the scheduled a
 | Flag | Default | Behavior |
 |---|---|---|
 | `--days N` | 30 | Only consider files modified in the last N days. |
-| `--scope <path>` | whole vault | Restrict to a single folder (e.g. `07-Projects/<ORG-E>`). |
+| `--scope <path>` | whole vault | Restrict to a single folder (e.g. `05-Projects/<ORG-E>`). |
 | `--min-cluster N` | 3 | Minimum file count for a cluster to be reported. Below this, treated as noise. |
 | `--audit` | off | Non-interactive mode for the scheduled weekly agent. Writes directly to the reports folder, no prompts. |
 | `--promote <pattern-id>` | — | Skip mining. Take a previously-identified cluster and promote it to a full `03-Concepts/<slug>.md` note. |
@@ -40,9 +40,9 @@ Do NOT auto-run `/emerge` inside another skill's pipeline except the scheduled a
 
 ### 1. Collect
 
-Glob all vault files modified in the time window. Exclude `06-Assets/`, `node_modules/`, `.obsidian/`, `.git/`, `.claude/`, `.agents/`. **Cap at 500 files.** If over cap, sample by:
+Glob all vault files modified in the time window. Exclude `node_modules/`, `.obsidian/`, `.git/`, `.claude/`, `.agents/`. **Cap at 500 files.** If over cap, sample by:
 - Recency (newer = higher weight)
-- Project diversity (one `07-Projects/<ORG-C>/content/` note ≠ ten of them — cap per-folder contribution)
+- Project diversity (one `05-Projects/<ORG-C>/content/` note ≠ ten of them — cap per-folder contribution)
 
 ### 2. Extract signals
 
@@ -122,7 +122,7 @@ Recency: median 4 days ago
 
 ### 7. Cross-reference existing concepts
 
-Before emitting a cluster, check `03-Concepts/` and `03-Permanent/` for overlapping notes. If a proposed pattern overlaps ≥70% with an existing concept:
+Before emitting a cluster, check `03-Concepts/` for overlapping notes (the pre-mogging `03-Permanent/` folder was collapsed into `03-Concepts/` on 2026-04-16). If a proposed pattern overlaps ≥70% with an existing concept:
 - Do NOT propose a new note.
 - Instead, label the cluster `[MERGE-CANDIDATE]` and suggest updating the existing note with the new sources.
 

@@ -144,7 +144,7 @@ Mandatory for every WebFetch call — no exceptions:
 
 ## Commit Hygiene
 
-When a vault sync commits `/autoresearch` output, the commit message MUST start with `[bot:autoresearch]`. This matches the `08-Tasks/` sync filter and prevents W1 from re-ingesting research runs as tasks.
+When a vault sync commits `/autoresearch` output, the commit message MUST start with `[bot:autoresearch]`. This matches the `06-Tasks/` sync filter and prevents W1 from re-ingesting research runs as tasks.
 
 ## Failure Modes
 

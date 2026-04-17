@@ -130,7 +130,7 @@ Source pages (`02-Sources/`) are strictly evidence. No interpretation, no opinio
 <optional: bullet dump of other notable quotes or data points>
 ```
 
-Interpretation, synthesis, and the operator-voice live in concept pages (`03-Concepts/`) and permanent notes (`03-Permanent/`). Source pages are the audit trail.
+Interpretation, synthesis, and the operator-voice live in concept pages (`03-Concepts/`). Source pages are the audit trail. (The pre-mogging `03-Permanent/` folder was collapsed into `03-Concepts/` during the 2026-04-16 refactor.)
 
 ### 3.3 Concept page updates (prefer update)
 
@@ -171,7 +171,7 @@ AUDIT never writes except to a timestamped report. It scans:
 Use `Glob` to enumerate files. Use `Grep` for wikilink/frontmatter extraction (multiline where needed for frontmatter). Do not instantiate an LLM call for any of the above — the detectors are deterministic regex + set-arithmetic on the link graph.
 
 Build two in-memory sets:
-- `pages = { basename → path, frontmatter, wikilinks_out }` for everything under `02-Sources/`, `03-Concepts/`, `03-Permanent/`, `04-Index/`, `04-MOC/`.
+- `pages = { basename → path, frontmatter, wikilinks_out }` for everything under `02-Sources/`, `03-Concepts/`, `04-Index/`.
 - `inbound = { basename → [paths that link to it] }` via inversion.
 
 ### 4.2 Output
@@ -300,7 +300,7 @@ FIND is semantic retrieval with transparent reasoning.
 5. **Offer to save.** Print:
    ```
    Save this synthesis as a permanent note? (y/n)
-   Default path: 03-Permanent/synth-<slug>-2026-04-16.md
+   Default path: 03-Concepts/synth-<slug>-2026-04-16.md
    ```
    If `y`, hand off to `/save` branch 3 (dictated note, type=permanent) with the synthesis pre-filled.
 
