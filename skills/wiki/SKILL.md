@@ -1,6 +1,6 @@
 ---
 name: wiki
-description: Add, audit, heal, and find across the 2ndBrain Obsidian vault. Unifies the old /cingest + /clint flows into one skill with four branches — ADD ingests sources (URL/file/paste/YouTube/PDF) into the 02-Sources → 03-Concepts → 04-Index pipeline with discuss-before-write; AUDIT is read-only integrity scan; HEAL applies safe repairs on a dry-run branch; FIND is semantic retrieval with wikilink-cited synthesis. Never writes owner:human files, never touches 05-Projects/*/index or 06-Tasks/.
+description: Add, audit, heal, and find across the 2ndBrain Obsidian vault. Single skill with four branches — ADD ingests sources (URL/file/paste/YouTube/PDF) into the 02-Sources → 03-Concepts → 04-Index pipeline with discuss-before-write; AUDIT is read-only integrity scan; HEAL applies safe repairs on a dry-run branch; FIND is semantic retrieval with wikilink-cited synthesis. Never writes owner:human files, never touches 05-Projects/*/index or 06-Tasks/.
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash
 ---
 

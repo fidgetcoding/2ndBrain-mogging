@@ -124,7 +124,7 @@ preflight() {
   command -v osascript >/dev/null 2>&1 || { err "missing: osascript"; exit 12; }
 
   local raw major minor
-  raw="$(claude --version 2>/dev/null | awk '{print $NF}' | head -n1 | tr -d '[:space:]')"
+  raw="$(claude --version 2>/dev/null | head -n1 | awk '{print $1}' | tr -d '[:space:]')"
   if [[ -z "$raw" ]]; then
     err "could not determine claude version"
     exit 12
@@ -196,7 +196,7 @@ merge_stop_hook() {
       {
         "hooks": [
           { "type": "command",
-            "command": "$REPO_ROOT/hooks/stop-hook.sh",
+            "command": "$REPO_ROOT/hooks/stop-save.sh",
             "timeout": 60 }
         ]
       }
@@ -216,11 +216,22 @@ JSON
 
   # Detect existing Stop hook (count only — NEVER print contents)
   local existing_stop_count=0
+  local ours_already_present=0
   if [[ -f "$SETTINGS_PATH" ]]; then
     existing_stop_count="$(jq '(.hooks.Stop // []) | length' "$SETTINGS_PATH" 2>/dev/null || echo 0)"
+    # Idempotency guard: detect if our own hook is already present by path fingerprint.
+    if jq -e --arg p "2ndBrain-mogging/hooks/stop-" '
+          (.hooks.Stop // []) | map(.hooks // []) | add | map(.command // "") | any(contains($p))
+        ' "$SETTINGS_PATH" >/dev/null 2>&1; then
+      ours_already_present=1
+    fi
   fi
 
   local merge_mode="append"
+  if (( ours_already_present == 1 )) && [[ "$MERGE_STOP" -ne 1 ]]; then
+    log "our Stop hook already present in settings.json — skipping merge (pass --merge-stop to force replace)"
+    return 0
+  fi
   if (( existing_stop_count > 0 )) && [[ "$MERGE_STOP" -eq 1 ]]; then
     merge_mode="replace"
   elif (( existing_stop_count > 0 )); then
