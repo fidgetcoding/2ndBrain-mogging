@@ -8,7 +8,7 @@ allowed-tools: Read, Write, Edit, Glob, Grep, Bash
 
 Shared schema: see `../references/wiki-schema.md` (source of truth for frontmatter keys, folder roles, and linking grammar used by both `save` and `wiki`).
 
-`save` is the single canonical entry point for "commit this conversation (or this slice of it, or this thing I just dictated) to the vault." It replaces every ad-hoc "just append to Inbox" habit. It is classification-first, preview-before-write, and append-only toward existing notes (never silent overwrite).
+`save` is the single canonical entry point for "commit this conversation (or this slice of it, or this thing I just dictated) to the vault." It replaces every ad-hoc "just append to Inbox" habit. It is classification-first, preview-before-write, and append-only toward existing notes — never overwrite an existing file without showing the diff and getting explicit approval.
 
 ## 1. Entry prompt
 
@@ -59,7 +59,7 @@ If the top two candidates score within 10% of each other, the content is AMBIGUO
    ```
 3. Call out the stub in the dry-run preview so the user can flip the decision before `y`.
 
-This prevents two failure modes at once: silent misfiling (stub always gets the breadcrumb) and lossy routing (user can override with one keystroke).
+This prevents two failure modes at once: unflagged misfiling (the stub breadcrumb always shows where content went) and lossy routing (user can flip the decision with one keystroke).
 
 ## 3. Dry-run preview (mandatory, all branches)
 

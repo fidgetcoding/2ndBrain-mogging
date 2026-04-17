@@ -323,7 +323,7 @@ A critical FIND rule: the skill MUST NOT emit a `[[wikilink]]` to a page that is
 | HEAL branch has unmerged predecessor                   | `git branch --list wiki-heal/*`          | Refuse to create a new HEAL branch until the old one is merged or deleted. |
 | AUDIT on a vault > 10k pages                           | Page count                                | Warn about runtime; offer to scope to `03-Concepts/` only by default.    |
 | Source page write collides with an existing SRC file   | `Glob` match on slug                      | Append `-v2`, `-v3`, etc., and record the collision in log.              |
-| Dead link has a HEAL comment from > 30 days ago        | Regex on HTML comments                   | Escalate in next AUDIT as "long-unresolved"; do NOT auto-delete the link.|
+| Dead link has a HEAL comment from > 30 days ago        | Regex on HTML comments                   | Escalate in next AUDIT as "long-unresolved"; flag for human review. Never remove the link without explicit human approval.|
 
 ## 8. Non-goals (explicitly out of scope)
 
