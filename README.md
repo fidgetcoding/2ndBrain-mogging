@@ -75,7 +75,7 @@ These skills are auto-namespaced under the `2ndbrain-mogging` plugin. Both `/sav
   log.md              # Append-only session log.
 ```
 
-This is the post-mogging 7-folder layout (canonical as of 2026-04-16). If your vault uses a different numbering scheme or retains legacy folders (`00-Inbox/`, `01-Fleeting/`, `05-Templates/`, `06-Assets/`), `Claude-Memory/aliases.yaml` can remap and the skills will leave unknown top-level folders untouched.
+This is the post-mogging 7-folder layout (canonical as of 2026-04-16). The Post-Mogging Vault Contract explicitly retires the legacy folders (`00-Inbox/`, `01-Fleeting/`, `05-Templates/`, `06-Assets/`) — the pack does not run against them. `Claude-Memory/aliases.yaml` handles entity-name remapping (person → project, alias → canonical handle) only; it is not a folder-structure compatibility layer. Vaults still on the legacy scheme need to migrate to the 7-folder layout before installing.
 
 ## The four regimes
 
@@ -83,10 +83,10 @@ Every note in the vault is owned by exactly one regime. The skill knows which re
 
 | Regime | Who writes it | What it optimizes for | Example |
 |---|---|---|---|
-| **HUMAN** | You, hand-edited | Voice, nuance, trust | `03-Permanent/*.md`, poems, essays, project briefs |
-| **PROJECT** | You + agents, negotiated | Correctness + currency | `07-Projects/**/index.md`, `08-Tasks/TASKS-*.md` |
+| **HUMAN** | You, hand-edited | Voice, nuance, trust | `03-Concepts/*.md`, poems, essays, project briefs |
+| **PROJECT** | You + agents, negotiated | Correctness + currency | `05-Projects/**/index.md`, `06-Tasks/TASKS-*.md` |
 | **SYNC** | A bot, round-trip | Fidelity to an external system | Morgen task mirrors, GitHub issue shadows, calendar pins |
-| **LLM-COMPILED** | The plugin, re-derivable | Freshness, coverage, no-loss | `03-Permanent/wiki-*.md` re-compiled from Sources |
+| **LLM-COMPILED** | The plugin, re-derivable | Freshness, coverage, no-loss | `03-Concepts/wiki-*.md` re-compiled from Sources |
 
 A HUMAN note is never silently rewritten. A PROJECT note is diffed and proposed. A SYNC note is never touched outside its sync pipeline (the plugin will refuse). An LLM-COMPILED note is regenerated idempotently on demand.
 
@@ -96,10 +96,10 @@ Four launchd jobs run on your machine, invoking the plugin headlessly. Delete an
 
 | Agent | When | What it does |
 |---|---|---|
-| **morning** | 07:00 local | Scans yesterday's transcripts in `~/.claude/projects/`, surfaces anything worth `/save`-ing that you skipped. Does not write — only reports. |
-| **nightly** | 23:30 local | `/tether` audit + `/connect` suggestions. Writes to `00-Inbox/NIGHTLY-<date>.md`. |
-| **weekly** | Sunday 18:00 | `/emerge` pass across the full `03-Permanent/` graph. One-page digest. |
-| **health** | every 6h | Sanity check: broken wikilinks, orphan files, missing frontmatter, stale MOCs. Writes to `00-Inbox/HEALTH-<date>.md`. |
+| **morning** | 08:00 local, daily | Pulls today's Morgen events, surfaces overdue + today tasks, primes `Claude-Memory/hot.md`. Writes to `01-Conversations/VAULT/reports/daily-YYYY-MM-DD.md`. |
+| **nightly** | 22:00 local, daily | `/wiki audit` scoped to `02-Sources/`, `03-Concepts/`, `04-Index/` — audit-only, no writes to those folders. Writes to `01-Conversations/VAULT/reports/audit-YYYY-MM-DD.md`. |
+| **weekly** | Friday 18:00 local | `/emerge --days 7 --audit` — new concepts, killed ideas, contradictions, 7-day audit trend. Writes to `01-Conversations/VAULT/reports/weekly-YYYY-WW.md`. |
+| **health** | Sunday 21:00 local | Four gates: symlink resolution, Obsidian plugin presence, n8n sync freshness, Morgen↔Obsidian task-count parity. Writes to `01-Conversations/VAULT/reports/health-YYYY-MM-DD.md`. |
 
 Every scheduled write is commit-prefixed `[bot:<agent>]` so your n8n sync pipelines know to skip it.
 

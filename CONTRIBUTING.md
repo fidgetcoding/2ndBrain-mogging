@@ -14,7 +14,7 @@ Thanks for considering a contribution. This repo is small, opinionated, and inte
 
 **No breaking changes without a major version bump.** Anything that changes a frontmatter key, a folder role, a command name, or the `[bot:*]` commit prefix convention is a breaking change. Breaking changes require the version in `.claude-plugin/plugin.json` to go from `0.x.y` to `1.0.0` (or from `1.x.y` to `2.0.0`) and an entry in `CHANGELOG.md` under a `### Breaking` heading. We do not ship breaking changes silently.
 
-**Every PR runs the full test harness.** From the repo root: `bash tests/run-all.sh`. The harness creates a known-state vault fixture in a temp directory, runs every skill against it, and diffs the output against expected-state files in `tests/expected/`. If your change modifies output, update the expected files in the same PR.
+**Every PR runs the full test harness.** From the repo root: `bash tests/run_all.sh`. The harness creates a known-state vault fixture in a temp directory, runs every skill against it, and diffs the output against expected-state files in `tests/expected/`. If your change modifies output, update the expected files in the same PR.
 
 **Direct push to `main` is the maintainer default, not the contributor default.** This repo lives under `<ORG-A>` where maintainers push directly to `main` by policy. Contributor PRs are still required to target `main` through review. The direct-push policy does not mean "anyone can push" — it means "once merged, the change is live, no staging branch."
 

@@ -149,7 +149,7 @@ Two distinct people. Never collapse.
 1. **Folder scan of `05-Projects/`.** Every direct child folder becomes an entry in `projects:`. Sub-project folders (`<ORG-B>/<PROJECT-A>`, `MMA/<PROJECT-B>`) get their own entries.
 2. **Memory file grep.** Walk `~/.claude/projects/**/memory/MEMORY.md` and the project-specific memory files referenced there. Extract canonical IDs (`project_*`, `person_*`, `user_*`, `concept_*`).
 3. **Proper-noun scan of the vault.** Run a capitalized-word frequency analysis across all `.md` files. Candidates with ≥ 3 mentions get surfaced as person/concept proposals.
-4. **Task file `@name` mentions.** `Grep` `08-Tasks/**` for `@Name` patterns — Obsidian Tasks assignee mentions.
+4. **Task file `@name` mentions.** `Grep` `06-Tasks/**` for `@Name` patterns — Obsidian Tasks assignee mentions.
 5. **Frontmatter `related:` arrays.** Every `related: [[X]]` is evidence that `X` is a canonical thing. Harvest the referenced targets.
 
 Bootstrap never writes directly to `aliases.yaml` if one exists. It always writes to `Claude-Memory/aliases-pending.md` for review.

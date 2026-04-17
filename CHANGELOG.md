@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.3] — 2026-04-17
+
+### Fixed — post-mogging contract sync across skills, docs, schema
+
+15-agent /fswarmmax fix swarm addressed all known pre-mogging folder drift in skill runtime paths, README tables, migration docs, and the CLAUDE-MD-PATCH template that gets appended to user vaults at install. Before this release, the plugin documented the post-mogging 7-folder layout in prose while still carrying pre-mogging destinations (`07-Projects/`, `08-Tasks/`, `02-Literature/`, `03-Permanent/`, `00-Inbox/`, `01-Fleeting/`, `06-Assets/`) throughout skill specs — meaning `/save`, `/wiki`, `/challenge`, `/emerge`, and siblings could route writes to folders the contract had already retired.
+
+- **`skills/{aliases,autoresearch,backfill,canvas,challenge,connect,emerge,save,wiki}/SKILL.md` + `references/wiki-schema.md`:** 31 of 49 pre-mogging folder references updated to post-mogging targets (historical prose preserved where it describes the rename itself). Every runtime destination, routing rule, and example path now resolves against `01-Conversations/` / `02-Sources/` / `03-Concepts/` / `04-Index/` / `05-Projects/` / `06-Tasks/` / `Claude-Memory/`.
+- **`docs/CLAUDE-MD-PATCH.md`:** full rewrite (147 → 192 lines). This is the file appended to user vaults' CLAUDE.md at install time — previous versions installed stale pre-mogging contract into new vaults. Marker block renamed from `<!-- mogging:* -->` to `<!-- 2ndbrain-mogging:* -->` for namespace clarity. Now carries the canonical 7-folder table, killed-folders callout, grandfathered-type mapping (literature→source, permanent→concept, moc→index, fleeting→inbox-residue), 10 skills list, 4 scheduled agents with correct times (morning 8am, nightly 10pm, weekly Fri 6pm, health Sun 9pm), 3 non-negotiables, bot-prefix commits table, and 9 hard rules.
+- **`README.md`:** regime-ownership table updated (HUMAN → `03-Concepts/`, PROJECT → `05-Projects/` + `06-Tasks/`, LLM-COMPILED → `03-Concepts/wiki-*.md`). Scheduled-agents table fully rewritten to match shipped plists + agent-spec write paths (`01-Conversations/VAULT/reports/*`). Backward-compat claim about killed folders inverted — `aliases.yaml` remaps entity names only, not folder structures.
+- **`MIGRATION.md`:** folder-numbering callout rewritten to the post-mogging 7-folder scheme with pointer to `docs/MIGRATION.md` for pre-mogging → post-mogging migration runbook. `/aliases init` walk target corrected `07-Projects/` → `05-Projects/`.
+- **`CONTRIBUTING.md`:** test harness path typo `tests/run-all.sh` → `tests/run_all.sh` (actual filename uses underscore).
+
+### Changed — regex hardening for PII scrub
+
+- **`.filter-repo-replacements.example.txt`:** added explicit WARNING section documenting the v0.1.1 substring-bleed regression mode. Future forks get a prominent callout: `regex:\bNAME\b` word-boundary patterns are NOT safe with all `git-filter-repo` versions — use capitalized literal rules instead. Documents the exact corruption signature (`security` → `sec<person-i>ty`, etc.) so the mistake cannot be innocently reintroduced.
+
+### Known gaps (v0.1.3)
+
+- `install.sh` does not currently consume `docs/CLAUDE-MD-PATCH.md` — the file is a reference template not yet wired into the live installer. Wiring the append step is tracked as a follow-up.
+
 ## [0.1.2] — 2026-04-17
 
 ### Fixed

@@ -27,7 +27,7 @@ The vault follows the operator's stripped operator layout. The plugin treats eac
 | `02-Sources/` | Source-of-truth notes for external content (articles, videos, transcripts, emails) | `save` (branch 2 `--source`), `autoresearch` | `wiki` (heal only) | Each file must carry `source_url` + `source_type` + `captured` in frontmatter. Body is summary; raw fetched text lives in a `> [!source]` callout or a fenced block. |
 | `03-Concepts/` | Refined atomic concept notes | `wiki` | `save` (branch 3, type `p`), `emerge` | One concept per file. Must have ≥1 inbound from a `02-Sources/` note and ≥1 outbound to `04-Index/`. `needs_review: true` on first write; promoted by `wiki` once it has 3+ inbound links. |
 | `04-Index/` | Maps of content (MOCs), hub pages, topic indexes | `wiki`, `tether` | `emerge` (weekly only) | Never append freeform text — only link lists + terse one-liners. Must list every concept in its topic cluster; `tether` fails the graph audit if an `03-Concepts/` note has no MOC entry. |
-| `05-Projects/` | Project hubs mirroring Claude Projects | `save` (branches 1–3), `tether` | `wiki` (heal only) | Each project folder has an index note where filename matches folder name (`FOO/FOO.md`, never `FOO-Index.md`). Bidirectional links up to `04-Index/MOC-Projects.md` are mandatory. |
+| `05-Projects/` | Project hubs mirroring Claude Projects | `save` (branches 1–3), `tether` | `wiki` (heal only) | Each project folder has an index note where filename matches folder name (`FOO/FOO.md`, never `FOO-Index.md`). Bidirectional links up to `04-Index/Projects-Index.md` are mandatory. |
 | `06-Tasks/` | Obsidian Tasks plugin files + inline tasks | `save` (UUID-preserving edits only) | none | `/wiki` and `/autoresearch` are FORBIDDEN from writing here. `/save` is edit-safe only with strict UUID preservation (§5). No agent writes here. |
 | `Claude-Memory/` (vault root) | Plugin working state: aliases, ADRs, manifests, hot context | `aliases`, `save` (ADR branch + backfill manifest), `emerge` (hot.md) | `agents/morning` (hot.md prime) | Not user-facing notes — treat as config. `aliases.yaml` is the canonical alias source; `adr/` holds ADRs; `backfill-manifest.jsonl` is append-only. |
 | `.obsidian/` (root sidecar) | Obsidian app config | none (user-owned) | none | Forbidden path (§8). |
@@ -42,7 +42,7 @@ These override every skill-local policy. A skill that skips one of these must be
 
 2. **Stop-hook-jq-merge.** The `Stop` hook payload MUST be merged into existing session state using `jq --slurp 'add'` semantics, never naive concatenation. Raw string append corrupts `Claude-Memory/sessions/<id>.json` silently and breaks `/save --backfill --resume`. If `jq` is unavailable on the system path, the hook prints a WARN and no-ops rather than writing partial state.
 
-3. **n8n-path-filter-update.** Any skill that adds a new vault subtree (new top-level folder, new `05-Projects/<ORG>/<repo>/` with externally-synced tasks) MUST also update the n8n W1 path filter so the new subtree is ingested. The canonical path filter lives in `07-Projects/<ORG-A>/n8n-workflows/W1-paths.yaml` in the main vault. If that file is inaccessible (no symlink, no vault mounted), the skill prints a TODO row in its report and continues — it does not silently create untracked subtrees.
+3. **n8n-path-filter-update.** Any skill that adds a new vault subtree (new top-level folder, new `05-Projects/<ORG>/<repo>/` with externally-synced tasks) MUST also update the n8n W1 path filter so the new subtree is ingested. The canonical path filter lives in `05-Projects/<ORG-A>/n8n-workflows/W1-paths.yaml` in the main vault. If that file is inaccessible (no symlink, no vault mounted), the skill prints a TODO row in its report and continues — it does not silently create untracked subtrees.
 
 ## 3. Linking rules
 
@@ -53,7 +53,7 @@ Graph density is the product. Each rule below exists to prevent an orphan.
 - **50/50 ambiguity.** If alias classification scores the top two candidates within 10% of each other, the content is ambiguous. Primary file is written to the higher-confidence target with full content. Stub file is written at the secondary target with `stub_of: "[[primary]]"` in frontmatter and a one-line body: `> See [[primary-basename]] — classification was 50/50. Resolved to primary on {{date}}.` Both files carry tag `#ambiguous-routing` so they can be reviewed via query. See §9 for the full rule.
 - **Dead-link handling.** When `/wiki heal` or any audit detects a wikilink target that does not resolve (file removed, renamed without update), the link is rewritten to `~~[[orphaned-target]]~~ <!-- dead: YYYY-MM-DD -->` — strike-through in Obsidian rendering plus an HTML comment carrying the detection date. The comment lets us diff history. Never remove the link itself without flagging it for human review — removal is a human-only action.
 - **Rename propagation.** If a skill renames a note, it MUST grep the vault for all `[[old-name]]` references and update them in the same commit. An unupdated reference is a bug, not a "nice to have".
-- **Never link to a folder.** `[[07-Projects]]` is not a link; `[[MOC-Projects]]` is. Folders do not have notes; MOCs do.
+- **Never link to a folder.** `[[05-Projects]]` is not a link; `[[Projects-Index]]` is. Folders do not have notes; MOCs/Indexes do.
 
 ## 4. Frontmatter contract
 
@@ -190,7 +190,7 @@ Date format is ISO (`YYYY-MM-DD`). Slugs are lowercase, hyphenated, ≤40 chars.
 | `[bot:wiki-heal]` | `wiki heal`, `nightly audit` fixups | Link repair, frontmatter backfill, orphan dressing. |
 | `[bot:backfill]` | `backfill` skill (non-save entry) | Historical content ingestion outside `save`. |
 
-All five prefixes MUST be listed in the n8n W1 filter or the bot will get stuck in a self-retrigger loop. The filter is kept in `07-Projects/<ORG-A>/obsidian-tasks-sync/config/bot-prefixes.yaml` in the live vault.
+All five prefixes MUST be listed in the n8n W1 filter or the bot will get stuck in a self-retrigger loop. The filter is kept in `05-Projects/<ORG-A>/obsidian-tasks-sync/config/bot-prefixes.yaml` in the live vault.
 
 ### Rules
 
@@ -245,6 +245,6 @@ When alias scoring produces two top candidates within 10% of each other, the con
 - Frontmatter includes `stub_of: "[[primary-basename]]"` plus the same `#ambiguous-routing` tag.
 - No further content. No auto-promotion. Stub stays stub until a human upgrades it with `/save` branch 2 + explicit destination.
 
-Both files are surfaced in the dry-run preview table so the user can override with `edit` before writing. If the secondary candidate scores below 30% confidence, the 50/50 rule does NOT fire — instead, the skill routes to `00-Inbox/` with a TODO. Stubbing random weak candidates adds noise, not signal.
+Both files are surfaced in the dry-run preview table so the user can override with `edit` before writing. If the secondary candidate scores below 30% confidence, the 50/50 rule does NOT fire — instead, the skill routes to `02-Sources/` with a TODO (the pre-mogging `00-Inbox/` was killed on 2026-04-16). Stubbing random weak candidates adds noise, not signal.
 
 End of `wiki-schema.md`. Any skill contradicting this file is the bug; fix the skill.

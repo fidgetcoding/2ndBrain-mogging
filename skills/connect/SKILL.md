@@ -102,7 +102,7 @@ Constraint: <what blocks a naive copy>.
 
 ## 3. <headline> — [collision idea]
 A × B = <new thing>. Not present in vault yet.
-If persisting, copy this block into a fleeting note in `01-Fleeting/`.
+If persisting, copy this block into a fleeting capture in `02-Sources/` (the pre-mogging `01-Fleeting/` folder was killed on 2026-04-16; fleeting thoughts now land alongside sources).
 
 ---
 

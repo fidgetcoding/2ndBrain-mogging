@@ -1,116 +1,159 @@
 # CLAUDE.md Patch — 2ndBrain-mogging
 
-This document contains the **canonical text** that `2ndBrain-mogging` appends to a vault's `CLAUDE.md` during install (or via `/aliases init`). Agent 1 of the `/rswarmmax` refactor swarm performs the actual append in Phase B10 — this file is the reference source of truth that agent reads from.
+This document contains the **canonical text** that `2ndBrain-mogging` appends to a vault's `CLAUDE.md` during install (via `install.sh --apply`) or via `/aliases update-claudemd`. The installer (or the Phase B10 agent in a `/rswarm*` vault refactor) reads this file and writes the exact block below between the marker pair, verbatim, so every vault running the plugin carries the same post-mogging contract.
+
+This file is the source of truth for the patch. Edit this file first, then re-run the installer or `/aliases update-claudemd` — never hand-edit the markers in a live vault.
 
 ## Contract
 
-- The patch is delimited by HTML comment markers so it can be cleanly re-applied, idempotently updated, or removed without touching any hand-authored content.
-- **Start marker:** `<!-- mogging:start -->`
-- **End marker:** `<!-- mogging:end -->`
-- Both markers MUST appear at the end of the CLAUDE.md file on their own lines, with a single blank line before the start marker and no trailing content after the end marker (except a terminal newline).
+- The patch is delimited by HTML comment markers so the installer can cleanly re-apply, idempotently upgrade, or remove it without touching any hand-authored content above the markers.
+- **Start marker:** `<!-- 2ndbrain-mogging:start -->`
+- **End marker:** `<!-- 2ndbrain-mogging:end -->`
+- Both markers MUST appear at the end of the vault's `CLAUDE.md` on their own lines, with a single blank line before the start marker and no trailing content after the end marker (except a terminal newline).
 - Anything between the markers is owned by the plugin and may be overwritten on upgrade. Everything outside the markers is user-owned and untouched.
-- `/aliases update-claudemd` and the plugin installer both read THIS file and write the exact block below verbatim between the markers. Update this file first, then re-run the installer — never hand-edit the markers in a live vault.
+- Marker names are permanent. They identify the plugin across version bumps. Changing them breaks the idempotency contract and strands every existing install. If a future rewrite needs to reset the block, bump the version noted inside the block, not the markers.
 
 ## Exact text to append
 
-Copy EVERYTHING between (and including) the two `<!-- mogging:... -->` lines below. Do not strip the markers. Do not collapse blank lines. Do not reformat the tables — Obsidian preview and downstream parsers both rely on the column alignment.
+Copy EVERYTHING between (and including) the two `<!-- 2ndbrain-mogging:... -->` lines below. Do not strip the markers. Do not collapse blank lines. Do not reformat the tables — Obsidian preview and downstream parsers both rely on the column alignment.
 
 ```markdown
-<!-- mogging:start -->
+<!-- 2ndbrain-mogging:start -->
 
 ## 2ndBrain-mogging (plugin-managed section)
 
-> This section is managed by the `2ndBrain-mogging` Claude Code plugin. It is regenerated on plugin upgrade. Do not hand-edit between the markers — edit `docs/CLAUDE-MD-PATCH.md` in the plugin repo and re-run `/aliases update-claudemd`, OR edit `Claude-Memory/aliases.yaml` directly for entity changes.
+> This section is managed by the `2ndBrain-mogging` Claude Code plugin (post-mogging contract, 2026-04-16 onward). It is regenerated on plugin upgrade. Do not hand-edit between the markers — edit `docs/CLAUDE-MD-PATCH.md` in the plugin repo and re-run the installer, OR edit `Claude-Memory/aliases.yaml` directly for entity changes.
+>
+> Canonical source: https://github.com/<ORG-A>/2ndBrain-mogging
 
-### Entity registry
+### Post-mogging folder contract (7 folders)
 
-The canonical entity dictionary for this vault lives at `Claude-Memory/aliases.yaml` (a symlink to `~/.claude/projects/<project-slug>/memory/aliases.yaml`). Every `/save`, `/cingest`, and `/wiki` call consults this file BEFORE writing. If an entity appears in a conversation but is not in `aliases.yaml`, the skill either:
+Every write path in every skill resolves its target against this table. If a skill disagrees with this layout, the skill is the bug — fix the skill.
 
-1. Auto-classifies it with a confidence score and writes a dry-run plan listing the unresolved name, OR
-2. Halts and prompts the user for disambiguation if the name is flagged `ambiguous:` in the registry.
-
-Entities are grouped into four buckets: `people`, `concepts`, `orgs`, `projects`. Each entry has a stable `canonical_id` (snake_case, prefixed by bucket) that never changes even if the display name is renamed — downstream wikilinks route through the ID, not the name.
-
-**Manage entries:**
-
-- Add / rename / split: `/aliases` (interactive) or edit `Claude-Memory/aliases.yaml` directly.
-- Validate shape: `python3 -c "import yaml; yaml.safe_load(open('Claude-Memory/aliases.yaml'))"`.
-- The file is version-controlled in the repo's `.git` (the symlink target lives under `~/.claude/projects/`, which is separately backed up).
-
-### Regime ownership
-
-Every note file has exactly one regime. Skills check the regime before writing.
-
-| Regime | Who writes it | Can skills rewrite? | Example paths |
+| Folder | Role | Primary writer | Notes |
 |---|---|---|---|
-| HUMAN | You, hand-edited | NO — propose diffs only | `03-Permanent/*.md`, poems, essays, project briefs |
-| PROJECT | You + agents, negotiated | YES — after diff preview | `05-Projects/**/*.md` index notes, `08-Tasks/TASKS-*.md` |
-| SYNC | A bot, round-trip | NO — owned by sync pipeline | Morgen task mirrors, GitHub issue shadows, calendar pins |
-| LLM-COMPILED | The plugin, re-derivable | YES — idempotent regen | `03-Permanent/wiki-*.md` re-compiled from `02-Literature/` |
+| `01-Conversations/` | `/save` output + scheduled-agent reports; mirrors `05-Projects/` subfolders | `save` (branches 1–3) | Append-only per file. Scheduled agents write reports under `01-Conversations/VAULT/reports/` and nowhere else. Vault-about-vault notes live under `01-Conversations/VAULT/`. |
+| `02-Sources/` | Source-of-truth notes for external content (articles, videos, transcripts, emails, PDFs, books) | `save` (branch 2 `--source`), `autoresearch`, `wiki add` | Each file carries `source_url` + `source_type` + `captured` in frontmatter. Body is summary; raw fetched text lives in a `> [!source]` callout or a fenced block. Replaces legacy `02-Literature/`. |
+| `03-Concepts/` | Refined atomic concept notes — one concept per file | `wiki` | Needs ≥1 inbound from a `02-Sources/` note and ≥1 outbound to `04-Index/`. First write sets `needs_review: true`; `wiki promote` flips it once the note has 3+ inbound links. Replaces legacy `03-Permanent/`. Existing notes grandfathered with `owner: human` are never silently rewritten. |
+| `04-Index/` | Maps of content (indexes), hub pages, topic guides | `wiki`, `tether` | Never freeform prose — only link lists + terse one-liners. Must list every concept in its topic cluster. Contains `Index.md`, `Home-Index`, `Projects-Index`, `Poetry-Index`, `Tech-Index`, and `Map.canvas`. Replaces legacy `04-MOC/`. |
+| `05-Projects/` | Project hubs mirroring Claude Projects; includes `INCUBATOR/` | `save` (branches 1–3), `tether` | Every project folder has an index note where filename = folder name (`FOO/FOO.md`, never `FOO-Index.md`). Bidirectional links up to `04-Index/Projects-Index.md` are mandatory. |
+| `06-Tasks/` | Obsidian Tasks plugin files + inline tasks | `save` (UUID-preserving edits only) | `/wiki` and `/autoresearch` are FORBIDDEN from writing here. `/save` is edit-safe only with strict UUID preservation. No agent writes here. Live n8n ↔ Morgen ↔ Notion sync is wired through this folder; the `06-Tasks/` git submodule is preserved. |
+| `Claude-Memory/` | Plugin working state: aliases, ADRs, session manifests, hot context | `aliases`, `save` (ADR branch + backfill manifest), `emerge` (hot.md) | Symlink to `~/.claude/projects/<project-slug>/memory/`. Treat as config, not user-facing notes. `aliases.yaml` is the canonical alias source; `adr/` holds ADRs; `backfill-manifest.jsonl` is append-only. |
 
-A HUMAN note is never silently rewritten. A PROJECT note is diffed before write. A SYNC note is refused outright unless the caller is the sync pipeline itself (detected by `[bot:*]` commit prefix). An LLM-COMPILED note may be regenerated at any time without approval.
+**Killed folders** (pre-mogging layout, do not recreate): `00-Inbox/`, `01-Fleeting/`, `05-Templates/`, `06-Assets/`. If a skill sees one of these in a legacy vault, it treats the content as residue and routes it through `/save` migration — it does not reanimate the folder.
 
-### Scheduled agents
+### Note-type contract (frontmatter `type:`)
 
-The plugin installs four launchd jobs. Each one invokes Claude Code headlessly and writes a single report file into `00-Inbox/` prefixed with the agent name. Deleting the plist disables the agent.
+Closed set. A skill encountering an unknown `type` halts with a parse error rather than guessing.
+
+**Post-mogging canonical types:**
+
+| Type | Folder | Purpose |
+|---|---|---|
+| `source` | `02-Sources/` | External input (article, video, transcript, email, PDF, book). Must have `source_url`, `source_type`, `captured`. |
+| `concept` | `03-Concepts/` | Refined atomic concept. Needs `last_confirmed`, `needs_review`, `owner`. |
+| `index` | `04-Index/` | Map of content, hub, topic index. Body is a link list, not prose. |
+| `conversation` | `01-Conversations/` | `/save` output + scheduled-agent reports. No per-type additions beyond universal fields. |
+| `adr` | `Claude-Memory/adr/` | Architectural decision record. Has `status`, `supersedes`, `superseded_by`. |
+| `synthesis` | `03-Concepts/` or `04-Index/` | Cross-concept rollup. Has `answers_question`, `sources`. |
+
+**Grandfathered legacy types** (read-only mapping for notes created pre-mogging; skills normalize on next write):
+
+| Legacy type | Maps to | Treatment |
+|---|---|---|
+| `literature` | `source` | Folder moves from `02-Literature/` → `02-Sources/`. Body unchanged. |
+| `permanent` | `concept` | Folder moves from `03-Permanent/` → `03-Concepts/`. If `owner: human` is set, the note is locked — skills propose diffs instead of rewriting. |
+| `moc` | `index` | Folder moves from `04-MOC/` → `04-Index/`. Wikilinks of the shape `[[MOC-*]]` are rewritten to `[[*-Index]]` by `/wiki heal`. |
+| `fleeting` | `inbox-residue` | Body is preserved verbatim; the note is re-routed to its most likely project under `05-Projects/` (or surfaced for human decision if no alias hits). `01-Fleeting/` itself is killed and never recreated. |
+
+### Universal frontmatter
+
+Every note the plugin writes opens with:
+
+```yaml
+---
+title: "Human-readable title"              # required, quote if it contains :
+date: 2026-04-17                           # ISO date, required
+type: source | concept | index | conversation | adr | synthesis
+tags: [lowercase-hyphenated]                # list, may be empty
+aliases: ["Alt Name 1", "Alt Name 2"]       # list, used by Obsidian link autocomplete
+---
+```
+
+Per-type additions are documented in the plugin's `references/wiki-schema.md`.
+
+### 10 skills (plugin `2ndbrain-mogging`, auto-namespaced)
+
+`/save` `/wiki` `/challenge` `/emerge` `/backfill` `/aliases` `/autoresearch` `/canvas` `/tether` `/connect`
+
+Local installs use **hardlinks** (preferred) or symlinks — `install.sh --apply` hardlinks by default. Editing either side edits both. If a skill file ever drifts, the mogging repo is the source of truth.
+
+### 4 scheduled agents (audit-only by default)
 
 | Agent | When | Writes to | Purpose |
 |---|---|---|---|
-| morning | 07:00 local | stdout report (no file) | Review yesterday's transcripts, flag unsaved content |
-| nightly | 23:30 local | `00-Inbox/NIGHTLY-<date>.md` | `/tether` audit + `/connect` suggestions |
-| weekly | Sunday 18:00 | `00-Inbox/WEEKLY-<date>.md` | `/emerge` pass over `03-Permanent/` |
-| health | every 6h | `00-Inbox/HEALTH-<date>.md` | Broken wikilinks, orphan files, missing frontmatter |
+| `morning` | 08:00 local | `01-Conversations/VAULT/reports/MORNING-<date>.md` (opt-in) | Review yesterday's transcripts, flag unsaved content. |
+| `nightly` | 22:00 local | `01-Conversations/VAULT/reports/NIGHTLY-<date>.md` | `/tether` audit + `/connect` suggestions. |
+| `weekly` | Friday 18:00 | `01-Conversations/VAULT/reports/WEEKLY-<date>.md` | `/emerge` pass over `03-Concepts/`. |
+| `health` | Sunday 21:00 | `01-Conversations/VAULT/reports/HEALTH-<date>.md` | Broken wikilinks, orphan files, missing frontmatter. |
 
-Every scheduled write carries commit prefix `[bot:<agent>]` so the n8n 3-way sync skips it (bot-prefix-skip rule is enforced in W1's filter node).
+Scheduled agents are audit-only by default. Any write-capable scheduled agent requires explicit opt-in via its plist. Every scheduled write carries commit prefix `[bot:<agent>]` so the n8n 3-way sync skips it.
 
-### Routing conventions for `/save` and `/cingest`
+### 3 non-negotiables
 
-When a capture arrives, the skill walks this decision tree — first match wins:
+These override every skill-local policy. A skill that skips one of these is broken and must be halted.
 
-1. **Explicit project flag** (`/save --project <ORG-B>`) → write under `05-Projects/<ORG-B>/` with a dated filename.
-2. **Alias hit** on an entity in `Claude-Memory/aliases.yaml` with `confidence: high` → write under the `project:` path on that entity, and tether to the project index.
-3. **Alias hit with `confidence: medium` or `needs_review`** → write to `00-Inbox/` with a dry-run plan listing the candidate project(s) and request confirmation.
-4. **Ambiguous name** (listed under `ambiguous:` in the registry, or multiple high-confidence matches) → halt, prompt user.
-5. **No alias match, sourced content** (URL, PDF, video) → `02-Literature/LIT-<slug>.md` with the source frontmatter, link to any MOC it touches.
-6. **No alias match, unsourced thought** → `01-Fleeting/<date>-<slug>.md`.
-7. **No alias match, raw capture** → `00-Inbox/<date>-<slug>.md` for later triage.
+1. **Backup before mutation.** Before any multi-file structural change, tarball the vault to `~/Desktop/2ndBrain-backup-*.tar.gz`. Before overwriting ANY single file that already exists, snapshot it to `Claude-Memory/backups/YYYY-MM-DD/HHMMSS--<relpath>.bak`. If the backup write fails (disk full, permissions), abort the primary write. No exceptions.
+2. **Stop-hook jq-merge discipline.** The `Stop` hook payload MUST be merged into `~/.claude/settings.json` using `jq --slurp 'add'` semantics — never naive concatenation, never overwrite. Raw string append corrupts settings and breaks `/save --backfill --resume`. If `jq` is unavailable on the system path, the hook prints a WARN and no-ops rather than writing partial state.
+3. **n8n path filters stay current.** Any skill that adds a new top-level vault folder or a new externally-synced `05-Projects/<ORG>/<repo>/` subtree MUST update the n8n W1 path filter so the new subtree is ingested. The W1/W2/W3 filters have been migrated from legacy `08-Tasks/` to `06-Tasks/` as of the 2026-04-17 swarm; W2 phantom-write prefix is removed, defensive strippers are left as no-ops. The canonical path-filter file lives in the private `obsidian-tasks-sync` config repo — if it is not mounted, the skill prints a TODO row in its report and continues rather than silently creating an untracked subtree.
 
-The decision log for each capture is written to `00-Inbox/.save-decisions/<timestamp>.jsonl` so the classifier's accuracy can be audited and `/aliases` can learn from corrections.
+### Bot-prefix commits
 
-### Public-safety filter
+Automated commits MUST use one of the `[bot:*]` prefixes so n8n W1 skips re-ingesting them (filter node enforces skip). A missing prefix creates a duplicate-task loop.
 
-Some entities carry `public_safe: false` in the registry (e.g. private individuals, internal project codenames). When any skill produces an artifact destined for a public channel (README, release notes, issue body, PR description, blog post, social media draft), it filters out every name flagged `public_safe: false`. The skill will either:
+| Prefix | Used by |
+|---|---|
+| `[bot:save]` | `/save` (all non-backfill branches) |
+| `[bot:save --backfill]` | `/save --backfill` historical ingest |
+| `[bot:wiki-add]` | `/wiki add`, `/connect`, `/tether` (new-note paths) |
+| `[bot:wiki-heal]` | `/wiki heal`, nightly audit fixups |
+| `[bot:wiki-fix]` | `/wiki` targeted repairs |
+| `[bot:backfill]` | `/backfill` skill (non-save entry) |
+| `[bot:mogging-*]` | Mogging-repo maintenance (e.g., `[bot:mogging-fix]`) |
+| `[bot:morning]` / `[bot:nightly]` / `[bot:weekly]` / `[bot:health]` | Scheduled agents |
 
-- Rewrite with a placeholder (`<contact>`, `<internal-project>`) and show a diff, OR
-- Halt and list the flagged names so you can rewrite manually.
+Every prefix in this table MUST be listed in the n8n W1 filter.
 
-Current high-priority `public_safe: false` entities (see `aliases.yaml` for the full list): <PERSON-A>, <PERSON-B>, <PERSON-D>. Never reference these in any public repo artifact.
+### Hard rules
 
-### Project index note rules
+- **Never auto-rewrite `05-Projects/*/<project>.md` index files.** Filename-equals-folder rule is preserved; violations break `[[PROJECT]]` wikilink resolution.
+- **Never edit `06-Tasks/` content directly.** Use `/save` with Obsidian Tasks plugin syntax and strict UUID preservation. Missing UUID on a legacy task is mint-and-log, not rewrite.
+- **Never use `[[MOC-*]]` wikilinks.** Legacy shape, dead after the `04-MOC/` → `04-Index/` rename. Use `[[*-Index]]`. `/wiki heal` rewrites existing `[[MOC-*]]` references automatically.
+- **Never remove a note or wikilink** without flagging it for human review. Dead wikilinks get struck through with an HTML comment (`~~[[orphaned]]~~ <!-- dead: YYYY-MM-DD -->`), never silently deleted.
+- **Always check `Claude-Memory/aliases.yaml`** before classifying entities. If `jq`/`yaml` can't parse it, the skill halts — partial classification is worse than no classification.
+- **Respect the `graph-clean` workspace filter.** Excludes `MISC-CLAUDE/`, `CART-BLANCHE-HQ/`, `node_modules/`, `.claude/`, `.agents/`, `READMEs`, and `SKILL.md` files from the graph view.
+- **`/wiki` and `/autoresearch` are forbidden from writing under `06-Tasks/**`.** Task management is human-sovereign plus `/save`-only.
+- **No skill writes to `CLAUDE.md` wholesale.** The plugin-managed block between the `2ndbrain-mogging:*` markers is regenerated by the installer; everything above the start marker is user-owned.
+- **Bidirectional tethering on every project.** Every `05-Projects/<PROJECT>/<PROJECT>.md` links UP (to `Projects-Index` / parent hub) AND DOWN (to sub-projects, key notes). Client work tethers to its org hub; code projects tether to `[[GITHUB]]`.
 
-These rules are enforced by `/tether` and the nightly agent. Violations are listed in `00-Inbox/NIGHTLY-<date>.md`:
+### Obsidian Tasks syntax
 
-1. **Filename = folder name.** `05-Projects/FOO/FOO.md`, never `FOO-Index.md`. The wikilink `[[FOO]]` must resolve.
-2. **Bidirectional tethering.** Every project index links UP (to parent / MOC-Projects / org hub) AND DOWN (to sub-projects, key notes).
-3. **Client work tethers to its org.** Projects built under <ORG-A> or <ORG-B> link the org hub in Related; the org's index lists the project in `## Repos` or `## Projects`.
-4. **Code projects tether to `[[GITHUB]]`.** If a project has a cloned repo in `05-Projects/GITHUB/`, it links `[[GITHUB]]` in Related and `GITHUB.md` lists the project under `## Owned By`.
-5. **Never orphan on rename.** If an index is renamed, grep the vault for all stale references and update them in the same commit.
+Canonical line (token order is mandatory — the Tasks plugin parses positionally):
 
-### Task syntax
-
-This vault uses the **Obsidian Tasks plugin** (Clare Macrae). The plugin's syntax is the only supported task format. Skills will never introduce Todoist, Notion-database, or raw-checkbox-no-metadata tasks.
-
-```text
-- [ ] task text ⏫ 📅 2026-04-15 🔁 every week 🆔 <stable-id>
+```
+- [ ] <task text> <priority?> 📅 YYYY-MM-DD <🔁 recurrence?> 🆔 <uuidv4>
 ```
 
-- Priorities: `🔺` highest, `⏫` high, `🔼` medium, `🔽` low, `⏬` lowest.
-- Dates: `📅` due, `⏳` scheduled, `🛫` start, `✅` done, `❌` cancelled.
-- `🆔 <stable-id>` is required on any task that participates in the 3-way sync. The skill mints a fresh ULID when creating a new task; it never rewrites an existing ID.
+- Priorities: 🔺 highest · ⏫ high · 🔼 medium · 🔽 low · ⏬ lowest
+- Dates: 📅 due · ⏳ scheduled · 🛫 start · ✅ done · ❌ cancelled
+- Recurrence: `🔁 every week`, `🔁 every 2 weeks`, `🔁 every month on the 1st`
+- 🆔 is a lowercase UUIDv4, mandatory on every new task. Edits preserve it byte-for-byte. Missing UUID on a legacy line is mint-and-log (appended to `Claude-Memory/task-uuid-mints.log`), never rewrite.
+
+Rewriting tokens in the wrong order or dropping the UUID breaks the n8n W1/W2/W3 sync and creates duplicate tasks in Morgen and Notion that cost ~15 minutes of manual deduping to undo.
 
 ### Calendar + task ops default
 
-Calendar and task operations default to **Morgen** (`mcp__morgen__*`). Motion (`mcp__motion*`) is used only for the four feature gaps Morgen lacks in the public API: teammate events, full-text event search, all-day event queries, and calendar management. If you explicitly want Motion for any other reason, pass `--engine motion` on the relevant slash command.
+Calendar and task operations default to **Morgen** (`mcp__morgen__*`). Motion (`mcp__motion*`) is used only for the feature gaps Morgen lacks in its public API: teammate events, full-text event search, all-day event queries, and calendar management. If Motion is desired for any other reason, pass `--engine motion` on the relevant slash command.
 
 ### Anti-drift guarantees
 
@@ -119,29 +162,31 @@ The plugin enforces these invariants on every write. Violations abort the write 
 - File size stays under 500 lines.
 - Every public API has a typed interface.
 - Input validation happens at every system boundary.
-- No secrets in source. No `.env` committed. No hardcoded tokens.
+- No secrets in source. No `.env` committed. No hardcoded tokens. Every write passes through the security scrub regex panel defined in `references/wiki-schema.md §6` before landing on disk.
 - File paths are sanitized against directory traversal.
-- Commit messages use present-tense, imperative mood, and include a one-line rationale.
+- Commit messages use present-tense, imperative mood, include a one-line rationale, and carry the correct `[bot:*]` prefix for automated writes.
 
-<!-- mogging:end -->
+<!-- 2ndbrain-mogging:end -->
 ```
 
-## How agent 1 should apply this
+## How the installer applies this
 
-Phase B10 of the `/rswarmmax` vault refactor:
+`install.sh --apply` (or the Phase B10 agent in a `/rswarm*` vault refactor):
 
-1. Read the source file at `docs/CLAUDE-MD-PATCH.md` in this repo.
-2. Read `$HOME/Desktop/WORK/OBSIDIAN/2ndBrain/CLAUDE.md`.
-3. If the vault's CLAUDE.md already contains `<!-- mogging:start -->`, replace everything between the two markers (inclusive) with the new block. If not, append a single blank line followed by the entire block from this doc.
-4. Do NOT touch any text outside the markers.
-5. Run `python3 -c "import yaml; yaml.safe_load(open('Claude-Memory/aliases.yaml'))"` to verify the registry is valid after the vault refactor.
-6. Commit as `chore(vault): apply mogging CLAUDE.md patch` with no `[bot:*]` prefix (this is a human-initiated refactor, not a scheduled agent write).
+1. Reads the source file at `docs/CLAUDE-MD-PATCH.md` in this repo.
+2. Reads the vault's `CLAUDE.md` (at `$VAULT/CLAUDE.md`). If absent, creates it with a single trailing newline, then proceeds.
+3. If the vault's `CLAUDE.md` already contains `<!-- 2ndbrain-mogging:start -->`, replaces everything between the two markers (inclusive) with the new block. If not, appends a single blank line followed by the entire block from this doc.
+4. Does NOT touch any text outside the markers.
+5. Runs `python3 -c "import yaml; yaml.safe_load(open('$VAULT/Claude-Memory/aliases.yaml'))"` to verify the registry is valid after the patch.
+6. Commits the vault as `[bot:mogging-install] apply CLAUDE.md patch` so n8n W1 skips re-ingesting it.
+
+Re-running the installer is safe and idempotent — the marker pair guarantees the block is replaced, not duplicated.
 
 ## Update procedure
 
 When a future release changes plugin semantics:
 
-1. Edit the fenced code block above. Keep the markers intact.
+1. Edit the fenced code block above. Keep the markers intact and unchanged.
 2. Bump `version` in `Claude-Memory/aliases.yaml` if the registry shape changes.
-3. Run `/aliases update-claudemd` in every vault that has the plugin installed — the skill reads this file and rewrites the marker block verbatim.
-4. Add a `CHANGELOG.md` entry noting the patch version bump.
+3. Add a `CHANGELOG.md` entry noting the patch change and what the marker block now contains.
+4. Re-run `install.sh --apply` (or `/aliases update-claudemd`) in every vault that has the plugin installed — the installer reads this file and rewrites the marker block verbatim.

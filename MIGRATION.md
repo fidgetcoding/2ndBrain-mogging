@@ -31,7 +31,7 @@ If you stay on a pure Karpathy / Jens / eugeniughelbur setup:
 
 This pack is additive, not replacing. You keep:
 
-- Your folder structure. The pack uses your numbering (`00-Inbox/`, `01-Fleeting/`, etc.) but `aliases.yaml` lets you remap if yours differs.
+- Your folder structure. The pack uses the post-mogging 7-folder numbering (`01-Conversations/`, `02-Sources/`, `03-Concepts/`, `04-Index/`, `05-Projects/`, `06-Tasks/`, `Claude-Memory/`) but `aliases.yaml` lets you remap if yours differs. If you're migrating from a pre-mogging 9-folder layout, see [`docs/MIGRATION.md`](docs/MIGRATION.md) for the rename + drain commands.
 - Your frontmatter conventions. We read and emit the same YAML keys you already use.
 - Your existing skills. If you've installed another second-brain pack, you can run them side-by-side — just pin the slash-command names in `plugin.json` if there's a collision.
 - Your sync pipelines. n8n workflows, Morgen task mirroring, calendar pins — the pack reads them, respects them, and commit-prefixes everything `[bot:*]` so your filters keep working.
@@ -43,7 +43,7 @@ This pack is additive, not replacing. You keep:
 
 2. **Install the plugin.** `/plugin marketplace add <ORG-A>/2ndBrain-mogging` then `/plugin install 2ndbrain-mogging@<ORG-A>`. Restart Claude Code.
 
-3. **Run `/aliases init`.** This walks your `07-Projects/` tree and proposes an `aliases.yaml` seed with one entry per project. Review and edit before `y`. This file becomes the classifier dictionary for every future `/save`.
+3. **Run `/aliases init`.** This walks your `05-Projects/` tree and proposes an `aliases.yaml` seed with one entry per project. Review and edit before `y`. This file becomes the classifier dictionary for every future `/save`.
 
 4. **Run `/tether --dry-run`.** This audits project-index bidirectional links, MOC membership, and hub wiring. It reports orphans without fixing anything. Eyeball the report. If it looks sane, re-run without `--dry-run` to apply the fixes. If it looks wrong, check your `aliases.yaml` — it's usually a classification bug.
 

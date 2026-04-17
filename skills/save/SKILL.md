@@ -33,12 +33,12 @@ Before routing any content, load `Claude-Memory/aliases.yaml` from the vault roo
 aliases:
   - key: <person-h>
     names: [<person-h>, <person-h>, <project-b>, <project-c>]
-    destination: 07-Projects/MMA/<PROJECT-B>/<PROJECT-B>.md
+    destination: 05-Projects/MMA/<PROJECT-B>/<PROJECT-B>.md
     tags: [mma, client, <person-h>]
     confidence_boost: 0.15
   - key: morgen-mcp
     names: [morgen mcp, morgen-mcp, morgen bot, w1, obsidian-tasks-sync]
-    destination: 07-Projects/<ORG-A>/morgen-mcp.md
+    destination: 05-Projects/<ORG-A>/morgen-mcp.md
     ...
 ```
 
@@ -69,9 +69,9 @@ Before any `Write` or `Edit`, print a table:
 ┌───────────────────────────────┬────────────────────────────────────────────────────┬──────────────┐
 │ Signal                        │ Destination                                        │ Confidence   │
 ├───────────────────────────────┼────────────────────────────────────────────────────┼──────────────┤
-│ "<person-h>", "<project-c>"   │ 07-Projects/MMA/<PROJECT-B>/…/2026-04-16.md        │ 0.88         │
-│ "stripe webhook" (ambiguous)  │ 07-Projects/<ORG-A>/stripe-notes.md  [stub]   │ 0.41         │
-│ "tax deduction"               │ 07-Projects/LEGAL : FINANCE/tax-notes-2025.md      │ 0.72         │
+│ "<person-h>", "<project-c>"   │ 05-Projects/MMA/<PROJECT-B>/…/2026-04-16.md        │ 0.88         │
+│ "stripe webhook" (ambiguous)  │ 05-Projects/<ORG-A>/stripe-notes.md  [stub]   │ 0.41         │
+│ "tax deduction"               │ 05-Projects/LEGAL : FINANCE/tax-notes-2025.md      │ 0.72         │
 └───────────────────────────────┴────────────────────────────────────────────────────┴──────────────┘
 
 Commit on all writes: [bot:save] capture <person-h> session 2026-04-16
@@ -88,7 +88,7 @@ Q&A tree after selecting `1`:
 2. "Include tool-call traces? (y/n)" — if `y`, each tool call is captured as an indented code block.
 3. "Include artifacts emitted in this thread? (y/n)" — if `y`, any files the thread wrote are listed with absolute paths and a one-line purpose note.
 4. Classification pass against `aliases.yaml`. Print preview table.
-5. On `y`: write per alias destination. For depth 3, split the transcript into `02-Literature/LIT-conversation-<slug>-<date>.md` plus per-project pointer notes that link to it.
+5. On `y`: write per alias destination. For depth 3, split the transcript into `02-Sources/LIT-conversation-<slug>-<date>.md` plus per-project pointer notes that link to it.
 
 Frontmatter for the primary capture file:
 
@@ -112,8 +112,8 @@ related: [[<alias destinations as wikilinks>]]
 
 ## 6. Branch 3 — Dictated note
 
-1. "Is this a fleeting thought, a literature-style capture, or a permanent atomic note? (f/l/p)"
-2. Based on answer, route to `01-Fleeting/`, `02-Literature/`, or `03-Permanent/` with the corresponding filename convention from `CLAUDE.md` (never the root).
+1. "Is this a fleeting thought, a source-style capture, or a permanent atomic note? (f/l/p)"
+2. Based on answer, route to `02-Sources/` (for `f` and `l`) or `03-Concepts/` (for `p`) with the corresponding filename convention from `CLAUDE.md` (never the root). The pre-mogging `01-Fleeting/` and `03-Permanent/` folders were killed during the 2026-04-16 mogging refactor — fleeting thoughts now land in `02-Sources/` alongside literature.
 3. Still run alias classification on the content to propose `related: []` wikilinks in frontmatter. Show them in the preview so the user can accept/edit.
 
 ## 7. Branch 4 — ADR
@@ -230,13 +230,13 @@ Backfill commits use `[bot:save --backfill]` as the prefix so they're still W1-t
 | Failure                                                | Detection                                | Recovery                                                                 |
 |--------------------------------------------------------|------------------------------------------|--------------------------------------------------------------------------|
 | `aliases.yaml` missing or malformed                    | YAML parse error, file not found         | Abort before any write; print path + parse error; suggest `/wiki add` to create initial alias set. |
-| Destination file exists but is owned by a human (frontmatter `owner: human`) | Read frontmatter before write | Skip write, route to `00-Inbox/2026-04-16-save-blocked-<slug>.md` instead, and note the block in the commit. |
+| Destination file exists but is owned by a human (frontmatter `owner: human`) | Read frontmatter before write | Skip write, route to `02-Sources/save-blocked-2026-04-16-<slug>.md` instead (the pre-mogging `00-Inbox/` was killed), and note the block in the commit. |
 | Secret detected in content                             | Regex panel §9                           | Redact inline, add warning row in preview, continue.                     |
 | Secret detected in commit message                      | Regex panel §9                           | Redact in message, print a warning, continue.                            |
 | UUID missing on an existing task                       | Task regex with no `🆔` token            | Mint a new UUIDv4 and append it; log the mint event to `Claude-Memory/task-uuid-mints.log`. |
 | User picks `n` at the preview                          | Explicit abort                           | Exit cleanly; no partial writes; no commit.                              |
 | Write to forbidden path (`.env`, `.git/`, `node_modules`, root `CLAUDE.md`) | Path allowlist check | Hard-refuse, print the blocked path, suggest a legal sibling.            |
-| 50/50 ambiguity with NO second candidate above 30% confidence | Score threshold | Fall through to `00-Inbox/` with a TODO note; do NOT stub a random second file. |
+| 50/50 ambiguity with NO second candidate above 30% confidence | Score threshold | Fall through to `02-Sources/` with a TODO note (the pre-mogging `00-Inbox/` was killed); do NOT stub a random second file. |
 | Backfill manifest corrupt                              | JSONL parse fail on `--resume`          | Move corrupt manifest to `.bak`, refuse to proceed without explicit `--force-reindex`. |
 
 ## 14. Non-goals (explicitly out of scope)
