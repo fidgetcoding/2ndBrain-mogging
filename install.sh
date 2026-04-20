@@ -50,6 +50,7 @@ VERBOSE=0
 MERGE_STOP=0
 WITH_INTELLIGENCE=0
 USE_SYMLINK=0
+NO_SEED_VAULT=0
 
 usage() {
   cat <<'USAGE'
@@ -63,6 +64,12 @@ Options:
   --skip-tests         Skip running tests/test_onboarding.sh
   --verbose            Verbose logging (does NOT echo settings.json contents)
   --merge-stop         Replace any existing Stop hook with ours instead of append
+  --no-seed-vault      Skip seeding the 7-folder vault layout from vault-template/.
+                       Default is to copy missing folders (01-Conversations/,
+                       02-Sources/, 03-Concepts/, 04-Index/, 05-Projects/,
+                       06-Tasks/, Claude-Memory/ placeholder, CLAUDE.md,
+                       AGENTS.md) into --vault. Existing files are never
+                       overwritten — the seed is strictly additive.
   --with-intelligence  Install the self-learning tier (helpers/ + 5 hook types
                        merged into settings.json + seeded .claude-flow/data/).
                        OFF by default; existing users won't get surprise hooks.
@@ -94,6 +101,7 @@ while [[ $# -gt 0 ]]; do
     --skip-tests)         SKIP_TESTS=1; shift ;;
     --verbose)            VERBOSE=1; shift ;;
     --merge-stop)         MERGE_STOP=1; shift ;;
+    --no-seed-vault)      NO_SEED_VAULT=1; shift ;;
     --with-intelligence)  WITH_INTELLIGENCE=1; shift ;;
     --symlink)            USE_SYMLINK=1; shift ;;
     -h|--help)            usage; exit 0 ;;
@@ -174,6 +182,55 @@ validate_vault() {
   fi
   export VAULT
   vlog "vault=${VAULT:-<unset>}"
+}
+
+# ---- step 3.5: seed vault from vault-template/ ------------------------------
+# For a freshly-created Obsidian vault (empty folder), copy the 7-folder layout
+# + CLAUDE.md + AGENTS.md + Projects-Index + example projects out of
+# vault-template/ into $VAULT. Strictly additive — existing files/folders are
+# never overwritten. Skipped entirely with --no-seed-vault or if $VAULT is unset
+# (the doctor-only / dry-run-only paths).
+
+seed_vault_from_template() {
+  log "step 3.5: seed vault from template"
+  if [[ -z "$VAULT" ]]; then
+    vlog "vault not set — skipping seed"
+    return 0
+  fi
+  if [[ "$NO_SEED_VAULT" -eq 1 ]]; then
+    log "--no-seed-vault set — skipping"
+    return 0
+  fi
+  local src="$REPO_ROOT/vault-template"
+  if [[ ! -d "$src" ]]; then
+    warn "vault-template/ missing at $src — nothing to seed"
+    return 0
+  fi
+
+  local copied=0 skipped=0
+  # Top-level dirs (01-Conversations, 02-Sources, ...) — copy each if absent.
+  while IFS= read -r -d '' entry; do
+    local rel="${entry#"$src"/}"
+    [[ "$rel" == ".DS_Store" ]] && continue
+    [[ "$rel" == *"/.DS_Store" ]] && continue
+    local dest="$VAULT/$rel"
+    if [[ -e "$dest" ]]; then
+      vlog "seed skip (exists): $rel"
+      skipped=$((skipped + 1))
+      continue
+    fi
+    # Use cp -R for directories to preserve nested structure; install for files.
+    if [[ -d "$entry" ]]; then
+      run cp -R "$entry" "$dest"
+    else
+      run mkdir -p "$(dirname "$dest")"
+      run cp "$entry" "$dest"
+    fi
+    vlog "seeded: $rel"
+    copied=$((copied + 1))
+  done < <(find "$src" -mindepth 1 -maxdepth 1 -print0)
+
+  log "seeded $copied top-level entries from vault-template/ ($skipped already present)"
 }
 
 # ---- step 4: backup settings.json -------------------------------------------
@@ -724,6 +781,7 @@ main() {
   mode_banner
   preflight
   validate_vault
+  seed_vault_from_template
   backup_settings
   merge_stop_hook
   symlink_dir "skills"

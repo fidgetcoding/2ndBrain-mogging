@@ -102,10 +102,11 @@ cd 2ndBrain-mogging
 | `--no-launchd` | off | Skip the 4 scheduled-agent launchd jobs (morning / nightly / weekly / health). |
 | `--skip-tests` | off | Skip the onboarding test suite at the end. |
 | `--merge-stop` | off | Replace the existing Stop hook instead of jq-merging onto it. |
+| `--no-seed-vault` | off | Skip seeding the 7-folder vault layout from `vault-template/`. By default the installer copies in any of `01-Conversations/`, `02-Sources/`, `03-Concepts/`, `04-Index/Projects-Index.md`, `05-Projects/{example-project-1,2,3, INCUBATOR}/`, `06-Tasks/`, `Claude-Memory/`, `CLAUDE.md`, `AGENTS.md` that are missing. Existing files are never overwritten. |
 | `--with-intelligence` | off | Install the self-learning tier. See [Self-learning tier](#self-learning-tier-opt-in) below. |
 | `--symlink` | off | With `--with-intelligence`: symlink helpers instead of hardlinking. |
 
-On `--apply`, the installer backs up `~/.claude/settings.json`, jq-merges the Stop hook (never overwrites), symlinks skills + commands + agents into `~/.claude/`, installs the launchd plists, and runs the onboarding tests.
+On `--apply`, the installer backs up `~/.claude/settings.json`, **seeds the 7-folder vault layout from `vault-template/` (any folder/file already in your vault is left untouched)**, jq-merges the Stop hook (never overwrites), symlinks skills + commands + agents into `~/.claude/`, installs the launchd plists, and runs the onboarding tests.
 
 ---
 
