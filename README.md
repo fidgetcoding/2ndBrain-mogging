@@ -1,139 +1,270 @@
+<a id="top"></a>
+
+<div align="center">
+
+![2ndBrain-mogging](https://raw.githubusercontent.com/<ORG-A>/2ndBrain-mogging/main/2ndbrainmogging.png)
+
 # 2ndBrain-mogging
 
-**The Obsidian + Claude Code second brain that respects your existing infrastructure.**
+**The best of five second-brain systems, sanded down, self-learning, and actually usable by a normal human.**
 
-I built this plugin because every second-brain toolkit I found assumed I was starting from an empty vault. I wasn't. I had Obsidian Tasks running, a Morgen sync pipeline, a project folder structure I'd lived in for months, and three different calendar/task engines already talking to each other. Most skills I tried either ignored that substrate or overwrote it. This repo is the opposite: it treats the existing vault, the existing plugins, and the existing agent graph as the primary user, and fits around them.
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-The pack is an amalgamation — not an invention — of the best ideas from five upstream second-brain projects, with the rough edges sanded down for operators who already have live systems running. Full upstream attribution lives in the [Credits](#credits) section at the bottom of this file.
+</div>
 
-## What we retired
+---
 
-If you've been in the Obsidian + LLM space for longer than a weekend you've probably built the same four folders I built, three times in a row: `00-Inbox/`, `01-Fleeting/`, `05-Templates/`, `06-Assets/`. They feel load-bearing for about six weeks and then they quietly become where good notes go to die. This pack ships without them on purpose, and it's the single biggest reason the 7-folder layout works.
+## Quick Navigation
 
-`00-Inbox/` is gone because `/save` and `/wiki add` write directly to `02-Sources/` with a dry-run preview first — the inbox stage was a tax you paid every single capture for the luxury of triaging later, which you never actually did. `01-Fleeting/` is gone because fleeting notes are just concepts you haven't written down yet; inline capture plus same-day promotion beats shuffling markdown between folders. `05-Templates/` is gone because templates belong in the plugin layer, not in your graph — the `2ndbrain-mogging` skills carry them now, and your vault stops graphing fake template files as if they were real thoughts. `06-Assets/` is gone because Obsidian's attachment defaults already handle assets in-place, and a centralized assets folder exists mostly to make your graph view lie to you about which notes are "connected."
+| Link | Section | What it does | Time |
+|---|---|---|---|
+| [Why this exists](#why-this-exists) | Origin | The maxxing → mogging story | ~2 min |
+| [What you get](#what-you-get) | Overview | TL;DR of the kit | ~1 min |
+| [Install Obsidian first](#install-obsidian-first) | Setup | Manual download + folder suggestion | ~3 min |
+| [Install the mogging pack](#install-the-mogging-pack) | Setup | Clone, dry-run, apply | ~2 min |
+| [The 12 skills](#the-12-skills) | Reference | Every slash command in plain English | ~3 min |
+| [Vault structure](#vault-structure) | Reference | The 7-folder layout, with example projects | ~2 min |
+| [Self-learning tier](#self-learning-tier-opt-in) | Optional | Turns the pack into a pattern-graph that gets smarter as you go | ~1 min |
+| [Bring your existing stuff in](#bring-your-existing-stuff-in-optional) | Optional | Import Claude / ChatGPT conversations + Apple Notes / OneNote / Notion / Evernote | ~3 min |
+| [Credits](#credits) | Meta | The 5 originals I mogged | — |
+| [License](#license) | Meta | MIT | — |
 
-The replacement isn't "we removed stuff." The replacement is: every note you write already has a home in one of seven folders the second you decide what kind of note it is, and if you can't decide, that ambiguity is a signal the note isn't ready to exist yet. This pack is the answer to "what happens if you take the best 200 ideas from 5 excellent PKM systems and throw out the other 800?" — the [Credits](#credits) section names the five, and [`PHILOSOPHY.md`](PHILOSOPHY.md) covers the thrown-out 800.
+---
 
-## A note on placeholders
+## Why this exists
 
-This pack was extracted from a live operator's personal vault. Real personal names and private client-project names have been redacted and replaced with stable placeholders of the form `<PERSON-A>`, `<PROJECT-B>`, etc. The mapping from real name to placeholder is not included in this repository. See [`docs/placeholder-names.md`](docs/placeholder-names.md) for the full convention.
+I wanted a second brain. So I built one.
 
-## Install
+The first version was called **2ndBrain-maxxing** — a lightly modded replica of the second-brain system Jens (the AI-influencer guy on IG, you know who I mean) had put out. It worked. For a while. Then I stared at it for six months and realized half the folders were doing nothing, the taxonomy had jargon I was learning on the fly, and every capture required thinking about three other captures first. That's when I went shopping.
 
-The canonical install path is the bundled `install.sh`. It is idempotent, dry-runs by default, takes a backup before writing anything, and handles the Stop-hook merge safely.
+I tried **Karpathy's** Wiki-style LLM-powered second brain. I tried **AgriciDaniel's** claude-obsidian pack. I tried **eugeniu**'s system. I tried **NicholasSpisak**'s. And I kept going back to **Jens'** — not because it was the best, but because it was the one I already knew. Each of those had one thing the others didn't. None of them had everything.
+
+So I merged them. I took the best 200 ideas from the five of them and threw out the other 800. I killed `00-Inbox/` (it's where good notes went to die). I killed `01-Fleeting/` (fleeting notes are just concepts you haven't written yet). I killed `05-Templates/` (templates belong in the plugin layer, not in your graph). I killed `06-Assets/` (Obsidian already handles attachments in place).
+
+What was left was seven folders, ten skills, and a vault that doesn't require a taxonomy degree to use. Built for a layman. No complicated language. No complicated anything.
+
+The last piece — and the reason the other five started to feel heavy — is a **self-learning tier**. Every other system I tried needed constant manual upkeep. Sorting the inbox. Promoting fleeting notes. Rewiring MOCs. This one watches what you do and fills itself in as the vault grows. You can ignore it forever and the pack still works, but when you turn it on, it stops feeling like a filing cabinet and starts feeling like… well, a second brain.
+
+So: we went from maxxing to absolutely **mogging** everybody. It's not the best because I think it is. It's the best because it's the best of five. And I've tested them all.
+
+---
+
+## What you get
+
+- **The 7-folder mogged vault layout** — the contract you install against, pre-wired to the skills below.
+- **12 Claude Code skills** (10 core + 2 optional importers) that read + write against that layout with a shared alias dictionary + dry-run previews.
+- **Four scheduled agents** (morning / nightly / weekly / health) that audit the vault in the background so you don't have to.
+- **An opt-in self-learning tier** (ruvnet's claude-flow / ruflo pattern-graph) that makes routing smarter the longer you use it.
+- **Import tools** for bringing in every Claude.ai / ChatGPT conversation you've ever had, plus Apple Notes / OneNote / Notion / Evernote / raw docs — so you don't start from empty.
+
+---
+
+## Install Obsidian first
+
+The pack installs the Obsidian *configuration* — it assumes Obsidian itself is already on your machine. The installer for the Obsidian app is a one-time thing you do manually; I don't automate it because the official installer is the only one that reliably works across macOS/Windows/Linux quirks.
+
+1. Go to **[obsidian.md](https://obsidian.md/download)** and download the installer for your OS.
+2. Run the installer. It takes about 30 seconds.
+3. Open Obsidian. It'll ask where your vault should live.
+4. **Strong recommendation:** put it at `~/Desktop/BRAIN/`. That's `/Users/<you>/Desktop/BRAIN/` on macOS. Reasons:
+   - Short path — easier to type in scripts and your shell.
+   - You'll have a lot of subfolders. A shallow root path keeps them navigable.
+   - The import + sync scripts auto-detect vaults at `~/Desktop/BRAIN/` or `~/Desktop/BRAIN2/` without needing a `VAULT_PATH=…` prefix.
+5. Accept the "Create new vault" prompt. Obsidian makes the folder.
+6. **Done — close Obsidian.** The next step runs from the terminal and wants the vault folder empty-ish.
+
+> If you hit any install weirdness, the fix is almost always "use the official installer, not a script." I've tried. It fights me every time.
+
+---
+
+## Install the mogging pack
+
+Once Obsidian is installed and you have a vault folder (e.g. `~/Desktop/BRAIN/`), the pack's installer takes over.
 
 ```bash
 git clone https://github.com/<ORG-A>/2ndBrain-mogging.git
 cd 2ndBrain-mogging
 
 # Dry-run first (default) — shows every change without touching disk
-./install.sh --vault /absolute/path/to/your/Obsidian/vault
+./install.sh --vault ~/Desktop/BRAIN
 
-# Then apply
-./install.sh --vault /absolute/path/to/your/Obsidian/vault --apply
+# Then apply for real
+./install.sh --vault ~/Desktop/BRAIN --apply
 ```
 
-**Flags:**
+**The useful flags:**
 
-| Flag | Default | Meaning |
+| Flag | Default | What it does |
 |---|---|---|
 | `--vault PATH` | — | Absolute path to your Obsidian vault. Required with `--apply`. |
 | `--dry-run` | on | Simulate only — print every change, write nothing. |
 | `--apply` | off | Execute the changes on disk and in `~/.claude/settings.json`. |
-| `--no-launchd` | off | Skip installing the 4 scheduled-agent launchd jobs. |
-| `--skip-tests` | off | Skip the `tests/test_onboarding.sh` harness at the end of install. |
-| `--merge-stop` | off | Replace the existing Stop hook with ours instead of jq-merging onto it. |
-| `--with-intelligence` | off | Install the optional self-learning tier (pattern-graph routing, auto-memory bridge, 5 extra hooks). Adds `$VAULT/.claude/helpers/` and `$VAULT/.claude-flow/data/` — opt-in so existing users don't get surprise hooks. See [Self-learning tier](#self-learning-tier-opt-in) below. |
-| `--symlink` | off | With `--with-intelligence`: symlink helpers instead of hardlinking. Hardlink is the default (same-filesystem guarantee); use symlink if the vault lives on a different disk from this repo. |
+| `--no-launchd` | off | Skip the 4 scheduled-agent launchd jobs (morning / nightly / weekly / health). |
+| `--skip-tests` | off | Skip the onboarding test suite at the end. |
+| `--merge-stop` | off | Replace the existing Stop hook instead of jq-merging onto it. |
+| `--with-intelligence` | off | Install the self-learning tier. See [Self-learning tier](#self-learning-tier-opt-in) below. |
+| `--symlink` | off | With `--with-intelligence`: symlink helpers instead of hardlinking. |
 
-On `--apply`, the installer will: back up `~/.claude/settings.json`, jq-merge the Stop hook (never overwrite), symlink the skills / commands / agents into `~/.claude/`, install launchd plists (unless `--no-launchd`), install the self-learning tier (only if `--with-intelligence` was passed), and run the onboarding test suite (unless `--skip-tests`).
+On `--apply`, the installer backs up `~/.claude/settings.json`, jq-merges the Stop hook (never overwrites), symlinks skills + commands + agents into `~/.claude/`, installs the launchd plists, and runs the onboarding tests.
 
-## Self-learning tier (opt-in)
+---
 
-If you pass `--with-intelligence`, the installer adds a sixth upstream to the stack: ruvnet's claude-flow / ruflo intelligence loop (ADR-050). This tier wires PageRank-ranked memory into a small hook graph so `/save` and `/wiki` conversations get progressively smarter routing as the vault grows, without rewriting a single one of your notes. The 11 helper scripts in `helpers/` are verbatim-vendored MIT-licensed copies with a provenance header on each file; they read and write `$VAULT/.claude-flow/data/` and never touch `owner: human` content.
+## The 12 skills
 
-The install path hardlinks (or symlinks with `--symlink`) each helper into `$VAULT/.claude/helpers/` and jq-merges 5 additional hook types (PreToolUse, PostToolUse, UserPromptSubmit, SessionStart, SessionEnd) into `~/.claude/settings.json` using the same append-never-overwrite discipline as the Stop-hook merge. Your existing hooks — including the mogging Stop hook from `hooks/stop-save.sh` — are preserved untouched. The tier is off by default because the advertised build should work for people who just want the folder layout and the ten skills; turn it on when you want the pack to start learning from your session history.
+Every skill is a Claude Code slash command. You type `/<name>` inside Claude Code and the skill runs.
 
-## Commands
+| Slash command | What it does |
+|---|---|
+| `/save` | Capture this conversation (or a passage, dictated note, ADR) into the vault. Alias-classified, dry-run-previewed, append-only. Also runs in `--backfill` mode for historical transcripts. |
+| `/wiki` | Re-compile a topic note from its sources. Single source of truth is `wiki-schema.md`. |
+| `/challenge` | Steel-man the opposing view of any claim in your vault. Writes a dated `CHALLENGE-<slug>.md` — receipts for arguing with yourself. |
+| `/emerge` | Surface patterns across N notes you'd otherwise miss. Clusters, contradictions, half-formed arguments. |
+| `/connect` | Propose new `[[wikilinks]]` between notes that share concepts but don't link yet. |
+| `/tether` | Audit project-index bidirectional links, MOC membership, hub wiring. Fix orphans. |
+| `/backfill` | Walk a set of historical Claude Code session JSONLs and route them into the vault as if `/save` had run at the time. |
+| `/aliases` | Manage the classifier dictionary in `Claude-Memory/aliases.yaml`. Add / rename / split entities. |
+| `/autoresearch` | 3-round deepening research loop — shallow sweep, follow-up pass, synthesis. |
+| `/canvas` | Drop an Obsidian Canvas scratchpad pre-wired to whatever set of notes you name. |
+| `/import-claude` | One-shot import your entire Claude.ai or ChatGPT data export into the vault. Full conversation history, alias-classified, spawns concept stubs where ideas repeat. **New.** |
+| `/import-notes` | One-shot import your existing notes from Apple Notes, OneNote, Notion, Evernote, or any raw `.md` / `.docx` / `.pptx` / `.xlsx` / `.html` pile. Pandoc under the hood, full dry-run preview. **New.** |
 
-| Slash command | Skill | What it does |
-|---|---|---|
-| `/save` | `save` | Capture this conversation (or a passage, dictated note, or ADR) into the vault. Alias-classified, dry-run-previewed, append-only. Also `--backfill` mode for historical transcripts. |
-| `/wiki` | `wiki` | Re-compile a topic note from its Sources. Single source of truth is `wiki-schema.md`. |
-| `/challenge` | `challenge` | Steel-man the opposing view of any claim in your vault. Writes a dated `CHALLENGE-<slug>.md`. |
-| `/emerge` | `emerge` | Surface patterns across N notes you'd otherwise miss. Clusters, contradictions, half-formed arguments. |
-| `/connect` | `connect` | Propose new `[[wikilinks]]` between notes that share concepts but don't link yet. |
-| `/tether` | `tether` | Audit project-index bidirectional links, MOC membership, and hub wiring. Fix orphans. |
-| `/backfill` | `backfill` | Walk a set of historical transcripts and route them into the vault as if `/save` had run at the time. |
-| `/aliases` | `aliases` | Manage the classifier dictionary in `Claude-Memory/aliases.yaml`. Add / rename / split. |
-| `/autoresearch` | `autoresearch` | 3-round deepening research loop — shallow sweep, follow-up pass, synthesis. |
-| `/canvas` | `canvas` | Drop an Obsidian Canvas scratchpad pre-wired to whatever set of notes you name. |
+All twelve are auto-namespaced under the `2ndbrain-mogging` plugin. Both `/save` and `/2ndbrain-mogging:save` resolve to the same skill — use whichever form you like inside Claude Code.
 
-These skills are auto-namespaced under the `2ndbrain-mogging` plugin. Both `/save` and `/2ndbrain-mogging:save` resolve to the same skill, so either form works inside Claude Code. The placeholder convention used in skill examples and tests is documented in [`docs/placeholder-names.md`](docs/placeholder-names.md).
+---
 
 ## Vault structure
 
-```
-2ndBrain/
-  01-Conversations/   # /save output — mirrors 05-Projects subfolders. VAULT/ subtree holds vault-about-vault notes.
-  02-Sources/         # External inputs — articles, videos, transcripts, conversations. Factual.
-  03-Concepts/        # Refined atomic notes. The graph lives here. Human-owned by default.
-  04-Index/           # Maps of Content — Index.md, Home-Index, Projects-Index, topic-Index files, Map.canvas.
-  05-Projects/        # Active work. One folder per project, index note filename = folder name. Includes INCUBATOR/.
-  06-Tasks/           # Obsidian Tasks plugin area files. TASKS-{AREA}.md, 3-way Morgen sync.
-  Claude-Memory/      # Symlink to ~/.claude/projects/<vault>/memory/ — aliases.yaml + auto-memory shards.
+The post-mogging 7-folder layout. This is what the installer creates (and what every skill is hard-wired to target):
 
-  AGENTS.md           # Scheduled-agent contract for the 4 launchd jobs (morning / nightly / weekly / health).
-  CLAUDE.md           # Top-level Claude Code configuration and vault contract.
-  CRITICAL_FACTS.md   # Pinned facts the LLM must never contradict.
-  SOUL.md             # Operator voice / tone / first-person defaults.
-  index.md            # Top-level entry point (linked from Home-Index).
-  log.md              # Append-only session log.
+```
+BRAIN/
+├── 01-Conversations/    # /save output — full-fidelity chat captures, mirrors 05-Projects subfolders
+├── 02-Sources/          # External inputs — articles, videos, podcasts, book notes, conversation mirrors
+├── 03-Concepts/         # Atomic concepts — one idea per note, densely linked. The graph lives here.
+├── 04-Index/            # Maps of Content — navigation hubs + audits
+├── 05-Projects/         # Active work. One folder per project. See below.
+├── 06-Tasks/            # Obsidian Tasks plugin area files. Optional 3-way Notion + Morgen sync via task-maxxing.
+└── Claude-Memory/       # Symlink to ~/.claude/projects/<vault>/memory — aliases.yaml + auto-memory shards
 ```
 
-This is the post-mogging 7-folder layout (canonical as of 2026-04-16). The Post-Mogging Vault Contract explicitly retires the legacy folders (`00-Inbox/`, `01-Fleeting/`, `05-Templates/`, `06-Assets/`) — the pack does not run against them. `Claude-Memory/aliases.yaml` handles entity-name remapping (person → project, alias → canonical handle) only; it is not a folder-structure compatibility layer. Vaults still on the legacy scheme need to migrate to the 7-folder layout before installing.
+### `05-Projects/` in detail — example layout
 
-## The four regimes
+Each project gets its own folder. The folder name **equals** the index filename exactly (no `-Index` suffix), so `[[example-project-1]]` resolves from anywhere in the vault.
 
-Every note in the vault is owned by exactly one regime. The skill knows which regime it's operating in before it writes anything.
+```
+05-Projects/
+├── example-project-1/
+│   ├── example-project-1.md    ← index note (filename = folder name)
+│   ├── content/                 ← write-ups, specs, decks, session logs
+│   ├── misc-building/           ← experiments, tools, plugins built for this project
+│   └── GITHUB/                  ← cloned repos tied to this project
+│
+├── example-project-2/
+│   └── example-project-2.md
+│
+├── example-project-3/
+│   ├── example-project-3.md
+│   └── <any subfolders you want>
+│
+└── INCUBATOR/                   ← staging lane for ideas not yet full projects
+```
 
-| Regime | Who writes it | What it optimizes for | Example |
-|---|---|---|---|
-| **HUMAN** | You, hand-edited | Voice, nuance, trust | `03-Concepts/*.md`, poems, essays, project briefs |
-| **PROJECT** | You + agents, negotiated | Correctness + currency | `05-Projects/**/index.md`, `06-Tasks/TASKS-*.md` |
-| **SYNC** | A bot, round-trip | Fidelity to an external system | Morgen task mirrors, GitHub issue shadows, calendar pins |
-| **LLM-COMPILED** | The plugin, re-derivable | Freshness, coverage, no-loss | `03-Concepts/wiki-*.md` re-compiled from Sources |
+The subfolders inside each project are **up to you**. Use whatever makes sense — the skills don't require a specific layout below the project's index note. The `content/` + `misc-building/` + `GITHUB/` pattern is what I use personally; yours might be `research/` + `drafts/` + `deliverables/`. Whatever works.
 
-A HUMAN note is never silently rewritten. A PROJECT note is diffed and proposed. A SYNC note is never touched outside its sync pipeline (the plugin will refuse). An LLM-COMPILED note is regenerated idempotently on demand.
+### What the retired folders were
 
-## Scheduled agents
+If you're coming from an older second-brain kit, you'll notice these are gone:
 
-Four launchd jobs run on your machine, invoking the plugin headlessly. Delete any plist to disable that agent.
+- `00-Inbox/` → retired. `/save` and `/wiki add` write directly to `02-Sources/` with a dry-run preview first. The inbox stage was a tax you paid every single capture for the luxury of triaging later, which you never did.
+- `01-Fleeting/` → retired. Fleeting notes are just concepts you haven't written down yet. Inline capture plus same-day promotion beats shuffling markdown between folders.
+- `05-Templates/` → retired. Templates belong in the plugin layer, not in your graph. The `2ndbrain-mogging` skills carry them now.
+- `06-Assets/` → retired. Obsidian's attachment defaults handle assets in place; a centralized assets folder exists mostly to make your graph view lie to you about which notes are "connected."
 
-| Agent | When | What it does |
-|---|---|---|
-| **morning** | 08:00 local, daily | Pulls today's Morgen events, surfaces overdue + today tasks, primes `Claude-Memory/hot.md`. Writes to `01-Conversations/VAULT/reports/daily-YYYY-MM-DD.md`. |
-| **nightly** | 22:00 local, daily | `/wiki audit` scoped to `02-Sources/`, `03-Concepts/`, `04-Index/` — audit-only, no writes to those folders. Writes to `01-Conversations/VAULT/reports/audit-YYYY-MM-DD.md`. |
-| **weekly** | Friday 18:00 local | `/emerge --days 7 --audit` — new concepts, killed ideas, contradictions, 7-day audit trend. Writes to `01-Conversations/VAULT/reports/weekly-YYYY-WW.md`. |
-| **health** | Sunday 21:00 local | Four gates: symlink resolution, Obsidian plugin presence, n8n sync freshness, Morgen↔Obsidian task-count parity. Writes to `01-Conversations/VAULT/reports/health-YYYY-MM-DD.md`. |
+Deep rationale for each kill is in [`PHILOSOPHY.md`](PHILOSOPHY.md).
 
-Every scheduled write is commit-prefixed `[bot:<agent>]` so your n8n sync pipelines know to skip it.
+---
 
-## Contributing
+## Self-learning tier (opt-in)
 
-See [`CONTRIBUTING.md`](CONTRIBUTING.md). Short version: open an issue before large changes, one skill per PR, every PR runs the full `tests/` harness.
+Pass `--with-intelligence` to the installer and the pack wires in a sixth upstream: ruvnet's claude-flow / ruflo pattern-graph (ADR-050). It plugs into `/save` and `/wiki` so routing gets progressively smarter as the vault grows, without rewriting a single one of your notes. 11 helper scripts (verbatim MIT-licensed copies with provenance headers) get hardlinked into `$VAULT/.claude/helpers/` and 5 additional hook types (PreToolUse / PostToolUse / UserPromptSubmit / SessionStart / SessionEnd) get jq-merged into `~/.claude/settings.json` — your existing hooks are preserved.
 
-## License
+Off by default so the advertised pack works for people who just want the folders and the skills. Turn it on when you want the vault to start learning from your session history.
 
-MIT. See [`LICENSE`](LICENSE).
+---
+
+## Bring your existing stuff in (optional)
+
+If you've been keeping notes somewhere else, you don't have to abandon them. The two importer skills handle the most common cases.
+
+### Claude.ai or ChatGPT history → vault
+
+1. **Export from the platform.**
+   - Claude.ai: Settings → Privacy → **Download my data** → All time. You'll get an email with a zip.
+   - ChatGPT: Settings → Data controls → **Export data**. Same email pattern.
+2. **Drop the zip in `~/Downloads/`** and run the helper:
+   ```bash
+   bash scripts/import-claude.sh
+   ```
+   It unzips the export into `<vault>/.import-staging/<timestamp>-claude/` and prints the next step.
+3. **Inside Claude Code, run `/import-claude`** — scan first, dry-run, then apply. Each conversation becomes a full-fidelity capture in `01-Conversations/`, a factual LIT-mirror in `02-Sources/`, and (where ideas repeat) a concept stub in `03-Concepts/`.
+
+### Apple Notes / OneNote / Notion / Evernote / raw files → vault
+
+Same shape. Export from your source first, then run:
+
+```bash
+bash scripts/import-notes.sh
+```
+
+Then `/import-notes --source ~/Desktop/<export-folder>` inside Claude Code.
+
+**Supported sources:**
+
+- **Apple Notes** via [`Exporter.app`](https://apps.apple.com/us/app/exporter/id1099120373) → Markdown
+- **OneNote** via File → Export → Word `.docx`
+- **Notion** via Settings → Export → Markdown & CSV
+- **Evernote** via File → Export Notes → `.enex`
+- **Raw pile** — any folder full of `.md` / `.txt` / `.docx` / `.pptx` / `.xlsx` / `.html` / `.rtf`
+
+All five routes share the same rulebook in [`docs/PARSING-GUIDE.md`](docs/PARSING-GUIDE.md). Pandoc handles conversions; `/import-notes` does the classification.
+
+### After you import anything
+
+Run these three in order (they're all quick):
+
+```
+/tether        # audit and fix bidirectional project-note links
+/connect       # propose wikilinks between notes that share concepts
+/wiki audit    # write a dated audit report to 04-Index/audit-YYYY-MM-DD.md
+```
+
+That's it. Your vault is wired.
+
+---
+
+## A note on placeholders
+
+This pack was extracted from a live operator's personal vault. Real names and private client-project names have been redacted and replaced with stable placeholders of the form `<PERSON-A>`, `<PROJECT-B>`, etc. The mapping isn't in this repo. See [`docs/placeholder-names.md`](docs/placeholder-names.md) for the convention.
+
+---
 
 ## Credits
 
-This repository is an amalgamation and would not exist without the upstream work listed below. Every slash command, every pattern, every rule in this pack traces back to a specific source with a specific license. Full attribution with licenses and exact lines-of-inheritance lives in [`docs/CREDITS.md`](docs/CREDITS.md).
+This pack is an amalgamation — not an invention. The best ideas are all borrowed; what I did was test them side-by-side and throw out what didn't earn its keep. In alphabetical order:
 
-- [karpathy/llm-wiki-gist](https://gist.github.com/karpathy/3d3797cfe72b4fd78dab7a5c35caf0f9) — the canonical "wiki is a living artifact the LLM re-compiles from Sources" primitive. Compilation-over-retrieval stance and source-first frontmatter convention. The spine of this pack.
-- [NulightJens/ai-second-brain-skills](https://github.com/NulightJens/ai-second-brain-skills) — minimal-MVP discipline (two skills: `/save` and `/wiki`) and the self-heal-on-missing-schema reflex.
-- [eugeniughelbur/obsidian-second-brain](https://github.com/eugeniughelbur/obsidian-second-brain) — thinking-tool concept (`/challenge`, `/emerge`, `/connect`) and the scheduled-agent pattern (morning / nightly / weekly / health).
-- [AgriciDaniel/claude-obsidian](https://github.com/AgriciDaniel/claude-obsidian) — hot-cache pattern for fast re-compilation, the `/autoresearch` 3-round deepening loop, the plugin-marketplace layout, and the `/canvas` visual scratchpad.
-- [NicholasSpisak/second-brain](https://github.com/NicholasSpisak/second-brain) — the source-page template, discuss-before-write etiquette, the "factual content belongs in Sources only" rule, prefer-update-over-create, the Bash-based test harness, and `wiki-schema.md` as single source of truth.
-- [ruvnet/ruflo](https://github.com/ruvnet/ruflo) *(via the <ORG-A> fork [`<ORG-A>/fidgetflo`](https://github.com/<ORG-A>/fidgetflo))* — the self-learning intelligence loop (ADR-050) + auto-memory bridge (ADR-048/049). Vendored verbatim under `helpers/` and installed only when you pass `install.sh --with-intelligence`. MIT license, full provenance headers on every vendored file, full writeup in [`docs/CREDITS.md`](docs/CREDITS.md).
+- **AgriciDaniel** ([`claude-obsidian`](https://github.com/AgriciDaniel/claude-obsidian)) — the conversation-capture hygiene and the `owner: wiki` vs `owner: human` discipline that makes skills safe to run against live notes.
+- **eugeniu** — the concept-atomization rules that keep `03-Concepts/` from becoming a dumping ground.
+- **Jens** (AI-influencer, the one on IG) — the original folder structure I modded to death, and the taste-making starting point.
+- **Karpathy** ([`LLM Wiki`](https://karpathy.ai/zero-to-hero.html)-era second brain) — the wiki-style synthesis pattern that became `/wiki` and `/emerge`.
+- **NicholasSpisak** — the Canvas-scratchpad pattern that became `/canvas`.
+- **ruvnet** ([`claude-flow` / `ruflo`](https://github.com/ruvnet/claude-flow)) — the pattern-graph intelligence tier (opt-in via `--with-intelligence`).
+
+Each of them is worth a look even if you install this pack instead. They're the people who did the hard work; I just picked the best of five.
+
+---
+
+## License
+
+MIT — see [`LICENSE`](LICENSE).
+
+[⤴ back to top](#top)
