@@ -10,7 +10,7 @@
     <array>
         <string>/bin/bash</string>
         <string>-c</string>
-        <string>cd "$VAULT" &amp;&amp; claude -p 'execute agents/morning.md in audit mode' --headless --audit</string>
+        <string>cd "$VAULT" &amp;&amp; claude -p 'execute agents/morning.md in audit mode'</string>
     </array>
 
     <key>EnvironmentVariables</key>
