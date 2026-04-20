@@ -100,13 +100,18 @@ cd 2ndBrain-mogging
 | `--dry-run` | on | Simulate only — print every change, write nothing. |
 | `--apply` | off | Execute the changes on disk and in `~/.claude/settings.json`. |
 | `--no-launchd` | off | Skip the 4 scheduled-agent launchd jobs (morning / nightly / weekly / health). |
+| `--no-obsidian-mcp` | off | Skip registering the `obsidian-mcp` server with Claude Code (`claude mcp add obsidian … $VAULT`). |
 | `--skip-tests` | off | Skip the onboarding test suite at the end. |
 | `--merge-stop` | off | Replace the existing Stop hook instead of jq-merging onto it. |
 | `--no-seed-vault` | off | Skip seeding the 7-folder vault layout from `vault-template/`. By default the installer copies in any of `01-Conversations/`, `02-Sources/`, `03-Concepts/`, `04-Index/Projects-Index.md`, `05-Projects/{example-project-1, example-project-2, example-project-3, INCUBATOR}/`, `06-Tasks/`, `Claude-Memory/`, `CLAUDE.md`, `AGENTS.md` that are missing. Existing files are never overwritten. |
 | `--with-intelligence` | off | Install the self-learning tier. See [Self-learning tier](#self-learning-tier-opt-in) below. |
 | `--symlink` | off | With `--with-intelligence`: symlink helpers instead of hardlinking. |
 
-On `--apply`, the installer, in order: validates the vault path, **seeds the 7-folder vault layout from `vault-template/` (any folder/file already in your vault is left untouched)**, backs up `~/.claude/settings.json`, jq-merges the Stop hook (never overwrites), symlinks skills + commands + agents into `~/.claude/`, symlinks `$VAULT/Claude-Memory/` to Claude Code's per-project memory dir, patches the canonical post-mogging contract block into your vault's `CLAUDE.md` (backs up the old one to `$VAULT/Claude-Memory/backups/<timestamp>/` first — idempotent marker block, never duplicates), installs the launchd plists (unless `--no-launchd`), installs the self-learning tier if `--with-intelligence` was passed, runs the onboarding tests (unless `--skip-tests`), and finally runs `bin/doctor.sh` to sanity-check the install.
+On `--apply`, the installer, in order: validates the vault path, **seeds the 7-folder vault layout from `vault-template/` (any folder/file already in your vault is left untouched)**, backs up `~/.claude/settings.json`, jq-merges the Stop hook (never overwrites), symlinks skills + commands + agents into `~/.claude/`, symlinks `$VAULT/Claude-Memory/` to Claude Code's per-project memory dir, patches the canonical post-mogging contract block into your vault's `CLAUDE.md` (backs up the old one to `$VAULT/Claude-Memory/backups/<timestamp>/` first — idempotent marker block, never duplicates), installs the launchd plists (unless `--no-launchd`), installs the self-learning tier if `--with-intelligence` was passed, **registers the `obsidian-mcp` server with Claude Code pointed at your vault** (unless `--no-obsidian-mcp`), runs the onboarding tests (unless `--skip-tests`), and finally runs `bin/doctor.sh` to sanity-check the install.
+
+### Obsidian MCP
+
+The installer runs `claude mcp add --scope user obsidian -- npx -y obsidian-mcp "$VAULT"` so Claude Code can read and write vault notes directly. Upstream: [`obsidian-mcp`](https://github.com/StevenStavrakis/obsidian-mcp) on npm. Idempotent — skips if already registered. Opt out with `--no-obsidian-mcp`. To re-wire later against a different vault: `claude mcp remove obsidian && claude mcp add --scope user obsidian -- npx -y obsidian-mcp <new-path>`.
 
 ---
 
