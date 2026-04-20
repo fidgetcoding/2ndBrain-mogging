@@ -704,14 +704,15 @@ merge_intelligence_hooks() {
   # Deep merge, then for each of the 5 hook arrays, concat existing + overlay.
   # This preserves the Stop hook and any other user hooks untouched.
   if ! jq -s '
-    ( .[0] * .[1] ) as $m
-    | $m
+    .[0] as $old
+    | .[1] as $new
+    | ($old * $new)
     | .hooks = (.hooks // {})
-    | .hooks.PreToolUse       = ((.[0].hooks.PreToolUse       // []) + (.[1].hooks.PreToolUse       // []))
-    | .hooks.PostToolUse      = ((.[0].hooks.PostToolUse      // []) + (.[1].hooks.PostToolUse      // []))
-    | .hooks.UserPromptSubmit = ((.[0].hooks.UserPromptSubmit // []) + (.[1].hooks.UserPromptSubmit // []))
-    | .hooks.SessionStart     = ((.[0].hooks.SessionStart     // []) + (.[1].hooks.SessionStart     // []))
-    | .hooks.SessionEnd       = ((.[0].hooks.SessionEnd       // []) + (.[1].hooks.SessionEnd       // []))
+    | .hooks.PreToolUse       = (($old.hooks.PreToolUse       // []) + ($new.hooks.PreToolUse       // []))
+    | .hooks.PostToolUse      = (($old.hooks.PostToolUse      // []) + ($new.hooks.PostToolUse      // []))
+    | .hooks.UserPromptSubmit = (($old.hooks.UserPromptSubmit // []) + ($new.hooks.UserPromptSubmit // []))
+    | .hooks.SessionStart     = (($old.hooks.SessionStart     // []) + ($new.hooks.SessionStart     // []))
+    | .hooks.SessionEnd       = (($old.hooks.SessionEnd       // []) + ($new.hooks.SessionEnd       // []))
   ' "$base" "$overlay_src" > "$merged" 2>/dev/null; then
     err "jq intelligence merge failed"
     rm -f "$merged"
