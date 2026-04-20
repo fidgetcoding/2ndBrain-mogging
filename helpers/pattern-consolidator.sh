@@ -82,9 +82,9 @@ case "${1:-check}" in
   "force") rm -f "$LAST_RUN_FILE"; consolidate_patterns ;;
   "status")
     if [ -f "$PATTERNS_DB" ] && command -v sqlite3 &>/dev/null; then
-      local short=$(sqlite3 "$PATTERNS_DB" "SELECT COUNT(*) FROM short_term_patterns" 2>/dev/null || echo "0")
-      local long=$(sqlite3 "$PATTERNS_DB" "SELECT COUNT(*) FROM long_term_patterns" 2>/dev/null || echo "0")
-      local avg_q=$(sqlite3 "$PATTERNS_DB" "SELECT ROUND(AVG(quality), 2) FROM short_term_patterns" 2>/dev/null || echo "0")
+      short=$(sqlite3 "$PATTERNS_DB" "SELECT COUNT(*) FROM short_term_patterns" 2>/dev/null || echo "0")
+      long=$(sqlite3 "$PATTERNS_DB" "SELECT COUNT(*) FROM long_term_patterns" 2>/dev/null || echo "0")
+      avg_q=$(sqlite3 "$PATTERNS_DB" "SELECT ROUND(AVG(quality), 2) FROM short_term_patterns" 2>/dev/null || echo "0")
       echo "Patterns: $short short-term, $long long-term, avg quality: $avg_q"
     fi
     ;;
