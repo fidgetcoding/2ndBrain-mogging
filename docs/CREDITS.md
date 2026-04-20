@@ -62,6 +62,14 @@
   - The bash test harness pattern (my `tests/` folder follows this shape)
   - The `wiki-schema.md` as single source of truth (same pattern, same file location)
 
+### claude-flow / agentic-flow (ruvnet) — Intelligence Loop
+
+- **Source:** https://github.com/ruvnet/ruflo (re-shipped through the <ORG-A> fork `<ORG-A>/fidgetflo`, which was squash-imported from ruflo v3.5.80)
+- **License:** MIT (c) 2024-2026 ruvnet. The FidgetFlo LICENSE preserves ruvnet's original copyright alongside <ORG-A>'s rebrand additions.
+- **What I took:** the entire **self-learning intelligence tier** — ADR-050's pattern-graph routing loop and the ADR-048/049 auto-memory bridge. Concretely, the vendored files under `helpers/` (`intelligence.cjs`, `router.js`, `hook-handler.cjs`, `auto-memory-hook.mjs`, `pattern-consolidator.sh`, `learning-hooks.sh`, `learning-optimizer.sh`, `learning-service.mjs`, `memory.js`, `session.js`, `metrics-db.mjs`) are verbatim copies from ruflo/fidgetflo with a provenance header prepended to each. No code changes.
+- **How it wires in:** the optional `install.sh --with-intelligence` flag hardlinks the helpers into `$VAULT/.claude/helpers/` and jq-merges 5 hook types (PreToolUse / PostToolUse / UserPromptSubmit / SessionStart / SessionEnd) into `~/.claude/settings.json`. The mogging Stop hook from `hooks/stop-save.sh` is preserved via append-merge, never replaced.
+- **Attribution:** every vendored file carries a 6-line header pointing back here, and the Credits section in the README lists this as the sixth upstream. This tier is opt-in so existing mogging users don't get surprise hooks.
+
 ## Secondary influences (three)
 
 ### rohitg00 — LLM-Wiki-v2
