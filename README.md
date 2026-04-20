@@ -51,7 +51,7 @@ So: we went from maxxing to absolutely **mogging** everybody.
 
 ## What you get
 
-- **The 7-folder mogged vault layout** — the contract you install against, pre-wired to the skills below.
+- **The 7-folder vault-mogging layout** — the contract you install against, pre-wired to the skills below.
 - **12 Claude Code skills** (10 core + 2 optional importers) that read + write against that layout with a shared alias dictionary + dry-run previews.
 - **Four scheduled agents** (morning / nightly / weekly / health) that audit the vault in the background so you don't have to.
 - **An opt-in self-learning tier** (ruvnet's claude-flow / ruflo pattern-graph) that makes routing smarter the longer you use it.
