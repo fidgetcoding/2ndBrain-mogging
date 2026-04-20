@@ -45,7 +45,7 @@ What was left was seven folders, ten skills, and a vault that doesn't require a 
 
 The last piece — a **self-learning tier**. A couple of the originals had one, but bootstrapping them was heavy. This pack's is opt-in (`--with-intelligence`), ships clean, and fills itself in as you use the vault. Ignore it forever and the pack still works; turn it on and it stops feeling like a filing cabinet and starts feeling like… well, a second brain.
 
-So: we went from maxxing to absolutely **mogging** everybody. It's not the best because I think it is. It's the best because it's the best of five. And I've tested them all.
+So: we went from maxxing to absolutely **mogging** everybody.
 
 ---
 
