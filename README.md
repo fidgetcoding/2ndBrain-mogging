@@ -254,7 +254,7 @@ This pack is an amalgamation — not an invention. The best ideas are all borrow
 
 - **AgriciDaniel** ([`claude-obsidian`](https://github.com/AgriciDaniel/claude-obsidian)) — the conversation-capture hygiene and the `owner: wiki` vs `owner: human` discipline that makes skills safe to run against live notes.
 - **eugeniu** ([`obsidian-second-brain`](https://github.com/eugeniughelbur/obsidian-second-brain)) — the concept-atomization rules that keep `03-Concepts/` from becoming a dumping ground.
-- **Jens Heitmann** ([`ai-second-brain-skills`](https://github.com/NulightJens/ai-second-brain-skills) · [Instagram](https://www.instagram.com/jens.heitmann/)) — the original folder structure I modded to death, and the taste-making starting point.
+- **Jens Heitmann** ([`ai-second-brain-skills`](https://github.com/NulightJens/ai-second-brain-skills)) — the original folder structure I modded to death, and the taste-making starting point.
 - **Karpathy** ([`LLM Wiki`](https://karpathy.ai/zero-to-hero.html)-era second brain) — the wiki-style synthesis pattern that became `/wiki` and `/emerge`.
 - **NicholasSpisak** — the Canvas-scratchpad pattern that became `/canvas`.
 - **ruvnet** ([`claude-flow` / `ruflo`](https://github.com/ruvnet/claude-flow)) — the pattern-graph intelligence tier (opt-in via `--with-intelligence`).
