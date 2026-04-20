@@ -9,7 +9,7 @@ related: [[Projects-Index]]
 
 # example-project-2
 
-Second placeholder project. Same rules as `example-project-1` — rename the folder and this file together, one `.md` per project, filename = folder name.
+Second placeholder project — the minimal variant. Same rules as `example-project-1` (rename folder and file together, filename = folder name), but no subfolders. Subfolders are optional; see `example-project-1` for the full layout with `content/`, `misc-building/`, and `GITHUB/`.
 
 ## What this is
 

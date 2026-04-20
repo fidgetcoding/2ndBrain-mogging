@@ -41,7 +41,7 @@ I tried **Karpathy's** Wiki-style LLM-powered second brain. I tried **AgriciDani
 
 So I merged them. I took what earned its keep from each of the five, threw out what didn't, and killed `00-Inbox/` (it's where good notes went to die). I killed `01-Fleeting/` (fleeting notes are just concepts you haven't written yet). I killed `05-Templates/` (templates belong in the plugin layer, not in your graph). I killed `06-Assets/` (Obsidian already handles attachments in place).
 
-What was left was seven folders, ten skills, and a vault that doesn't require a taxonomy degree to use. Built for a layman. No complicated language. No complicated anything.
+What was left was seven folders, twelve skills, and a vault that doesn't require a taxonomy degree to use. Built for a layman. No complicated language. No complicated anything.
 
 The last piece — a **self-learning tier**. A couple of the originals had one, but bootstrapping them was heavy. This pack's is opt-in (`--with-intelligence`), ships clean, and fills itself in as you use the vault. Ignore it forever and the pack still works; turn it on and it stops feeling like a filing cabinet and starts feeling like… well, a second brain.
 
@@ -102,11 +102,11 @@ cd 2ndBrain-mogging
 | `--no-launchd` | off | Skip the 4 scheduled-agent launchd jobs (morning / nightly / weekly / health). |
 | `--skip-tests` | off | Skip the onboarding test suite at the end. |
 | `--merge-stop` | off | Replace the existing Stop hook instead of jq-merging onto it. |
-| `--no-seed-vault` | off | Skip seeding the 7-folder vault layout from `vault-template/`. By default the installer copies in any of `01-Conversations/`, `02-Sources/`, `03-Concepts/`, `04-Index/Projects-Index.md`, `05-Projects/{example-project-1,2,3, INCUBATOR}/`, `06-Tasks/`, `Claude-Memory/`, `CLAUDE.md`, `AGENTS.md` that are missing. Existing files are never overwritten. |
+| `--no-seed-vault` | off | Skip seeding the 7-folder vault layout from `vault-template/`. By default the installer copies in any of `01-Conversations/`, `02-Sources/`, `03-Concepts/`, `04-Index/Projects-Index.md`, `05-Projects/{example-project-1, example-project-2, example-project-3, INCUBATOR}/`, `06-Tasks/`, `Claude-Memory/`, `CLAUDE.md`, `AGENTS.md` that are missing. Existing files are never overwritten. |
 | `--with-intelligence` | off | Install the self-learning tier. See [Self-learning tier](#self-learning-tier-opt-in) below. |
 | `--symlink` | off | With `--with-intelligence`: symlink helpers instead of hardlinking. |
 
-On `--apply`, the installer backs up `~/.claude/settings.json`, **seeds the 7-folder vault layout from `vault-template/` (any folder/file already in your vault is left untouched)**, jq-merges the Stop hook (never overwrites), symlinks skills + commands + agents into `~/.claude/`, installs the launchd plists, and runs the onboarding tests.
+On `--apply`, the installer, in order: validates the vault path, **seeds the 7-folder vault layout from `vault-template/` (any folder/file already in your vault is left untouched)**, backs up `~/.claude/settings.json`, jq-merges the Stop hook (never overwrites), symlinks skills + commands + agents into `~/.claude/`, symlinks `$VAULT/Claude-Memory/` to Claude Code's per-project memory dir, patches the canonical post-mogging contract block into your vault's `CLAUDE.md` (backs up the old one to `$VAULT/Claude-Memory/backups/<timestamp>/` first — idempotent marker block, never duplicates), installs the launchd plists (unless `--no-launchd`), installs the self-learning tier if `--with-intelligence` was passed, runs the onboarding tests (unless `--skip-tests`), and finally runs `bin/doctor.sh` to sanity-check the install.
 
 ---
 
@@ -258,6 +258,7 @@ This pack is an amalgamation — not an invention. The best ideas are all borrow
 - **Jens Heitmann** ([`ai-second-brain-skills`](https://github.com/NulightJens/ai-second-brain-skills)) — the original folder structure I modded to death, and the taste-making starting point.
 - **Karpathy** ([`LLM Wiki`](https://karpathy.ai/zero-to-hero.html)-era second brain) — the wiki-style synthesis pattern that became `/wiki` and `/emerge`.
 - **NicholasSpisak** ([`second-brain`](https://github.com/NicholasSpisak/second-brain)) — the Canvas-scratchpad pattern that became `/canvas`.
+
 Each of them is worth a look even if you install this pack instead. They're the people who did the hard work; I just picked the best of five.
 
 ---

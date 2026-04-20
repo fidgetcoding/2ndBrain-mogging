@@ -12,8 +12,10 @@ pre-publish checks that every release must pass.
 Please **do not** open a public GitHub issue for suspected security
 vulnerabilities.
 
-- Email: `security@<ORG-A>.io` (placeholder — replace with the actual
-  disclosure inbox before first public release)
+- Preferred: open a private advisory via GitHub Security Advisories —
+  <https://github.com/<ORG-A>/2ndBrain-mogging/security/advisories/new>
+- Backup channel: email `operator@example.com` with `[security]` in the
+  subject line.
 - Expected first response: within **72 hours** on weekdays
 - Please include:
   - A description of the issue and its impact
@@ -50,10 +52,13 @@ Our trust guarantees:
 
 ### Verification example
 
+Replace `vX.Y.Z` with the tag you're verifying (e.g. `v0.1.4`).
+
 ```bash
 # 1. Download
-curl -sSfL -o install.sh      https://example.com/releases/vX.Y.Z/install.sh
-curl -sSfL -o install.sh.minisig  https://example.com/releases/vX.Y.Z/install.sh.minisig
+curl -sSfL -o install.sh          https://github.com/<ORG-A>/2ndBrain-mogging/releases/download/vX.Y.Z/install.sh
+curl -sSfL -o install.sh.minisig  https://github.com/<ORG-A>/2ndBrain-mogging/releases/download/vX.Y.Z/install.sh.minisig
+curl -sSfL -o install.sh.sha256   https://github.com/<ORG-A>/2ndBrain-mogging/releases/download/vX.Y.Z/install.sh.sha256
 
 # 2. Verify signature (public key pinned in README)
 minisign -V -p minisign.pub -m install.sh

@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **`install.sh` step 3.5 — vault-template seeding.** Fresh `--apply` runs now copy `vault-template/` into the target vault when the 7-folder layout is absent, including three placeholder projects (`example-project-1/2/3`) and a seed `Projects-Index.md` so `/tether` has something to audit on day one.
+- **`/import-claude` and `/import-notes` skills** — brought the shipped skill count to 12. `/import-claude` routes a Claude.ai Project export (conversations + knowledge + assets) into the matching `05-Projects/<PROJECT>/` subtree; `/import-notes` handles the more general "pile of files from somewhere else" case.
+- **FidgetFlo attribution in README** — the self-learning intelligence tier is sourced from FidgetFlo (a fork of ruvnet/ruflo@v3.5.80) and now credited as such.
+- **NicholasSpisak repo link** — added to the origin story and Credits.
+
+### Fixed
+- **launchd plist PATH + flags.** The four `scheduled/launchd/*.plist` templates had (a) stale `--headless --audit` flags on the agent invocations, removed, and (b) a PATH that didn't always include Homebrew's `/opt/homebrew/bin` on Apple Silicon, patched at install time.
+- **the operator → the operator sweep.** Purged every "the operator" / "the operator" reference from shipped skill MDs, commands, README, and migration docs. Canonical is the operator / <ORG-A>.
+- **Ruvnet/claude-flow/ruflo attribution.** Removed the inaccurate direct-descent claim from README in favor of the actual lineage (FidgetFlo fork).
+- **15-agent audit-and-fix pass** — this release. Full consistency sweep across `README.md`, `PHILOSOPHY.md`, `CHANGELOG.md`, `CONTRIBUTING.md`, `docs/**`, `references/wiki-schema.md`, and every `skills/*/SKILL.md` to close the residual drift between prose and shipped behavior after v0.1.4.
+
 ## [0.1.4] — 2026-04-17
 
 ### Added — `install.sh` now applies the CLAUDE.md patch (closes v0.1.3 known gap)

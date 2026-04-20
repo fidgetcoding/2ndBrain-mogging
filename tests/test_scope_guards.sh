@@ -35,7 +35,11 @@ do
 done
 
 if [[ -z "$WIKI_CMD" ]]; then
-  printf "%sSKIP%s test_scope_guards (no wiki command found)\n" \
+  # Forward-looking SKIP. The 06-Tasks scope guard is enforced by /wiki
+  # which ships as a SKILL.md only — no shell entrypoint, so the forbidden
+  # --target path cannot be exercised here. When a wiki CLI lands, this
+  # test auto-activates via the candidate loop above.
+  printf "%sSKIP%s test_scope_guards (no wiki CLI entrypoint — skill is SKILL.md-only)\n" \
     "${_C_YELLOW:-}" "${_C_RESET:-}"
   exit 0
 fi

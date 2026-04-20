@@ -24,7 +24,7 @@ Collect the past 7 days of signal:
 
 1. `Glob` all `01-Conversations/VAULT/reports/daily-*.md` where date is within the last 7 days.
 2. `Glob` all `01-Conversations/VAULT/reports/audit-*.md` within the same window.
-3. `git log --since="7 days ago" --format="%h %s"` for a commit-level change list, filtered to commits starting with `[bot:wiki-add]`, `[bot:wiki-heal]`, or `[bot:save]`.
+3. `git log --since="7 days ago" --format="%h %s"` for a commit-level change list, filtered to commits starting with `[bot:wiki-add]`, `[bot:wiki-heal]`, `[bot:wiki-fix]`, `[bot:save]`, `[bot:morning]`, `[bot:nightly]`, `[bot:weekly]`, or `[bot:health]`.
 4. Read the current `Claude-Memory/lint-counter.json` + snapshot from 7 days ago (stored in `Claude-Memory/lint-counter-snapshots/YYYY-MM-DD.json` by the previous weekly run).
 
 ## 2. /emerge --days 7 --audit
@@ -65,4 +65,4 @@ After writing the weekly report, copy the current `Claude-Memory/lint-counter.js
 
 ## 5. Commit
 
-Commit prefix: `[bot:wiki-heal]`. Subject: `[bot:wiki-heal] weekly review 2026-W15`.
+Commit prefix: `[bot:weekly]`. Subject: `[bot:weekly] weekly review 2026-W15`.

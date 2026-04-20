@@ -43,7 +43,11 @@ CLAUDE_MEMORY_SRC=""
 
 VAULT=""
 APPLY=0
-DRY_RUN=1
+# NOTE: dry-run is the default. All control flow keys off APPLY=0/1.
+# There is deliberately NO `DRY_RUN` variable — a prior version carried
+# one but nothing ever read it, which tripped shellcheck (SC2034) and
+# made the state machine confusing. If you need a dry-run predicate,
+# test `[[ "$APPLY" -eq 0 ]]`.
 NO_LAUNCHD=0
 SKIP_TESTS=0
 VERBOSE=0
@@ -95,8 +99,8 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --vault)              VAULT="${2:-}"; shift 2 ;;
     --vault=*)            VAULT="${1#*=}"; shift ;;
-    --apply)              APPLY=1; DRY_RUN=0; shift ;;
-    --dry-run)            APPLY=0; DRY_RUN=1; shift ;;
+    --apply)              APPLY=1; shift ;;
+    --dry-run)            APPLY=0; shift ;;
     --no-launchd)         NO_LAUNCHD=1; shift ;;
     --skip-tests)         SKIP_TESTS=1; shift ;;
     --verbose)            VERBOSE=1; shift ;;
@@ -209,8 +213,13 @@ seed_vault_from_template() {
 
   local copied=0 skipped=0
   # Top-level dirs (01-Conversations, 02-Sources, ...) — copy each if absent.
+  # `cp -R` preserves nested empty dirs and .gitkeep files from the template,
+  # which matters because git-clone drops truly-empty dirs but we want the
+  # 7-folder layout to render even before any notes land in it.
   while IFS= read -r -d '' entry; do
     local rel="${entry#"$src"/}"
+    # macOS litters vault-template with .DS_Store files during local editing;
+    # skip them at the top level AND scrub any that rode along inside a dir.
     [[ "$rel" == ".DS_Store" ]] && continue
     [[ "$rel" == *"/.DS_Store" ]] && continue
     local dest="$VAULT/$rel"
@@ -219,9 +228,15 @@ seed_vault_from_template() {
       skipped=$((skipped + 1))
       continue
     fi
-    # Use cp -R for directories to preserve nested structure; install for files.
+    # Use cp -R for directories (preserves nested empty dirs + .gitkeep);
+    # install for files.
     if [[ -d "$entry" ]]; then
       run cp -R "$entry" "$dest"
+      # Scrub any nested .DS_Store that rode along inside the copied tree.
+      # Failure is non-fatal — the file simply may not exist.
+      if [[ "$APPLY" -eq 1 && -d "$dest" ]]; then
+        find "$dest" -name '.DS_Store' -type f -delete 2>/dev/null || true
+      fi
     else
       run mkdir -p "$(dirname "$dest")"
       run cp "$entry" "$dest"
@@ -475,19 +490,11 @@ apply_claude_md_patch() {
   fi
 
   if [[ -f "$vault_claude" ]]; then
-    # Backup per non-negotiable #1 (backup-before-mutation).
-    if [[ "$APPLY" -eq 1 ]]; then
-      local ts backup_dir
-      ts="$(date +%Y-%m-%d-%H%M%S)"
-      backup_dir="$VAULT/Claude-Memory/backups/$ts"
-      mkdir -p "$backup_dir"
-      cp -p "$vault_claude" "$backup_dir/CLAUDE.md.bak"
-      vlog "backed up CLAUDE.md to $backup_dir/CLAUDE.md.bak"
-    fi
-
     # Strip any existing namespaced OR legacy marker block (inclusive), then
     # drop trailing blank lines. Anything outside the markers is preserved
-    # byte-for-byte.
+    # byte-for-byte. Backup is deferred until we know the content actually
+    # changed (see content-diff guard below) so idempotent re-runs don't
+    # pile up no-op backups.
     awk '
       /^<!-- 2ndbrain-mogging:start -->$/ { skip = 1; next }
       /^<!-- mogging:start -->$/          { skip = 1; next }
@@ -508,7 +515,26 @@ apply_claude_md_patch() {
   printf '\n' >> "$working"
   cat "$patch_block" >> "$working"
 
+  # Idempotency guard: compare proposed content to existing file byte-for-byte.
+  # Only touch the filesystem (backup + write) when content actually differs,
+  # so repeat `--apply` runs don't bump mtime or accumulate dead backups.
+  if [[ -f "$vault_claude" ]] && cmp -s "$working" "$vault_claude"; then
+    log "CLAUDE.md already up to date — no write needed"
+    rm -f "$patch_block" "$working"
+    return 0
+  fi
+
   if [[ "$APPLY" -eq 1 ]]; then
+    # Backup per non-negotiable #1 (backup-before-mutation). Only runs when
+    # an existing file is about to be replaced with different content.
+    if [[ -f "$vault_claude" ]]; then
+      local ts backup_dir
+      ts="$(date +%Y-%m-%d-%H%M%S)"
+      backup_dir="$VAULT/Claude-Memory/backups/$ts"
+      mkdir -p "$backup_dir"
+      cp -p "$vault_claude" "$backup_dir/CLAUDE.md.bak"
+      vlog "backed up CLAUDE.md to $backup_dir/CLAUDE.md.bak"
+    fi
     cp "$working" "$vault_claude"
     log "CLAUDE.md patched: $vault_claude"
   else
@@ -776,6 +802,26 @@ run_doctor() {
 }
 
 # ---- main --------------------------------------------------------------------
+#
+# Install pipeline — every step in order, one line each. Keep this in sync
+# with README's "On --apply" summary so the install surface stays auditable
+# without spelunking the shell functions.
+#
+#   step 1    preflight                  claude + jq/git/bash + osascript + version gate
+#   step 2/3  validate_vault             --apply requires --vault; must be a directory
+#   step 3.5  seed_vault_from_template   additive copy of 7-folder layout + template files
+#   step 4    backup_settings            timestamped ~/.claude/.backups/<ts>/settings.json
+#   step 5    merge_stop_hook            jq-merge Stop hook (append | replace | skip-if-present)
+#   step 6    symlink_dir "skills"       ~/.claude/skills/<name> -> repo/skills/<name>
+#   step 7    symlink_dir "commands"     ~/.claude/commands/<name> -> repo/commands/<name>
+#   step 8    symlink_dir "agents"       ~/.claude/agents/<name> -> repo/agents/<name>
+#   step 9    link_claude_memory         $VAULT/Claude-Memory -> ~/.claude/projects/<enc>/memory
+#   step 9.5  apply_claude_md_patch      idempotent CLAUDE.md patch (content-diff; no-op if same)
+#   step 10   install_launchd            scheduled/launchd/*.plist -> ~/Library/LaunchAgents
+#   step 10.5 install_intelligence       (opt-in --with-intelligence) helpers + hooks + pattern store
+#   step 11   run_tests                  tests/test_onboarding.sh (gated on --apply)
+#   step 12   run_doctor                 bin/doctor.sh (non-fatal — issues warn only)
+#
 
 main() {
   mode_banner

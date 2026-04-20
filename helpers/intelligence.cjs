@@ -1,9 +1,10 @@
 #!/usr/bin/env node
-/* Vendored from claude-flow / ruflo (ADR-050 Intelligence Loop)
- * Upstream:  https://github.com/ruvnet/ruflo (re-shipped via <ORG-A>/fidgetflo)
- * License:   MIT (c) 2024-2026 ruvnet
- * Synced:    2026-04-20 — no local modifications; only this header was prepended.
- * See:       docs/CREDITS.md for the full attribution entry.
+/* Vendored from FidgetFlo (<ORG-A>/fidgetflo) — a FidgetFlo-internal build
+ * descended from ruvnet/ruflo@v3.5.80 with additional pattern-graph logic
+ * extended by <ORG-A>. Upstream: https://github.com/ruvnet/ruflo/tree/v3.5.80
+ * License:   MIT (c) 2024-2026 ruvnet, (c) 2026 <ORG-A> / the operator
+ * Synced:    2026-04-20
+ * See:       docs/CREDITS.md for the full attribution chain + NOTICE for license text.
  */
 /**
  * Intelligence Layer (ADR-050)

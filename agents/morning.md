@@ -38,7 +38,7 @@ If the count exceeds 15, collapse the mid/low-priority section into a summary li
 
 ## 3. Write the daily report
 
-Target: `01-Conversations/VAULT/reports/daily-YYYY-MM-DD.md`. Overwrite allowed (the report regenerates nightly). Frontmatter:
+Target: `01-Conversations/VAULT/reports/daily-YYYY-MM-DD.md`. Overwrite allowed (the report regenerates daily). Frontmatter:
 
 ```yaml
 ---
@@ -68,4 +68,4 @@ Keep `hot.md` under 2KB. Older entries roll off.
 
 ## 5. Commit
 
-Commit prefix per `references/wiki-schema.md` §7: `[bot:wiki-heal]` (the morning briefing is classified as a healing pass since it's idempotent and edits-in-place). Commit subject: `[bot:wiki-heal] morning briefing 2026-04-16`.
+Commit prefix per `references/wiki-schema.md` §7: `[bot:morning]` (scheduled-agent commits carry their own prefix so n8n W1 skips re-ingesting them). Commit subject: `[bot:morning] morning briefing 2026-04-16`.

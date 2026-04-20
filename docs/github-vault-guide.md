@@ -23,7 +23,7 @@ Each project folder in `05-Projects/` can map to one or more GitHub repos. Add t
 - [repo-name](https://github.com/your-org/repo-name)
 ```
 
-`/tether` reads this section when auditing backlinks, so keep it named exactly `## GitHub Repos`.
+`## GitHub Repos` is the documented convention — keep the heading spelled exactly that way so Claude finds the repo URLs when the vault lookup comes up empty. (`/tether` audits a project's **Related** section and the org-hub `## Repos` / `## Owned By` / `## Projects` sections, not this one — see `skills/tether/SKILL.md`.)
 
 ## `gh` CLI commands Claude will use
 

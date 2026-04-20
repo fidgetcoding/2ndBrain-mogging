@@ -82,9 +82,24 @@ aliases: ["Alt Name 1", "Alt Name 2"]       # list, used by Obsidian link autoco
 
 Per-type additions are documented in the plugin's `references/wiki-schema.md`.
 
-### 10 skills (plugin `2ndbrain-mogging`, auto-namespaced)
+### 12 skills (plugin `2ndbrain-mogging`, auto-namespaced)
 
-`/save` `/wiki` `/challenge` `/emerge` `/backfill` `/aliases` `/autoresearch` `/canvas` `/tether` `/connect`
+`/save` `/wiki` `/challenge` `/emerge` `/backfill` `/aliases` `/autoresearch` `/canvas` `/tether` `/connect` `/import-claude` `/import-notes`
+
+| Skill | Purpose |
+|---|---|
+| `/save` | Capture conversation / passage / dictated note / ADR into the vault with alias-driven classification + dry-run preview. |
+| `/wiki` | Re-compile a topic note from its sources — add, audit, heal, find. |
+| `/challenge` | Steel-man the opposing view of any claim using the user's own prior notes. |
+| `/emerge` | Surface patterns, rising topics, and killed ideas across recent vault activity. |
+| `/backfill` | Walk historical Claude Code session JSONLs and route them as if `/save` had run at the time. |
+| `/aliases` | Manage `Claude-Memory/aliases.yaml` — add, rename, split entities. |
+| `/autoresearch` | Three-round web research loop — shallow sweep, follow-up, synthesis. |
+| `/canvas` | Generate an Obsidian Canvas pre-wired to a named set of notes. |
+| `/tether` | Audit `05-Projects/` bidirectional links, MOC membership, hub wiring; fix orphans. |
+| `/connect` | Propose `[[wikilinks]]` between notes that share concepts but don't link yet. |
+| `/import-claude` | One-shot import your Claude.ai or ChatGPT data export — full conversation history, alias-classified, spawns concept stubs where ideas repeat. |
+| `/import-notes` | One-shot import existing notes (Apple Notes, OneNote, Notion, Evernote, raw `.md` / `.docx` / `.pptx` / `.xlsx` / `.html`); pandoc under the hood, dry-run preview. |
 
 Local installs use **hardlinks** (preferred) or symlinks — `install.sh --apply` hardlinks by default. Editing either side edits both. If a skill file ever drifts, the mogging repo is the source of truth.
 
@@ -119,6 +134,9 @@ Automated commits MUST use one of the `[bot:*]` prefixes so n8n W1 skips re-inge
 | `[bot:wiki-heal]` | `/wiki heal`, nightly audit fixups |
 | `[bot:wiki-fix]` | `/wiki` targeted repairs |
 | `[bot:backfill]` | `/backfill` skill (non-save entry) |
+| `[bot:import-claude]` | `/import-claude` one-shot Claude.ai / ChatGPT export import |
+| `[bot:import-notes]` | `/import-notes` one-shot pandoc-driven note import (Apple Notes, OneNote, Notion, Evernote, raw files) |
+| `[bot:reconcile]` | Post-import reconciliation pass (alias re-classification, orphan backlinking) |
 | `[bot:mogging-*]` | Mogging-repo maintenance (e.g., `[bot:mogging-fix]`) |
 | `[bot:morning]` / `[bot:nightly]` / `[bot:weekly]` / `[bot:health]` | Scheduled agents |
 

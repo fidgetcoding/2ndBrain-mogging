@@ -10,7 +10,7 @@
 - **License:** not formally stated; public gist, treated as reference / fair use. I do not copy verbatim code from the gist into this pack.
 - **What I took:**
   - The compilation-over-retrieval thesis (core rationale in `PHILOSOPHY.md`)
-  - The Inbox → Sources → Wiki three-folder primitive (mapped to `00-Inbox/` → `02-Literature/` → `03-Permanent/` in this pack)
+  - The Sources → Wiki primitive (original Karpathy shape: Inbox → Sources → Wiki; mapped in this pack to `02-Sources/` → `03-Concepts/`, with the Inbox stage retired in the 2026-04-16 mogging — inbox residue is routed through `/save` rather than a persistent folder)
   - The source-first frontmatter convention (required `url`/`source` on every literature note)
   - The "lose-the-wiki is recoverable from Sources" invariant (enforced in `/wiki` and `/autoresearch`)
   - The thesis quotation used verbatim in `PHILOSOPHY.md` and `docs/foundations/01-karpathy-canonical.md`
@@ -19,7 +19,7 @@
 ### NulightJens — ai-second-brain-skills
 
 - **Source:** https://github.com/NulightJens/ai-second-brain-skills
-- **License:** MIT (check repository for current status). No code is copied verbatim.
+- **License:** MIT (verified via GitHub API 2026-04-20). No code is copied verbatim.
 - **What I took:**
   - The minimal-MVP discipline (only ship what is structurally necessary)
   - The self-heal-on-missing-schema pattern (now universal across this pack's skills)
@@ -55,7 +55,7 @@
 - **Source:** https://github.com/NicholasSpisak/second-brain
 - **License:** check repository. No code is copied verbatim.
 - **What I took:**
-  - The source-page template for `02-Literature/` entries
+  - The source-page template for literature entries (mapped in this pack to `02-Sources/`; upstream used `02-Literature/`)
   - The discuss-before-write etiquette (reinforces the Jens version)
   - The factual-content-in-Sources-only rule
   - The prefer-update-over-create rule
@@ -64,11 +64,11 @@
 
 ### claude-flow / agentic-flow (ruvnet) — Intelligence Loop
 
-- **Source:** https://github.com/ruvnet/ruflo (re-shipped through the <ORG-A> fork `<ORG-A>/fidgetflo`, which was squash-imported from ruflo v3.5.80)
-- **License:** MIT (c) 2024-2026 ruvnet. The FidgetFlo LICENSE preserves ruvnet's original copyright alongside <ORG-A>'s rebrand additions.
-- **What I took:** the entire **self-learning intelligence tier** — ADR-050's pattern-graph routing loop and the ADR-048/049 auto-memory bridge. Concretely, the vendored files under `helpers/` (`intelligence.cjs`, `router.js`, `hook-handler.cjs`, `auto-memory-hook.mjs`, `pattern-consolidator.sh`, `learning-hooks.sh`, `learning-optimizer.sh`, `learning-service.mjs`, `memory.js`, `session.js`, `metrics-db.mjs`) are verbatim copies from ruflo/fidgetflo with a provenance header prepended to each. No code changes.
+- **Source:** https://github.com/ruvnet/ruflo (re-shipped through the <ORG-A> fork `<ORG-A>/fidgetflo`, which was squash-imported from ruflo v3.5.80 and has since diverged)
+- **License:** MIT (c) 2024-2026 ruvnet, with <ORG-A> / the operator (c) 2026 additions. The FidgetFlo LICENSE preserves ruvnet's original copyright alongside <ORG-A>'s rebrand + extension additions.
+- **What I took:** the entire **self-learning intelligence tier** — ADR-050's pattern-graph routing loop and the ADR-048/049 auto-memory bridge. The vendored files under `helpers/` (`intelligence.cjs`, `router.js`, `hook-handler.cjs`, `auto-memory-hook.mjs`, `pattern-consolidator.sh`, `learning-hooks.sh`, `learning-optimizer.sh`, `learning-service.mjs`, `memory.js`, `session.js`, `metrics-db.mjs`) are copied from the <ORG-A> FidgetFlo build — a FidgetFlo-internal descendant of ruvnet/ruflo@v3.5.80 with extended pattern-graph logic on top of the upstream. They are **not byte-identical to upstream ruflo**: an audit pass against ruflo@v3.5.80 confirmed divergence in the pattern-graph code paths. Each file carries a provenance header documenting the ruflo ancestry, the FidgetFlo extension, and the dual copyright.
 - **How it wires in:** the optional `install.sh --with-intelligence` flag hardlinks the helpers into `$VAULT/.claude/helpers/` and jq-merges 5 hook types (PreToolUse / PostToolUse / UserPromptSubmit / SessionStart / SessionEnd) into `~/.claude/settings.json`. The mogging Stop hook from `hooks/stop-save.sh` is preserved via append-merge, never replaced.
-- **Attribution:** every vendored file carries a 6-line header pointing back here, and the Credits section in the README lists this as the sixth upstream. This tier is opt-in so existing mogging users don't get surprise hooks.
+- **Attribution:** every vendored file carries a provenance header naming the ruflo v3.5.80 ancestor, the FidgetFlo intermediate build, and the <ORG-A> pattern-graph extension. The README Credits section lists this as the sixth upstream. This tier is opt-in so existing mogging users don't get surprise hooks.
 
 ## Secondary influences (three)
 
@@ -76,7 +76,7 @@
 
 - **Source:** https://github.com/rohitg00/LLM-Wiki-v2
 - **License:** check repository.
-- **What I took:** the template-per-output-type idea, applied narrowly to literature notes in `02-Literature/`. The broader template catalog was not adopted.
+- **What I took:** the template-per-output-type idea, applied narrowly to source notes in `02-Sources/` (the pack's equivalent of the upstream `02-Literature/` folder). The broader template catalog was not adopted.
 
 ### huytieu — COG (Chain-of-Going)
 

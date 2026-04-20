@@ -1,6 +1,6 @@
 ---
 name: tether
-description: Audit and repair the tethering rules in `05-Projects/` — filename-equals-folder, bidirectional links to MOC/Projects-Index, org-hub tethering (<ORG-A>, GITHUB), sub-project back-links, and unlinked-mention detection. Dry-run by default; atomic per-project transactions on execute. Respects `tether: none` frontmatter opt-outs and never touches cloned repos under `05-Projects/GITHUB/`.
+description: Audit and repair the tethering rules in `05-Projects/` — filename-equals-folder, bidirectional links to Projects-Index, org-hub tethering (<ORG-A>, GITHUB), sub-project back-links, and unlinked-mention detection. Dry-run by default; atomic per-project transactions on execute. Respects `tether: none` frontmatter opt-outs and never touches cloned repos under any `05-Projects/<parent>/GITHUB/` subtree.
 allowed-tools: Read, Write, Edit, Glob, Grep
 ---
 
@@ -25,7 +25,7 @@ Project folders drift. Index files get renamed with stray `-Index` suffixes. New
 
 Every project folder has an index note whose filename matches the folder exactly, **with no `-Index` suffix**.
 
-- Correct: `05-Projects/<ORG-B>/<ORG-B>.md`, `05-Projects/GITHUB/GITHUB.md`, `05-Projects/MMA/MMA.md`.
+- Correct: `05-Projects/<ORG-B>/<ORG-B>.md`, `05-Projects/<parent>/GITHUB/GITHUB.md`, `05-Projects/MMA/MMA.md`.
 - Wrong: `<ORG-B>-Index.md`, `GITHUB-Index.md`, `MMA-Index.md`.
 
 Wrong filenames break `[[PROJECT]]` wikilink resolution — the wikilink goes stale and the project drifts off the main graph.
@@ -36,7 +36,7 @@ Sub-projects follow the same rule: `05-Projects/<ORG-B>/<PROJECT-A>/<PROJECT-A>.
 
 Every project index note must link:
 
-- **UP** to `Projects-Index.md` (or `04-MOC/MOC-Projects.md` in the older layout) and to any relevant org hub (`[[<ORG-A>]]`, `[[GITHUB]]`).
+- **UP** to `Projects-Index.md` and to any relevant org hub (`[[<ORG-A>]]`, `[[GITHUB]]`).
 - **DOWN** to every sub-project under the folder.
 
 And every sub-project index must link back UP to its parent project. One-way links create islands.
@@ -53,7 +53,7 @@ Example: `<ORG-B>/<PROJECT-A>` links to `[[<ORG-B>]]` (its parent) AND `[[<ORG-A
 
 ### Rule 5 — Code projects tethered to GITHUB hub
 
-If a project has a cloned repo under `05-Projects/GITHUB/`, the project's main note links `[[GITHUB]]` in its Related section, and `GITHUB.md` lists the project under its **## Owned By** section.
+If a project has a cloned repo under any `05-Projects/<parent>/GITHUB/` hub (the canonical pattern — e.g. a <ORG-C>-owned repo lives under `05-Projects/<ORG-C>/GITHUB/`), the project's main note links `[[GITHUB]]` in its Related section, and the matching `05-Projects/<parent>/GITHUB/GITHUB.md` hub lists the project under its **## Owned By** section.
 
 ## Violation categories
 
@@ -103,7 +103,7 @@ Use sparingly. A `tether: none` project drops off the main graph by design.
 
 ## GITHUB subfolder exclusion
 
-`05-Projects/GITHUB/` contains cloned third-party and <ORG-A> repos. **Never touch anything inside `05-Projects/GITHUB/*/`.** These are cloned git repos — their `.md` files are upstream content, not vault notes. The tether skill only looks at `05-Projects/GITHUB/GITHUB.md` itself (the hub note) and `05-Projects/GITHUB/{<ORG-A>-REPOS,MISC-REPOS}/*.md` index notes if they exist. Repo internals are out of scope.
+Any `05-Projects/<parent>/GITHUB/` hub contains cloned third-party and owned repos. **Never touch anything inside a cloned repo's own subtree** (e.g. `05-Projects/<parent>/GITHUB/<ORG-REPOS>/<repo>/*`). These are cloned git repos — their `.md` files are upstream content, not vault notes. The tether skill only looks at the hub note itself (`05-Projects/<parent>/GITHUB/GITHUB.md`) and the intermediate `05-Projects/<parent>/GITHUB/<ORG-REPOS>/*.md` index notes if they exist. Repo internals are out of scope.
 
 ## --dry-run report format
 
@@ -137,7 +137,7 @@ Dry-run output is a grouped violation list:
 ## Invariants
 
 - Never delete notes.
-- Never touch `05-Projects/GITHUB/<owner>/<repo>/` contents.
+- Never touch `05-Projects/<parent>/GITHUB/<owner-repos>/<repo>/` contents.
 - Never auto-convert unlinked mentions (surface only).
 - Never bypass `tether: none`.
 - Every `--execute` run is atomic per-project.
