@@ -6,6 +6,14 @@ I built this plugin because every second-brain toolkit I found assumed I was sta
 
 The pack is an amalgamation — not an invention — of the best ideas from five upstream second-brain projects, with the rough edges sanded down for operators who already have live systems running. Full upstream attribution lives in the [Credits](#credits) section at the bottom of this file.
 
+## What we retired
+
+If you've been in the Obsidian + LLM space for longer than a weekend you've probably built the same four folders I built, three times in a row: `00-Inbox/`, `01-Fleeting/`, `05-Templates/`, `06-Assets/`. They feel load-bearing for about six weeks and then they quietly become where good notes go to die. This pack ships without them on purpose, and it's the single biggest reason the 7-folder layout works.
+
+`00-Inbox/` is gone because `/save` and `/wiki add` write directly to `02-Sources/` with a dry-run preview first — the inbox stage was a tax you paid every single capture for the luxury of triaging later, which you never actually did. `01-Fleeting/` is gone because fleeting notes are just concepts you haven't written down yet; inline capture plus same-day promotion beats shuffling markdown between folders. `05-Templates/` is gone because templates belong in the plugin layer, not in your graph — the `2ndbrain-mogging` skills carry them now, and your vault stops graphing fake template files as if they were real thoughts. `06-Assets/` is gone because Obsidian's attachment defaults already handle assets in-place, and a centralized assets folder exists mostly to make your graph view lie to you about which notes are "connected."
+
+The replacement isn't "we removed stuff." The replacement is: every note you write already has a home in one of seven folders the second you decide what kind of note it is, and if you can't decide, that ambiguity is a signal the note isn't ready to exist yet. This pack is the answer to "what happens if you take the best 200 ideas from 5 excellent PKM systems and throw out the other 800?" — the [Credits](#credits) section names the five, and [`PHILOSOPHY.md`](PHILOSOPHY.md) covers the thrown-out 800.
+
 ## A note on placeholders
 
 This pack was extracted from a live operator's personal vault. Real personal names and private client-project names have been redacted and replaced with stable placeholders of the form `<PERSON-A>`, `<PROJECT-B>`, etc. The mapping from real name to placeholder is not included in this repository. See [`docs/placeholder-names.md`](docs/placeholder-names.md) for the full convention.
@@ -35,8 +43,16 @@ cd 2ndBrain-mogging
 | `--no-launchd` | off | Skip installing the 4 scheduled-agent launchd jobs. |
 | `--skip-tests` | off | Skip the `tests/test_onboarding.sh` harness at the end of install. |
 | `--merge-stop` | off | Replace the existing Stop hook with ours instead of jq-merging onto it. |
+| `--with-intelligence` | off | Install the optional self-learning tier (pattern-graph routing, auto-memory bridge, 5 extra hooks). Adds `$VAULT/.claude/helpers/` and `$VAULT/.claude-flow/data/` — opt-in so existing users don't get surprise hooks. See [Self-learning tier](#self-learning-tier-opt-in) below. |
+| `--symlink` | off | With `--with-intelligence`: symlink helpers instead of hardlinking. Hardlink is the default (same-filesystem guarantee); use symlink if the vault lives on a different disk from this repo. |
 
-On `--apply`, the installer will: back up `~/.claude/settings.json`, jq-merge the Stop hook (never overwrite), symlink the skills / commands / agents into `~/.claude/`, install launchd plists (unless `--no-launchd`), and run the onboarding test suite (unless `--skip-tests`).
+On `--apply`, the installer will: back up `~/.claude/settings.json`, jq-merge the Stop hook (never overwrite), symlink the skills / commands / agents into `~/.claude/`, install launchd plists (unless `--no-launchd`), install the self-learning tier (only if `--with-intelligence` was passed), and run the onboarding test suite (unless `--skip-tests`).
+
+## Self-learning tier (opt-in)
+
+If you pass `--with-intelligence`, the installer adds a sixth upstream to the stack: ruvnet's claude-flow / ruflo intelligence loop (ADR-050). This tier wires PageRank-ranked memory into a small hook graph so `/save` and `/wiki` conversations get progressively smarter routing as the vault grows, without rewriting a single one of your notes. The 11 helper scripts in `helpers/` are verbatim-vendored MIT-licensed copies with a provenance header on each file; they read and write `$VAULT/.claude-flow/data/` and never touch `owner: human` content.
+
+The install path hardlinks (or symlinks with `--symlink`) each helper into `$VAULT/.claude/helpers/` and jq-merges 5 additional hook types (PreToolUse, PostToolUse, UserPromptSubmit, SessionStart, SessionEnd) into `~/.claude/settings.json` using the same append-never-overwrite discipline as the Stop-hook merge. Your existing hooks — including the mogging Stop hook from `hooks/stop-save.sh` — are preserved untouched. The tier is off by default because the advertised build should work for people who just want the folder layout and the ten skills; turn it on when you want the pack to start learning from your session history.
 
 ## Commands
 
@@ -120,3 +136,4 @@ This repository is an amalgamation and would not exist without the upstream work
 - [eugeniughelbur/obsidian-second-brain](https://github.com/eugeniughelbur/obsidian-second-brain) — thinking-tool concept (`/challenge`, `/emerge`, `/connect`) and the scheduled-agent pattern (morning / nightly / weekly / health).
 - [AgriciDaniel/claude-obsidian](https://github.com/AgriciDaniel/claude-obsidian) — hot-cache pattern for fast re-compilation, the `/autoresearch` 3-round deepening loop, the plugin-marketplace layout, and the `/canvas` visual scratchpad.
 - [NicholasSpisak/second-brain](https://github.com/NicholasSpisak/second-brain) — the source-page template, discuss-before-write etiquette, the "factual content belongs in Sources only" rule, prefer-update-over-create, the Bash-based test harness, and `wiki-schema.md` as single source of truth.
+- [ruvnet/ruflo](https://github.com/ruvnet/ruflo) *(via the <ORG-A> fork [`<ORG-A>/fidgetflo`](https://github.com/<ORG-A>/fidgetflo))* — the self-learning intelligence loop (ADR-050) + auto-memory bridge (ADR-048/049). Vendored verbatim under `helpers/` and installed only when you pass `install.sh --with-intelligence`. MIT license, full provenance headers on every vendored file, full writeup in [`docs/CREDITS.md`](docs/CREDITS.md).

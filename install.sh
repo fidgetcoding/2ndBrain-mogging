@@ -9,6 +9,7 @@
 # Usage:
 #   install.sh [--vault PATH] [--apply] [--dry-run] [--no-launchd]
 #              [--skip-tests] [--verbose] [--merge-stop]
+#              [--with-intelligence] [--symlink]
 #
 # NEVER uses `set -x`. Settings.json contents must never be echoed
 # or logged. This script handles secrets-adjacent data.
@@ -47,20 +48,28 @@ NO_LAUNCHD=0
 SKIP_TESTS=0
 VERBOSE=0
 MERGE_STOP=0
+WITH_INTELLIGENCE=0
+USE_SYMLINK=0
 
 usage() {
   cat <<'USAGE'
 Usage: install.sh [options]
 
 Options:
-  --vault PATH     Absolute path to the Obsidian vault (required with --apply)
-  --apply          Execute changes (default is dry-run)
-  --dry-run        Simulate only (default)
-  --no-launchd     Skip launchd plist install
-  --skip-tests     Skip running tests/test_onboarding.sh
-  --verbose        Verbose logging (does NOT echo settings.json contents)
-  --merge-stop     Replace any existing Stop hook with ours instead of append
-  -h, --help       Show this help
+  --vault PATH         Absolute path to the Obsidian vault (required with --apply)
+  --apply              Execute changes (default is dry-run)
+  --dry-run            Simulate only (default)
+  --no-launchd         Skip launchd plist install
+  --skip-tests         Skip running tests/test_onboarding.sh
+  --verbose            Verbose logging (does NOT echo settings.json contents)
+  --merge-stop         Replace any existing Stop hook with ours instead of append
+  --with-intelligence  Install the self-learning tier (helpers/ + 5 hook types
+                       merged into settings.json + seeded .claude-flow/data/).
+                       OFF by default; existing users won't get surprise hooks.
+  --symlink            With --with-intelligence: symlink helpers/ instead of
+                       hardlinking (hardlink is default). Useful if the vault
+                       lives on a different filesystem from this repo.
+  -h, --help           Show this help
 
 Exit codes:
   0   success
@@ -77,15 +86,17 @@ USAGE
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --vault)        VAULT="${2:-}"; shift 2 ;;
-    --vault=*)      VAULT="${1#*=}"; shift ;;
-    --apply)        APPLY=1; DRY_RUN=0; shift ;;
-    --dry-run)      APPLY=0; DRY_RUN=1; shift ;;
-    --no-launchd)   NO_LAUNCHD=1; shift ;;
-    --skip-tests)   SKIP_TESTS=1; shift ;;
-    --verbose)      VERBOSE=1; shift ;;
-    --merge-stop)   MERGE_STOP=1; shift ;;
-    -h|--help)      usage; exit 0 ;;
+    --vault)              VAULT="${2:-}"; shift 2 ;;
+    --vault=*)            VAULT="${1#*=}"; shift ;;
+    --apply)              APPLY=1; DRY_RUN=0; shift ;;
+    --dry-run)            APPLY=0; DRY_RUN=1; shift ;;
+    --no-launchd)         NO_LAUNCHD=1; shift ;;
+    --skip-tests)         SKIP_TESTS=1; shift ;;
+    --verbose)            VERBOSE=1; shift ;;
+    --merge-stop)         MERGE_STOP=1; shift ;;
+    --with-intelligence)  WITH_INTELLIGENCE=1; shift ;;
+    --symlink)            USE_SYMLINK=1; shift ;;
+    -h|--help)            usage; exit 0 ;;
     *) echo "unknown flag: $1" >&2; usage >&2; exit 2 ;;
   esac
 done
@@ -499,6 +510,174 @@ install_launchd() {
   shopt -u nullglob
 }
 
+# ---- step 10.5: self-learning intelligence tier (opt-in) --------------------
+#
+# Gated behind --with-intelligence. Three sub-steps:
+#   (a) link_helpers()              — hardlink (or symlink with --symlink) every
+#                                     file in repo/helpers/ into $VAULT/.claude/helpers/
+#   (b) merge_intelligence_hooks()  — jq-deep-merge + concat-append the 5 hook
+#                                     arrays from hooks/intelligence-hooks.json
+#                                     into ~/.claude/settings.json. NEVER
+#                                     replaces existing hooks (notably the
+#                                     mogging Stop hook from hooks/stop-save.sh).
+#   (c) seed_pattern_store()        — idempotent mkdir -p $VAULT/.claude-flow/data/
+#                                     so the first session has a place to write.
+
+link_helpers() {
+  log "step 10.5a: link intelligence helpers into vault"
+  if [[ -z "$VAULT" ]]; then
+    vlog "vault not set — skipping helpers link"
+    return 0
+  fi
+
+  local src_dir="$REPO_ROOT/helpers"
+  local dest_dir="$VAULT/.claude/helpers"
+
+  if [[ ! -d "$src_dir" ]]; then
+    warn "helpers source missing at $src_dir — skipping"
+    return 0
+  fi
+
+  run mkdir -p "$dest_dir"
+
+  local mode="hardlink"
+  [[ "$USE_SYMLINK" -eq 1 ]] && mode="symlink"
+  log "helpers link mode: $mode"
+
+  shopt -s nullglob
+  local entry name dest
+  for entry in "$src_dir"/*; do
+    [[ -f "$entry" ]] || continue
+    name="$(basename "$entry")"
+    dest="$dest_dir/$name"
+
+    # Remove any existing entry (file OR link) so link is idempotent.
+    if [[ -e "$dest" || -L "$dest" ]]; then
+      run rm -f "$dest"
+    fi
+
+    if [[ "$USE_SYMLINK" -eq 1 ]]; then
+      run ln -s "$entry" "$dest"
+    else
+      # Try hardlink; fall back to symlink if cross-device (errno EXDEV).
+      if [[ "$APPLY" -eq 1 ]]; then
+        if ! ln "$entry" "$dest" 2>/dev/null; then
+          vlog "hardlink failed (likely cross-device) — falling back to symlink: $name"
+          ln -s "$entry" "$dest"
+        fi
+      else
+        log "would hardlink: $entry -> $dest (falls back to symlink if cross-device)"
+      fi
+    fi
+    vlog "linked helpers/$name"
+  done
+  shopt -u nullglob
+}
+
+merge_intelligence_hooks() {
+  log "step 10.5b: merge intelligence hooks into settings.json"
+
+  local overlay_src="$REPO_ROOT/hooks/intelligence-hooks.json"
+  if [[ ! -f "$overlay_src" ]]; then
+    warn "intelligence overlay missing at $overlay_src — skipping"
+    return 0
+  fi
+
+  # Idempotency guard: check fingerprint "2ndBrain-mogging" hook-handler.cjs path
+  # in any of the 5 hook arrays we touch. If present, assume ours is already merged.
+  local ours_already_present=0
+  if [[ -f "$SETTINGS_PATH" ]]; then
+    if jq -e --arg p "helpers/hook-handler.cjs" '
+          [ .hooks.PreToolUse, .hooks.PostToolUse, .hooks.UserPromptSubmit,
+            .hooks.SessionStart, .hooks.SessionEnd ]
+          | map(. // [])
+          | map(.[]?.hooks // [])
+          | flatten
+          | map(.command // "")
+          | any(contains($p))
+        ' "$SETTINGS_PATH" >/dev/null 2>&1; then
+      ours_already_present=1
+    fi
+  fi
+
+  if (( ours_already_present == 1 )); then
+    log "intelligence hooks already present in settings.json — skipping merge"
+    return 0
+  fi
+
+  local base="{}"
+  [[ -f "$SETTINGS_PATH" ]] && base="$SETTINGS_PATH"
+
+  # The overlay has no placeholders to substitute (paths use ${CLAUDE_PROJECT_DIR:-.}).
+  # Validate overlay JSON.
+  if ! jq empty "$overlay_src" >/dev/null 2>&1; then
+    err "intelligence overlay JSON is invalid; aborting merge"
+    exit 40
+  fi
+
+  local merged
+  merged="$(mktemp -t mogging-intel-merged.XXXXXX)"
+
+  # Deep merge, then for each of the 5 hook arrays, concat existing + overlay.
+  # This preserves the Stop hook and any other user hooks untouched.
+  if ! jq -s '
+    ( .[0] * .[1] ) as $m
+    | $m
+    | .hooks = (.hooks // {})
+    | .hooks.PreToolUse       = ((.[0].hooks.PreToolUse       // []) + (.[1].hooks.PreToolUse       // []))
+    | .hooks.PostToolUse      = ((.[0].hooks.PostToolUse      // []) + (.[1].hooks.PostToolUse      // []))
+    | .hooks.UserPromptSubmit = ((.[0].hooks.UserPromptSubmit // []) + (.[1].hooks.UserPromptSubmit // []))
+    | .hooks.SessionStart     = ((.[0].hooks.SessionStart     // []) + (.[1].hooks.SessionStart     // []))
+    | .hooks.SessionEnd       = ((.[0].hooks.SessionEnd       // []) + (.[1].hooks.SessionEnd       // []))
+  ' "$base" "$overlay_src" > "$merged" 2>/dev/null; then
+    err "jq intelligence merge failed"
+    rm -f "$merged"
+    exit 40
+  fi
+
+  if ! jq empty "$merged" >/dev/null 2>&1; then
+    err "merged settings.json is invalid JSON after intelligence merge"
+    rm -f "$merged"
+    exit 40
+  fi
+
+  if [[ "$APPLY" -eq 1 ]]; then
+    run mkdir -p "$CLAUDE_HOME"
+    run chmod 0700 "$CLAUDE_HOME"
+    cp "$merged" "$SETTINGS_PATH.tmp.$$"
+    chmod 0600 "$SETTINGS_PATH.tmp.$$"
+    mv "$SETTINGS_PATH.tmp.$$" "$SETTINGS_PATH"
+    log "settings.json updated with intelligence hooks (0600)"
+  else
+    log "would write merged settings.json to $SETTINGS_PATH (0600)"
+  fi
+
+  rm -f "$merged"
+}
+
+seed_pattern_store() {
+  log "step 10.5c: seed pattern store"
+  if [[ -z "$VAULT" ]]; then
+    vlog "vault not set — skipping pattern store seed"
+    return 0
+  fi
+  run mkdir -p "$VAULT/.claude-flow/data"
+  run mkdir -p "$VAULT/.claude-flow/learning"
+  run mkdir -p "$VAULT/.claude-flow/metrics"
+  run mkdir -p "$VAULT/.claude-flow/sessions"
+}
+
+install_intelligence() {
+  if [[ "$WITH_INTELLIGENCE" -ne 1 ]]; then
+    vlog "step 10.5: intelligence tier SKIPPED (pass --with-intelligence to enable)"
+    return 0
+  fi
+  log "step 10.5: installing self-learning intelligence tier"
+  link_helpers
+  merge_intelligence_hooks
+  seed_pattern_store
+}
+
 # ---- step 11: tests ----------------------------------------------------------
 
 run_tests() {
@@ -553,6 +732,7 @@ main() {
   link_claude_memory
   apply_claude_md_patch
   install_launchd
+  install_intelligence
   run_tests
   run_doctor
   log "done."
