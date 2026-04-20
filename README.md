@@ -54,7 +54,7 @@ So: we went from maxxing to absolutely **mogging** everybody.
 - **The 7-folder vault-mogging layout** — the contract you install against, pre-wired to the skills below.
 - **12 Claude Code skills** (10 core + 2 optional importers) that read + write against that layout with a shared alias dictionary + dry-run previews.
 - **Four scheduled agents** (morning / nightly / weekly / health) that audit the vault in the background so you don't have to.
-- **An opt-in self-learning tier** (ruvnet's claude-flow / ruflo pattern-graph) that makes routing smarter the longer you use it.
+- **An opt-in self-learning tier** — a pattern-graph that makes routing smarter the longer you use the vault.
 - **Import tools** for bringing in every Claude.ai / ChatGPT conversation you've ever had, plus Apple Notes / OneNote / Notion / Evernote / raw docs — so you don't start from empty.
 
 ---
@@ -186,7 +186,7 @@ Deep rationale for each kill is in [`PHILOSOPHY.md`](PHILOSOPHY.md).
 
 ## Self-learning tier (opt-in)
 
-Pass `--with-intelligence` to the installer and the pack wires in a sixth upstream: ruvnet's claude-flow / ruflo pattern-graph (ADR-050). It plugs into `/save` and `/wiki` so routing gets progressively smarter as the vault grows, without rewriting a single one of your notes. 11 helper scripts (verbatim MIT-licensed copies with provenance headers) get hardlinked into `$VAULT/.claude/helpers/` and 5 additional hook types (PreToolUse / PostToolUse / UserPromptSubmit / SessionStart / SessionEnd) get jq-merged into `~/.claude/settings.json` — your existing hooks are preserved.
+Pass `--with-intelligence` to the installer and the pack wires in a pattern-graph that plugs into `/save` and `/wiki` so routing gets progressively smarter as the vault grows, without rewriting a single one of your notes. 11 helper scripts get hardlinked into `$VAULT/.claude/helpers/` and 5 additional hook types (PreToolUse / PostToolUse / UserPromptSubmit / SessionStart / SessionEnd) get jq-merged into `~/.claude/settings.json` — your existing hooks are preserved.
 
 Off by default so the advertised pack works for people who just want the folders and the skills. Turn it on when you want the vault to start learning from your session history.
 
@@ -257,8 +257,6 @@ This pack is an amalgamation — not an invention. The best ideas are all borrow
 - **Jens Heitmann** ([`ai-second-brain-skills`](https://github.com/NulightJens/ai-second-brain-skills)) — the original folder structure I modded to death, and the taste-making starting point.
 - **Karpathy** ([`LLM Wiki`](https://karpathy.ai/zero-to-hero.html)-era second brain) — the wiki-style synthesis pattern that became `/wiki` and `/emerge`.
 - **NicholasSpisak** — the Canvas-scratchpad pattern that became `/canvas`.
-- **ruvnet** ([`claude-flow` / `ruflo`](https://github.com/ruvnet/claude-flow)) — the pattern-graph intelligence tier (opt-in via `--with-intelligence`).
-
 Each of them is worth a look even if you install this pack instead. They're the people who did the hard work; I just picked the best of five.
 
 ---
