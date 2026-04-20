@@ -10,6 +10,7 @@
 #   install.sh [--vault PATH] [--apply] [--dry-run] [--no-launchd]
 #              [--skip-tests] [--verbose] [--merge-stop]
 #              [--with-intelligence] [--symlink] [--no-obsidian-mcp]
+#              [--no-statusline-brain]
 #
 # NEVER uses `set -x`. Settings.json contents must never be echoed
 # or logged. This script handles secrets-adjacent data.
@@ -50,6 +51,7 @@ APPLY=0
 # test `[[ "$APPLY" -eq 0 ]]`.
 NO_LAUNCHD=0
 NO_OBSIDIAN_MCP=0
+NO_STATUSLINE_BRAIN=0
 SKIP_TESTS=0
 VERBOSE=0
 MERGE_STOP=0
@@ -67,6 +69,9 @@ Options:
   --dry-run            Simulate only (default)
   --no-launchd         Skip launchd plist install
   --no-obsidian-mcp    Skip obsidian-mcp registration (claude mcp add obsidian)
+  --no-statusline-brain Skip writing ~/.claude/.mogging-vault (the vault-path
+                       marker cli-maxxing's ⚡ fidgetflo statusline reads to
+                       light up the 🧠 2ndBrain indicator)
   --skip-tests         Skip running tests/test_onboarding.sh
   --verbose            Verbose logging (does NOT echo settings.json contents)
   --merge-stop         Replace any existing Stop hook with ours instead of append
@@ -105,6 +110,7 @@ while [[ $# -gt 0 ]]; do
     --dry-run)            APPLY=0; shift ;;
     --no-launchd)         NO_LAUNCHD=1; shift ;;
     --no-obsidian-mcp)    NO_OBSIDIAN_MCP=1; shift ;;
+    --no-statusline-brain) NO_STATUSLINE_BRAIN=1; shift ;;
     --skip-tests)         SKIP_TESTS=1; shift ;;
     --verbose)            VERBOSE=1; shift ;;
     --merge-stop)         MERGE_STOP=1; shift ;;
@@ -787,8 +793,10 @@ install_obsidian_mcp() {
     return 0
   fi
 
-  # Already-registered fingerprint check (user-scope list).
-  if claude mcp list 2>/dev/null | grep -qE '^obsidian[[:space:]]'; then
+  # Already-registered fingerprint check (user-scope list). `claude mcp list`
+  # prints each server as `<name>: <command> - <status>`, so anchor on the
+  # colon to avoid matching `obsidian-*` neighbours.
+  if claude mcp list 2>/dev/null | grep -qE '^obsidian:'; then
     log "obsidian-mcp already registered — skipping"
     return 0
   fi
@@ -801,6 +809,43 @@ install_obsidian_mcp() {
     fi
   else
     log "would register obsidian-mcp: claude mcp add --scope user obsidian -- npx -y obsidian-mcp \"$VAULT\""
+  fi
+}
+
+# ---- step 10.8: statusline brain marker -------------------------------------
+#
+# Writes $HOME/.claude/.mogging-vault containing the absolute vault path.
+# cli-maxxing's ⚡ fidgetflo statusline reads this file to decide when to
+# light up the 🧠 2ndBrain indicator: if $CWD == marker-contents or $CWD
+# starts with marker-contents + "/", the indicator shows.
+#
+# This is the ENTIRE mogging contribution to the statusline — mogging does
+# not install or own a statusline of its own. If cli-maxxing isn't installed,
+# the marker file is a harmless ~100-byte no-op. Opt out with
+# --no-statusline-brain.
+
+install_statusline_marker() {
+  if [[ "$NO_STATUSLINE_BRAIN" -eq 1 ]]; then
+    log "step 10.8: statusline brain marker SKIPPED (--no-statusline-brain)"
+    return 0
+  fi
+  log "step 10.8: write statusline brain marker"
+
+  if [[ -z "${VAULT:-}" ]]; then
+    vlog "vault not set — skipping statusline marker"
+    return 0
+  fi
+
+  local marker="$CLAUDE_HOME/.mogging-vault"
+
+  if [[ "$APPLY" -eq 1 ]]; then
+    run mkdir -p "$CLAUDE_HOME"
+    # shellcheck disable=SC2094
+    printf '%s\n' "$VAULT" > "$marker"
+    chmod 0644 "$marker"
+    log "marker written: $marker → $VAULT"
+  else
+    log "would write marker: $marker → $VAULT"
   fi
 }
 
@@ -863,6 +908,8 @@ run_doctor() {
 #   step 10   install_launchd            scheduled/launchd/*.plist -> ~/Library/LaunchAgents
 #   step 10.5 install_intelligence       (opt-in --with-intelligence) helpers + hooks + pattern store
 #   step 10.7 install_obsidian_mcp       claude mcp add obsidian → vault; opt out w/ --no-obsidian-mcp
+#   step 10.8 install_statusline_marker  write $HOME/.claude/.mogging-vault (vault path marker for
+#                                        cli-maxxing's 🧠 indicator); opt out w/ --no-statusline-brain
 #   step 11   run_tests                  tests/test_onboarding.sh (gated on --apply)
 #   step 12   run_doctor                 bin/doctor.sh (non-fatal — issues warn only)
 #
@@ -882,6 +929,7 @@ main() {
   install_launchd
   install_intelligence
   install_obsidian_mcp
+  install_statusline_marker
   run_tests
   run_doctor
   log "done."
