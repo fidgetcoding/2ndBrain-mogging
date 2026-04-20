@@ -1,5 +1,5 @@
 ---
-description: "Suggest new wikilinks between concepts the skill believes are related but currently unlinked — proposes, does not auto-apply."
+description: "Bridge two notes — surfaces 3–5 structural analogies, transfer opportunities, or collision ideas between them. Read-only, terminal-only output, never writes."
 ---
 
-Read the `connect` skill at `skills/connect/SKILL.md`, then run the workflow. The skill embeds every `03-Concepts/` note, finds pairs with cosine similarity ≥0.82 that lack a direct wikilink in either direction, and produces a proposal list. Each proposal shows the two notes, the overlap signal (shared tags, shared sources, embedding score), and a suggested anchor sentence for the link. The user confirms per-pair before any write. Commit prefix `[bot:wiki-add]` on accepted proposals. All writes obey `references/wiki-schema.md`.
+Read the `connect` skill at `skills/connect/SKILL.md`, then run the workflow. Invocation is `/connect [[note-A]] [[note-B]] [--via [[intermediate]]] [--depth surface|deep]`. The skill resolves both wikilinks, scopes each note's neighborhood (backlinks, outgoing links, tag-overlap, folder-parent, frontmatter `related:`), finds overlap, and types each hit as `structural analogy`, `transfer opportunity`, or `collision idea` — capped at 5. HARD RULE: the skill is READ-ONLY. No `Write`, no `Edit`, no file creation, no `--save`, no commits. If the user wants to persist a connection, they copy-paste manually. The friction is the quality gate.

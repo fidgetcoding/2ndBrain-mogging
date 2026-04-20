@@ -1,6 +1,9 @@
 MIT License
 
-Copyright (c) 2026 <ORG-A>
+Copyright (c) 2026 the operator / <ORG-A> (2ndBrain-mogging pack)
+Copyright (c) 2024-2026 ruvnet (applies specifically to the vendored helpers
+    under helpers/, inherited from https://github.com/ruvnet/ruflo via the
+    <ORG-A>/fidgetflo intermediate fork — see docs/CREDITS.md and NOTICE)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

@@ -71,7 +71,7 @@ Before any `Write` or `Edit`, print a table:
 ├───────────────────────────────┼────────────────────────────────────────────────────┼──────────────┤
 │ "<person-h>", "<project-c>"   │ 05-Projects/MMA/<PROJECT-B>/…/2026-04-16.md        │ 0.88         │
 │ "stripe webhook" (ambiguous)  │ 05-Projects/<ORG-A>/stripe-notes.md  [stub]   │ 0.41         │
-│ "tax deduction"               │ 05-Projects/LEGAL : FINANCE/tax-notes-2025.md      │ 0.72         │
+│ "tax deduction"               │ 05-Projects/LEGAL-FINANCE/tax-notes-2025.md        │ 0.72         │
 └───────────────────────────────┴────────────────────────────────────────────────────┴──────────────┘
 
 Commit on all writes: [bot:save] capture <person-h> session 2026-04-16
@@ -96,7 +96,7 @@ Frontmatter for the primary capture file:
 ---
 title: "Conversation — <short description>"
 date: 2026-04-16
-type: literature
+type: source
 source: "claude-cli session <session-id>"
 tags: [conversation, <alias-tags...>]
 related: [[<alias destinations as wikilinks>]]
@@ -113,7 +113,7 @@ related: [[<alias destinations as wikilinks>]]
 ## 6. Branch 3 — Dictated note
 
 1. "Is this a fleeting thought, a source-style capture, or a permanent atomic note? (f/l/p)"
-2. Based on answer, route to `02-Sources/` (for `f` and `l`) or `03-Concepts/` (for `p`) with the corresponding filename convention from `CLAUDE.md` (never the root). The pre-mogging `01-Fleeting/` and `03-Permanent/` folders were killed during the 2026-04-16 mogging refactor — fleeting thoughts now land in `02-Sources/` alongside literature.
+2. Based on answer, route to `02-Sources/` (for `f` and `l`) or `03-Concepts/` (for `p`) with the corresponding filename convention from `CLAUDE.md` (never the root). The pre-mogging `01-Fleeting/` and `03-Permanent/` folders were killed during the 2026-04-16 mogging refactor — fleeting thoughts now land in `02-Sources/` alongside other source notes. Source captures use `type: source`; concept captures use `type: concept` (per `docs/PARSING-GUIDE.md` decision table — the canonical type set is `source | concept | index | conversation | adr | synthesis`).
 3. Still run alias classification on the content to propose `related: []` wikilinks in frontmatter. Show them in the preview so the user can accept/edit.
 
 ## 7. Branch 4 — ADR
@@ -204,8 +204,10 @@ which records intent for the CURRENT session only and prints a one-line confirma
 `/save --backfill` ingests historical Claude CLI transcripts into the vault. Source path:
 
 ```
-$HOME/.claude/projects/-$HOME-Desktop-WORK-OBSIDIAN-2ndBrain/session-*.jsonl
+~/.claude/projects/<vault-encoded-path>/session-*.jsonl
 ```
+
+`<vault-encoded-path>` is Claude Code's slug for the absolute vault path — leading slash replaced with `-`, every remaining `/` replaced with `-`. Derive it at runtime from `$VAULT_ROOT` (e.g. `/Users/nathandavidovich/Desktop/BRAIN2` → `-Users-nathandavidovich-Desktop-BRAIN2`). Do NOT hardcode a vault-specific slug in this file — the vault may be renamed or moved.
 
 Pipeline:
 

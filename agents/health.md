@@ -22,7 +22,7 @@ Triggered by `scheduled/launchd/io.<ORG-A>.mogging.health.plist` at 21:00 Americ
 
 ### Gate A — Symlinks resolve
 
-The live vault has a handful of project symlinks (e.g., `07-Projects/GITHUB/<ORG-A>-REPOS/obsidian-tasks-sync` → a repo elsewhere on disk). A broken symlink creates ghost paths in `Glob` output and confuses every downstream skill.
+The live vault has a handful of project symlinks (e.g., the `06-Tasks/obsidian-tasks-sync` git submodule → a repo elsewhere on disk; or any repo submoduled under `05-Projects/<ORG-C>/GITHUB/<ORG-A>-REPOS/`). A broken symlink creates ghost paths in `Glob` output and confuses every downstream skill.
 
 Check: `find <vault-root> -maxdepth 5 -type l` and `test -e` each target. Report count of broken vs. resolved.
 
@@ -83,4 +83,4 @@ Following the status line, a diagnostics block with one `## Gate <A|B|C|D>` sect
 
 ## 4. Commit
 
-Commit prefix: `[bot:wiki-heal]`. Subject format: `[bot:wiki-heal] health 2026-04-19 — STATUS: <OK|WARN|FAIL>`. The status in the commit subject lets `git log --oneline` scan surface the trend without opening any file.
+Commit prefix: `[bot:health]`. Subject format: `[bot:health] health 2026-04-19 — STATUS: <OK|WARN|FAIL>`. The status in the commit subject lets `git log --oneline` scan surface the trend without opening any file.

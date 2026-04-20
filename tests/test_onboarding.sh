@@ -19,8 +19,10 @@ assert_reset "test_onboarding"
 # ---------------------------------------------------------------------------
 TMPROOT="$(mktemp -d -t 2brain-onboard-XXXXXX)"
 cleanup() {
-  # Defensive: only nuke tempdir, never $HOME.
-  if [[ -n "${TMPROOT:-}" && "$TMPROOT" == /tmp/* || "$TMPROOT" == /var/folders/* ]]; then
+  # Defensive: only nuke tempdir, never $HOME. Explicit parens because bash
+  # treats unparenthesised `A && B || C` as ambiguous — we need
+  # "set AND (inside /tmp OR inside /var/folders)".
+  if [[ -n "${TMPROOT:-}" && ( "$TMPROOT" == /tmp/* || "$TMPROOT" == /var/folders/* ) ]]; then
     rm -rf "$TMPROOT"
   fi
 }
@@ -97,40 +99,46 @@ assert_contains "$FAKE_VAULT/CLAUDE.md" "02-Sources" \
 # either Markdown H2 or H3 level.
 assert_contains "$FAKE_VAULT/CLAUDE.md" "re:^#+[[:space:]]+Routing" \
   "CLAUDE.md has a Routing header"
-assert_contains "$FAKE_VAULT/CLAUDE.md" "re:^#+[[:space:]]+(Vault Structure|Folders|Layout)" \
+# Accept any of: "Vault Structure", "Folder structure", "Folders", "Layout".
+# Case-insensitive via [Ff]/[Ss] character classes because posix-ERE has no
+# inline (?i) and CLAUDE.md uses "Folder structure" (sentence case).
+assert_contains "$FAKE_VAULT/CLAUDE.md" "re:^#+[[:space:]]+([Vv]ault [Ss]tructure|[Ff]older [Ss]tructure|[Ff]olders|[Ll]ayout)" \
   "CLAUDE.md has a Vault/Folders header"
 
 # ---------------------------------------------------------------------------
-# Plugin manifest.
+# Plugin manifest (repo-root, NOT vault).
+#
+# plugin.json is the Claude Code marketplace/pack manifest. It lives at
+# $REPO_ROOT/.claude-plugin/plugin.json and is read by Claude Code when the
+# pack is registered — install.sh does not copy it into the user's vault.
+# The old assertions looked in $VAULT/.claude-plugin/plugin.json which was
+# a category error; we now assert against the repo.
 # ---------------------------------------------------------------------------
-PLUGIN_JSON="$FAKE_VAULT/.claude-plugin/plugin.json"
-assert_file "$PLUGIN_JSON" "plugin.json exists"
+PLUGIN_JSON="$REPO_ROOT/.claude-plugin/plugin.json"
+assert_file "$PLUGIN_JSON" "plugin.json exists in repo"
 assert_json_valid "$PLUGIN_JSON" "plugin.json is valid JSON"
 assert_contains "$PLUGIN_JSON" "2ndbrain-mogging" \
   "plugin.json references the plugin name"
 
 # ---------------------------------------------------------------------------
-# Skills — 10 symlinks under ~/.claude/skills, each resolving into the repo.
+# Skills — ship surface is 10 skills, symlinked into ~/.claude/skills WITHOUT
+# any namespace prefix. Source of truth: .claude-plugin/plugin.json .skills[].
+#
+# The old EXPECTED_SKILLS list included phantom skills (onboard, recall,
+# distill, index, route, scrub) that were never implemented; those
+# assertions have been removed. If/when any of them ship, add them back
+# here and update plugin.json in the same change.
 # ---------------------------------------------------------------------------
 SKILLS_DIR="$FAKE_HOME/.claude/skills"
 assert_dir "$SKILLS_DIR" "~/.claude/skills exists after install"
 
 EXPECTED_SKILLS=(
-  wiki save onboard aliases recall connect
-  distill index route scrub
+  save wiki challenge emerge backfill
+  aliases autoresearch canvas tether connect
 )
 for s in "${EXPECTED_SKILLS[@]}"; do
-  # The installer may pick a prefix — we accept any file/dir under skills/
-  # whose name *ends* with the canonical skill name. Strict assertion first,
-  # with a tolerant fallback.
-  link="$SKILLS_DIR/2ndbrain-$s"
-  if [[ -L "$link" || -e "$link" ]]; then
-    assert_symlink "$link" "skills/$s" "symlink present: 2ndbrain-$s"
-  else
-    # Tolerant fallback — any skill folder named $s.
-    alt="$SKILLS_DIR/$s"
-    assert_symlink "$alt" "skills/$s" "symlink present: $s (fallback)"
-  fi
+  link="$SKILLS_DIR/$s"
+  assert_symlink "$link" "skills/$s" "symlink present: $s"
 done
 
 # ---------------------------------------------------------------------------
@@ -146,7 +154,7 @@ if command -v jq >/dev/null 2>&1; then
   COUNT_2B_STOP=$(jq '
     [ .hooks.Stop[]?
       | .hooks[]?
-      | select(.command | test("2ndbrain"))
+      | select(.command | test("2ndbrain"; "i"))
     ] | length
   ' "$SETTINGS" 2>/dev/null || echo 0)
 fi
@@ -192,7 +200,7 @@ if command -v jq >/dev/null 2>&1; then
   COUNT_2B_STOP2=$(jq '
     [ .hooks.Stop[]?
       | .hooks[]?
-      | select(.command | test("2ndbrain"))
+      | select(.command | test("2ndbrain"; "i"))
     ] | length
   ' "$SETTINGS" 2>/dev/null || echo 0)
 fi

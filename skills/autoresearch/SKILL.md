@@ -1,12 +1,12 @@
 ---
 name: autoresearch
-description: Three-round web research loop that decomposes a topic, gathers sources, gap-fills contradictions, and emits vault-ready literature + concept notes with confidence labels. Ported from AgriciDaniel with source-freshness hardening, SSRF guards, and a Karpathy factual-only rule for literature notes.
+description: Three-round web research loop that decomposes a topic, gathers sources, gap-fills contradictions, and emits vault-ready source + concept notes with confidence labels. Ported from AgriciDaniel with source-freshness hardening, SSRF guards, and a Karpathy factual-only rule for source notes (02-Sources/).
 allowed-tools: Read, Write, WebSearch, WebFetch, Grep, Glob
 ---
 
 # /autoresearch
 
-Structured web research for the 2ndBrain vault. Decomposes a topic into angles, runs a bounded multi-round search loop, writes per-source literature notes + per-concept permanent notes, then reconciles everything into a master synthesis. Strict source-freshness and SSRF policies keep the research clean and safe.
+Structured web research for the 2ndBrain vault. Decomposes a topic into angles, runs a bounded multi-round search loop, writes per-source notes in `02-Sources/` (`type: source`) + per-concept notes in `03-Concepts/` (`type: concept`), then reconciles everything into a master synthesis (`type: synthesis`). Strict source-freshness and SSRF policies keep the research clean and safe. Every frontmatter `type:` value stays inside the canonical set defined in `docs/CLAUDE-MD-PATCH.md` and `docs/PARSING-GUIDE.md`: `source | concept | index | conversation | adr | synthesis`.
 
 ## Invocation
 
@@ -41,7 +41,7 @@ Decompose the topic into 3-5 angles. An angle is a distinct sub-question or stak
 1. Write angles as a checklist inside the synthesis draft.
 2. For each angle, run 2-3 WebSearch queries. Vary phrasing; prefer specific over generic.
 3. For each search, WebFetch the top 2-3 results that pass the source policy (below).
-4. Summarize each fetched source into a candidate `02-Sources/LIT-{slug}.md` in memory. Do not write yet — write only survives Round 2 reconciliation.
+4. Summarize each fetched source into a candidate `02-Sources/SRC-YYYY-MM-DD-{slug}.md` in memory. Do not write yet — writes only survive Round 2 reconciliation.
 
 Budget: `standard` depth → ~20 fetches max, `deep` → ~40 fetches max. Never exceed 50 fetches in a single invocation.
 
@@ -91,33 +91,36 @@ Tags render inline: `LLM inference latency scales near-linearly with context len
 
 ## Output Structure
 
-Per source → `02-Sources/LIT-{slug}.md`:
+Per source → `02-Sources/SRC-YYYY-MM-DD-{slug}.md`:
 
-- YAML frontmatter: `title`, `author`, `source_url`, `fetched_date`, `publish_date`, `confidence`, `type: literature`.
-- **Karpathy rule:** literature notes are factual extraction only. No synthesis, no opinions, no connections. If it wasn't on the page, it does not belong here.
+- YAML frontmatter: `title`, `author`, `source_url`, `fetched_date`, `publish_date`, `confidence`, `type: source`, `owner: wiki`.
+- **Karpathy rule:** source notes are factual extraction only. No synthesis, no opinions, no connections. If it wasn't on the page, it does not belong here.
 - Structure: summary (≤200 words) → key facts as bullets → verbatim quotes for load-bearing claims.
-- Cap at 200 lines. If a source is genuinely larger, split into `LIT-{slug}-part-2.md`.
+- Cap at 200 lines. If a source is genuinely larger, split into `SRC-YYYY-MM-DD-{slug}-part-2.md`.
 
 Per concept → `03-Concepts/{slug}.md` (create or update):
 
+- YAML frontmatter: `type: concept`, `owner: wiki` (new notes only — never overwrite an existing `owner: human` note; propose a diff instead).
 - Declarative present tense. Explain the concept as if to a colleague.
-- Every factual claim carries an inline citation `(Source: [[LIT-{slug}]])` and a confidence label.
-- Dense wikilinks to sibling concepts and upstream MOCs.
+- Every factual claim carries an inline citation `(Source: [[SRC-YYYY-MM-DD-{slug}]])` and a confidence label.
+- Dense wikilinks to sibling concepts and upstream indexes in `04-Index/`.
 - Update existing notes — do not duplicate. Append new facts under a `## Updates {date}` subheading if the concept exists.
 
-Per entity (person, org, tool, place) → update wikilinks across all affected notes. Create a stub in `03-Concepts/entities/` if missing.
+Per entity (person, org, tool, place) → update wikilinks across all affected notes. If a stub is missing, create it directly at `03-Concepts/{entity-slug}.md` with `type: concept`, `owner: wiki`. Do NOT create an `03-Concepts/entities/` subdirectory — the 7-folder contract has no such subtree.
 
-Master synthesis → `03-Concepts/synthesis/{topic-slug}.md`:
+Master synthesis → `03-Concepts/{topic-slug}.md`:
 
+- YAML frontmatter: `type: synthesis`, `owner: wiki`, `answers_question: "<original topic/question>"`, `sources: [[SRC-YYYY-MM-DD-a]], [[SRC-YYYY-MM-DD-b]], ...`.
 - The narrative answer to the original question.
-- Cites every `02-Sources/LIT-*` note used.
+- Cites every `02-Sources/SRC-*` note used.
 - Ends with a `## Open Questions` section and any `> [!gap]` callouts lifted from Round 2/3.
-- Links back to `04-Index/Index.md` and prepends a line to `log.md`.
+- Links back to the relevant `04-Index/<Topic>-Index.md` and prepends a line to `log.md`.
+- Lands flat in `03-Concepts/` — do NOT write to `03-Concepts/synthesis/`, which is not part of the 7-folder contract.
 
 ## Writing Rules
 
 - Declarative present tense. No "might", no "could arguably", no "in some cases" (use confidence labels instead).
-- Citations inline as `(Source: [[Page]])` — brackets must resolve to a real `LIT-*` file in `02-Sources/`.
+- Citations inline as `(Source: [[Page]])` — brackets must resolve to a real `SRC-YYYY-MM-DD-*` file in `02-Sources/`.
 - `> [!gap]` callout for any admitted uncertainty.
 - ≤200 lines per page. Hard cap — if content exceeds, split.
 - No hedging adverbs. No filler transitions ("furthermore", "additionally"). Facts stack tightly.
@@ -149,7 +152,7 @@ When a vault sync commits `/autoresearch` output, the commit message MUST start 
 ## Failure Modes
 
 - **No web results for a round** → emit `> [!gap] no results for: "{query}"` in synthesis, mark the angle `confidence: low`, continue.
-- **All sources fail URL safety** → abort the angle, flag in synthesis, do not write partial literature notes.
+- **All sources fail URL safety** → abort the angle, flag in synthesis, do not write partial source notes.
 - **Vault write collision** (existing note with same slug) → append to existing under `## Updates {date}`, never overwrite.
 - **Budget exhausted mid-round** → finish the current fetch, write everything gathered, mark remaining angles `incomplete` in synthesis, do not silently truncate.
 
@@ -158,13 +161,13 @@ When a vault sync commits `/autoresearch` output, the commit message MUST start 
 ```
 /autoresearch "JSCalendar floating datetime semantics" --depth standard
 
-Round 0 → vault has 2 adjacent notes (LIT-rfc8984, morgen-api-quirks). proceed.
+Round 0 → vault has 2 adjacent notes (SRC-2026-04-15-rfc8984, morgen-api-quirks). proceed.
 Round 1 → 4 angles × 2 searches × 2 fetches = 16 sources fetched, 12 passed source policy.
 Round 2 → 2 contradictions (timezone drift, DST handling); 4 targeted queries; both resolved.
 Round 3 → skipped (no unresolved contradictions).
-Output → 12 LIT-* notes, 3 concept updates, 1 synthesis at 03-Concepts/synthesis/jscalendar-floating-datetime.md.
+Output → 12 SRC-* notes (type: source), 3 concept updates (type: concept), 1 synthesis at 03-Concepts/jscalendar-floating-datetime.md (type: synthesis).
 Housekeeping → Index updated, log prepended, hot.md refreshed.
 Commit → [bot:autoresearch] 12 sources, 3 concepts, 0 gaps.
 ```
 
-The loop is bounded, the output is vault-native, and every claim is traceable to a literature note. When in doubt: shorter rounds, stricter sources, more gap callouts, fewer hedges.
+The loop is bounded, the output is vault-native, and every claim is traceable to a source note in `02-Sources/`. When in doubt: shorter rounds, stricter sources, more gap callouts, fewer hedges.

@@ -11,7 +11,7 @@ The vault gets denser every day. Some of that density is signal — a concept sh
 ## When to Invoke
 
 - User runs `/emerge` manually, usually at end of week or start of a review.
-- Scheduled weekly agent (Sunday 9pm EST) runs `/emerge --days 7 --audit` non-interactively and writes the report to `01-Conversations/VAULT/reports/emerge-YYYY-WW.md`.
+- Scheduled weekly agent (Friday 6pm ET) runs `/emerge --days 7 --audit` non-interactively and writes the report to `01-Conversations/VAULT/reports/emerge-YYYY-WW.md`.
 - After a burst of activity (e.g. the operator just closed a Lava deliverable sprint and wants to see what emerged).
 
 Do NOT auto-run `/emerge` inside another skill's pipeline except the scheduled agent. It's expensive and slow.
@@ -152,7 +152,7 @@ Before emitting a cluster, check `03-Concepts/` for overlapping notes (the pre-m
 ## Scheduled Agent Integration
 
 Weekly agent config (managed in `~/.claude/hooks/` not here):
-- Trigger: Sunday 9pm EST
+- Trigger: Friday 6pm ET
 - Command: `/emerge --days 7 --audit`
 - Output: `01-Conversations/VAULT/reports/emerge-YYYY-WW.md` (ISO week number)
 - Side effect: appends one-line summary to `01-Conversations/VAULT/reports/emerge-log.md` (run ID, cluster count, top cluster name).

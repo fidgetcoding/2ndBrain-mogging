@@ -38,7 +38,11 @@ do
 done
 
 if [[ -z "$WIKI_CMD" ]]; then
-  printf "%sSKIP%s test_discuss_before_write (no wiki command found)\n" \
+  # Forward-looking SKIP. /wiki currently ships as a SKILL.md only — the
+  # prompt→edit flow is Claude-driven, there is no shell entrypoint for
+  # automated confirm/reject testing. This test will auto-exercise when a
+  # runnable wiki CLI lands. run_all.sh surfaces SKIP distinctly from PASS.
+  printf "%sSKIP%s test_discuss_before_write (no wiki CLI entrypoint — skill is SKILL.md-only)\n" \
     "${_C_YELLOW:-}" "${_C_RESET:-}"
   exit 0
 fi

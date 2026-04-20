@@ -1,0 +1,39 @@
+2ndBrain-mogging
+================
+
+Copyright (c) 2026 the operator / <ORG-A>
+Licensed under the MIT License. See LICENSE for the full text.
+
+This pack incorporates vendored third-party code under `helpers/`. The files
+in that directory are derivatives of work originally authored by ruvnet and
+distributed under the MIT License:
+
+    Copyright (c) 2024-2026 ruvnet
+    Upstream:         https://github.com/ruvnet/ruflo
+    Anchor tag:       v3.5.80
+
+The vendored files were imported via the <ORG-A>-owned intermediate fork
+`<ORG-A>/fidgetflo`, which was squash-imported from ruflo@v3.5.80 and
+then extended with additional pattern-graph / intelligence-loop logic by
+<ORG-A> (the operator). As a result, several files in `helpers/` differ
+in content and length from the corresponding files in the public ruflo
+v3.5.80 tag, and a handful of files (`memory.js`, `router.js`, `session.js`)
+are <ORG-A> / FidgetFlo-era additions that do not exist in the upstream
+tag at all.
+
+The dual copyright on these files is therefore:
+
+    Copyright (c) 2024-2026 ruvnet (original ruflo work carried forward)
+    Copyright (c) 2026 <ORG-A> / the operator (FidgetFlo extensions
+                                                        and 2ndBrain-mogging
+                                                        integration)
+
+Both copyright holders release their contributions under the MIT License on
+identical terms. See LICENSE for the license text and docs/CREDITS.md for
+the full attribution chain, including the other upstream sources that
+informed the non-helpers portion of this pack.
+
+Per MIT License Section 1, redistribution of any portion of this software
+must preserve the copyright notices above. Each file under `helpers/`
+carries a provenance header that points back to this NOTICE and to
+docs/CREDITS.md.

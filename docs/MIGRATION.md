@@ -160,8 +160,20 @@ git commit -am "phase-C-3: rewrite wikilinks for renamed folders"
 
 ### D1. Claude-Memory symlink (idempotent)
 
+Claude Code encodes a project directory as `-<absolute-path-with-slashes-as-dashes>` under `~/.claude/projects/`. For a vault at `/Users/jane/vaults/BRAIN`, the project slug is `-Users-jane-vaults-BRAIN`. Resolve the slug from the current vault's absolute path rather than hardcoding — every operator's vault sits somewhere different.
+
 ```bash
-TARGET="$HOME/.claude/projects/-Users-$(whoami)-Desktop-WORK-OBSIDIAN-2ndBrain/memory"
+# Resolve the current vault's absolute path and encode it as a Claude Code project slug.
+VAULT_ABS="$(pwd -P)"
+PROJECT_SLUG="$(printf '%s' "$VAULT_ABS" | tr '/' '-')"   # e.g. -Users-jane-vaults-BRAIN
+TARGET="$HOME/.claude/projects/${PROJECT_SLUG}/memory"
+
+if [ ! -d "$TARGET" ]; then
+  echo "ERROR: Claude Code project dir not found at $TARGET"
+  echo "       Run Claude Code once from $VAULT_ABS so the project dir is created, then retry."
+  exit 1
+fi
+
 if [ -L Claude-Memory ]; then
   echo "Symlink exists — preserving"
 elif [ -e Claude-Memory ]; then
@@ -183,19 +195,19 @@ Create only if missing: `AGENTS.md`, `CLAUDE.md`, `CRITICAL_FACTS.md`, `SOUL.md`
 Never overwrite `CLAUDE.md`. Append a marker-bounded block so the installer can re-apply without duplicating:
 
 ```bash
-if ! grep -q '<!-- mogging:start -->' CLAUDE.md; then
+if ! grep -q '<!-- 2ndbrain-mogging:start -->' CLAUDE.md; then
 cat >> CLAUDE.md <<'EOF'
 
-<!-- mogging:start -->
+<!-- 2ndbrain-mogging:start -->
 ## Post-Mogging Vault Contract (auto-appended)
 See docs/MIGRATION.md + CLAUDE-MD-PATCH.md for the canonical block.
-<!-- mogging:end -->
+<!-- 2ndbrain-mogging:end -->
 EOF
 git commit -am "phase-D-3: append mogging block to CLAUDE.md"
 fi
 ```
 
-Re-running is a no-op because of the marker grep.
+Re-running is a no-op because of the marker grep. If a vault still carries the pre-namespaced `<!-- mogging:start -->` / `<!-- mogging:end -->` pair from a v0.1.2-or-earlier install, `install.sh --apply` strips the legacy block and replaces it with the namespaced pair (see `CHANGELOG.md` 0.1.4).
 
 ---
 
@@ -248,8 +260,12 @@ for f in AGENTS.md CLAUDE.md CRITICAL_FACTS.md SOUL.md index.md log.md; do
 done
 
 # 6. CLAUDE.md marker block present exactly once
-grep -c '<!-- mogging:start -->' CLAUDE.md
+grep -c '<!-- 2ndbrain-mogging:start -->' CLAUDE.md
 # expected: 1
+
+# 6b. No legacy marker pair lingering (pre-namespaced, v0.1.2-or-earlier)
+grep -c '<!-- mogging:start -->' CLAUDE.md
+# expected: 0
 ```
 
 ---

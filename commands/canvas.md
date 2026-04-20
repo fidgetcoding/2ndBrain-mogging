@@ -1,5 +1,5 @@
 ---
-description: "Generate an Obsidian Canvas JSON file that spatializes a concept cluster — useful for seeing a MOC in 2D before linking."
+description: "Generate and maintain Obsidian Canvas files from vault queries — adds images, text, PDFs, pinned notes, and labeled zones with strict JSON Canvas 1.0 validation."
 ---
 
-Read the `canvas` skill at `skills/canvas/SKILL.md`, then run the workflow. Given a MOC file (or a list of concept wikilinks), the skill writes an Obsidian `.canvas` JSON to `04-Index/canvases/<slug>.canvas` with nodes for each concept and edges for each wikilink. Node positions cluster by tag overlap. The canvas is a view, not a source of truth — regenerating it overwrites layout but preserves the underlying notes. Commit prefix `[bot:wiki-add]`. Follows the writer-role rules in `references/wiki-schema.md` §1.
+Read the `canvas` skill at `skills/canvas/SKILL.md`, then run the workflow. Subcommands: `new <name>` creates an empty `04-Index/canvases/<slug>.canvas`; `add image|text|pdf|note` appends nodes with deterministic `{type}-{slug}-{unix-ts}` IDs; `zone <name> [color]` creates a labeled group container; `list` enumerates every `.canvas` in the vault with node/edge counts; bare `/canvas` prints a status report. The central `04-Index/Map.canvas` uses a Fibonacci-spiral layout and `/canvas map-rebuild` is idempotent — existing node IDs and positions are preserved. The skill is a view layer — it NEVER mutates source notes, validates JSON Canvas 1.0 before every write, and rejects path traversal.

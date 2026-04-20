@@ -1,9 +1,10 @@
 #!/bin/bash
-# Vendored from claude-flow / ruflo (ADR-050 Intelligence Loop)
-# Upstream:  https://github.com/ruvnet/ruflo (re-shipped via <ORG-A>/fidgetflo)
-# License:   MIT (c) 2024-2026 ruvnet
-# Synced:    2026-04-20 — no local modifications; only this header was prepended.
-# See:       docs/CREDITS.md for the full attribution entry.
+# Vendored from FidgetFlo (<ORG-A>/fidgetflo) — a FidgetFlo-internal build
+# descended from ruvnet/ruflo@v3.5.80 with additional pattern-graph logic
+# extended by <ORG-A>. Upstream: https://github.com/ruvnet/ruflo/tree/v3.5.80
+# License:   MIT (c) 2024-2026 ruvnet, (c) 2026 <ORG-A> / the operator
+# Synced:    2026-04-20
+# See:       docs/CREDITS.md for the full attribution chain + NOTICE for license text.
 #
 # Claude Flow V3 - Learning Hooks
 # Integrates learning-service.mjs with session lifecycle
@@ -46,7 +47,10 @@ session_start() {
   # Check if better-sqlite3 is available
   if ! npm list better-sqlite3 --prefix "$PROJECT_ROOT" >/dev/null 2>&1; then
     log "Installing better-sqlite3..."
-    npm install --prefix "$PROJECT_ROOT" better-sqlite3 --save-dev --silent 2>/dev/null || true
+    # Pinned to caret-major 11.x so a compromised future major can't silently
+    # ship on the next opt-in install. Bump the range deliberately when
+    # better-sqlite3 releases v12 and you've reviewed the diff.
+    npm install --prefix "$PROJECT_ROOT" 'better-sqlite3@^11' --save-dev --silent 2>/dev/null || true
   fi
 
   # Initialize learning service

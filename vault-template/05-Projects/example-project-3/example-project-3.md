@@ -9,7 +9,7 @@ related: [[Projects-Index]]
 
 # example-project-3
 
-Third placeholder project — this one shows the "with subfolders" variant. You can add folders like `content/`, `research/`, `drafts/`, `GITHUB/` under here however makes sense for the project. The only hard rule is the index filename matching the folder name.
+Third placeholder project — also the minimal variant, no subfolders. Subfolders are optional; see `example-project-1` for the full layout with `content/`, `misc-building/`, and `GITHUB/`. The only hard rule is the index filename matching the folder name.
 
 ## What this is
 

@@ -33,7 +33,13 @@ do
 done
 
 if [[ -z "$ALIAS_CMD" ]]; then
-  printf "%sSKIP%s test_aliases_bootstrap (no aliases command found)\n" \
+  # Forward-looking SKIP. The /aliases skill currently ships as a SKILL.md
+  # only — Claude Code drives the behaviour; there is no standalone shell
+  # entrypoint at skills/aliases/run.sh or bin/aliases. When a runnable
+  # aliases binary lands, this test will pick it up automatically via the
+  # loop above. run_all.sh surfaces SKIP distinctly from PASS so this
+  # absence stays visible.
+  printf "%sSKIP%s test_aliases_bootstrap (no aliases CLI entrypoint — skill is SKILL.md-only)\n" \
     "${_C_YELLOW:-}" "${_C_RESET:-}"
   exit 0
 fi

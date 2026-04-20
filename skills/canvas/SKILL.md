@@ -96,7 +96,7 @@ Overflow protection: if a zone fills past 8 rows without an explicit resize, emi
 `Map.canvas` is the single-entry visual index for the vault. Layout is a Fibonacci spiral using the golden angle `137.5°` so nodes never align into readable rings (visually cleaner, scales without collision up to ~500 nodes).
 
 - Central node: `04-Index/Index.md`, size 400 × 200, positioned at origin.
-- Radiating nodes: MOC files (`MOC-*.md`, `Home-Index`, `Projects-Index`, `Poetry-Index`, `Tech-Index` equivalents). Each sits at radius `r = base + step * sqrt(i)` and angle `theta = i * 137.5° (rad)` for node index `i`.
+- Radiating nodes: Index files (`*-Index.md` — e.g. `Home-Index`, `Projects-Index`, `Poetry-Index`, `Tech-Index`). The legacy `MOC-*.md` shape was killed in the 2026-04-16 mogging; skills emit `[[*-Index]]` only. Each sits at radius `r = base + step * sqrt(i)` and angle `theta = i * 137.5° (rad)` for node index `i`.
 - Edges: Index → every MOC, undirected style (Obsidian ignores direction visually but stores it).
 - Rebuild is idempotent: running `/canvas map-rebuild` reads the current vault MOC set, diffs against existing Map.canvas nodes, and only adds/removes — existing nodes keep their IDs and computed positions.
 

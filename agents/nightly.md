@@ -76,4 +76,4 @@ The counter is append-semantic on totals — findings_by_check accumulates acros
 
 ## 5. Commit
 
-Commit prefix: `[bot:wiki-heal]`. Subject: `[bot:wiki-heal] nightly audit 2026-04-16 — N findings`. If findings total is zero across all checks, still commit (the zero is evidence the vault is clean).
+Commit prefix: `[bot:nightly]`. Subject: `[bot:nightly] nightly audit 2026-04-16 — N findings`. If findings total is zero across all checks, still commit (the zero is evidence the vault is clean).

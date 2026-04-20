@@ -4,9 +4,9 @@ This is the long form of why `2ndBrain-mogging` exists in a field that already h
 
 ## The working-operator problem
 
-If you Google "Claude Code Obsidian second brain" today, you land on a gradient of projects. On one end: a 50-line Karpathy gist, pristine in its minimalism, that treats the vault as a directory full of markdown files and the LLM as a compiler. On the other end: 20-plus-skill packs with scheduled agents, canvases, thinking tools, hot caches, opinions about tags, opinions about folder numbering, opinions about what "atomic" means.
+If you Google "Claude Code Obsidian second brain" today, you land on a gradient of projects. On one end: a 50-line Karpathy gist, pristine in its minimalism, that treats the vault as a directory full of markdown files and the LLM as a compiler. On the other end: 20-plus-skill packs with scheduled agents, canvases, and strong opinions about folder numbering.
 
-All of them assume something I didn't have: an empty vault and a blank schedule. I have a vault with 4,000 notes. I have Obsidian Tasks running on 80 tasks. I have an n8n workflow called W1 that syncs tasks to Morgen tasks with a specific commit-message filter (`[bot:*]` prefix skip-list) to prevent echo loops. I have a graph filter that excludes seventeen specific subtrees so my graph view isn't useless. I have scheduled agents running on launchd already, writing to `00-Inbox/`, that I don't want stepped on.
+All of them assume something I didn't have: an empty vault and a blank schedule. I have a vault with 4,000 notes. I have Obsidian Tasks running on 80 tasks. I have an n8n workflow called W1 that syncs tasks to Morgen tasks with a specific commit-message filter (`[bot:*]` prefix skip-list) to prevent echo loops. I have a graph filter that excludes seventeen specific subtrees so my graph view isn't useless. I have scheduled agents running on launchd already (which used to write to `00-Inbox/` pre-mogging, and now land in `02-Sources/` under the 7-folder contract) that I don't want stepped on.
 
 Every upstream toolkit I tried broke at least one of those systems the first time I ran it. Not because the upstream author did anything wrong — they were solving a different problem, which is "help a new user build a second brain from scratch." I needed the opposite: help an operator who has already built one not burn it down while adding LLM automation.
 
@@ -40,7 +40,7 @@ Compilation is slower per query. It's also much higher quality, and it produces 
 
 ## The folder is the app
 
-From the Jens project, expressed as a design constraint: the Obsidian folder structure **is** the application's data model. There is no separate index, no sidecar database, no external registry. If a file exists at `07-Projects/<ORG-A>/<ORG-A>.md`, the plugin knows that note is a project index for `<ORG-A>`. If a file exists at `08-Tasks/TASKS-<ORG-A>.md`, the plugin knows it's the Tasks hub for the same project.
+From the Jens project, expressed as a design constraint: the Obsidian folder structure **is** the application's data model. There is no separate index, no sidecar database, no external registry. If a file exists at `05-Projects/<ORG-A>/<ORG-A>.md`, the plugin knows that note is a project index for `<ORG-A>`. If a file exists at `06-Tasks/TASKS-<ORG-A>.md`, the plugin knows it's the Tasks hub for the same project.
 
 This is a discipline. It means the plugin cannot invent new structural concepts without expressing them as a folder or file naming rule, which keeps the surface honest. It also means an operator can move files around outside the plugin and the plugin will rediscover them correctly next run. No "re-index" step. No stale database.
 

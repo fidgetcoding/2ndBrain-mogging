@@ -13,10 +13,10 @@ Pulls Claude Code session transcripts out of the local JSONL cache and materiali
 Sessions live on disk at:
 
 ```
-~/.claude/projects/-2ndBrain/session-*.jsonl
+~/.claude/projects/<encoded-vault-path>/session-*.jsonl
 ```
 
-Each file is a newline-delimited JSON transcript. Every line is one turn (user, assistant, tool result, etc.). Use `Glob` to enumerate; never load a session fully into memory before sizing it.
+Claude Code encodes the vault's absolute filesystem path into a project slug by replacing `/` with `-` and stripping the leading slash — e.g. a vault rooted at `/Users/<user>/Desktop/MyBrain` produces `~/.claude/projects/-Users-<user>-Desktop-MyBrain/`. The skill resolves this at runtime from the current working directory; never hard-code a specific project slug. Each file is a newline-delimited JSON transcript. Every line is one turn (user, assistant, tool result, etc.). Use `Glob` to enumerate; never load a session fully into memory before sizing it.
 
 ## Flags
 

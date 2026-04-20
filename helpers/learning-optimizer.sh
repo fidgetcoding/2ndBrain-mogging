@@ -1,9 +1,10 @@
 #!/bin/bash
-# Vendored from claude-flow / ruflo (ADR-050 Intelligence Loop)
-# Upstream:  https://github.com/ruvnet/ruflo (re-shipped via <ORG-A>/fidgetflo)
-# License:   MIT (c) 2024-2026 ruvnet
-# Synced:    2026-04-20 — no local modifications; only this header was prepended.
-# See:       docs/CREDITS.md for the full attribution entry.
+# Vendored from FidgetFlo (<ORG-A>/fidgetflo) — a FidgetFlo-internal build
+# descended from ruvnet/ruflo@v3.5.80 with additional pattern-graph logic
+# extended by <ORG-A>. Upstream: https://github.com/ruvnet/ruflo/tree/v3.5.80
+# License:   MIT (c) 2024-2026 ruvnet, (c) 2026 <ORG-A> / the operator
+# Synced:    2026-04-20
+# See:       docs/CREDITS.md for the full attribution chain + NOTICE for license text.
 #
 # Claude Flow V3 - Learning Optimizer Worker
 # Runs SONA micro-LoRA optimization on patterns
@@ -111,8 +112,12 @@ EOF
 run_sona_training() {
   echo "[$(date +%H:%M:%S)] Spawning SONA learning agent..."
 
-  # Use agentic-flow for deep learning optimization
-  npx agentic-flow@alpha hooks intelligence 2>/dev/null || true
+  # Use agentic-flow for deep learning optimization.
+  # Pinned to a specific version (not @alpha) — a moving dist-tag is a republish
+  # attack surface: an upstream compromise would ship straight into this script
+  # on the next run. If reproducibility matters, vendor the script locally and
+  # call the vendored binary instead of `npx`. Bump the pin deliberately.
+  npx agentic-flow@3.0.0-alpha.2 hooks intelligence 2>/dev/null || true
 
   echo "[$(date +%H:%M:%S)] ✓ SONA training triggered"
 }
