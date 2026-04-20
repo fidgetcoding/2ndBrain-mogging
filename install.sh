@@ -9,7 +9,7 @@
 # Usage:
 #   install.sh [--vault PATH] [--apply] [--dry-run] [--no-launchd]
 #              [--skip-tests] [--verbose] [--merge-stop]
-#              [--with-intelligence] [--symlink]
+#              [--with-intelligence] [--symlink] [--no-obsidian-mcp]
 #
 # NEVER uses `set -x`. Settings.json contents must never be echoed
 # or logged. This script handles secrets-adjacent data.
@@ -49,6 +49,7 @@ APPLY=0
 # made the state machine confusing. If you need a dry-run predicate,
 # test `[[ "$APPLY" -eq 0 ]]`.
 NO_LAUNCHD=0
+NO_OBSIDIAN_MCP=0
 SKIP_TESTS=0
 VERBOSE=0
 MERGE_STOP=0
@@ -65,6 +66,7 @@ Options:
   --apply              Execute changes (default is dry-run)
   --dry-run            Simulate only (default)
   --no-launchd         Skip launchd plist install
+  --no-obsidian-mcp    Skip obsidian-mcp registration (claude mcp add obsidian)
   --skip-tests         Skip running tests/test_onboarding.sh
   --verbose            Verbose logging (does NOT echo settings.json contents)
   --merge-stop         Replace any existing Stop hook with ours instead of append
@@ -102,6 +104,7 @@ while [[ $# -gt 0 ]]; do
     --apply)              APPLY=1; shift ;;
     --dry-run)            APPLY=0; shift ;;
     --no-launchd)         NO_LAUNCHD=1; shift ;;
+    --no-obsidian-mcp)    NO_OBSIDIAN_MCP=1; shift ;;
     --skip-tests)         SKIP_TESTS=1; shift ;;
     --verbose)            VERBOSE=1; shift ;;
     --merge-stop)         MERGE_STOP=1; shift ;;
@@ -762,6 +765,45 @@ install_intelligence() {
   seed_pattern_store
 }
 
+# ---- step 10.7: obsidian-mcp registration -----------------------------------
+#
+# Registers the `obsidian-mcp` server with Claude Code, pointed at $VAULT.
+# Upstream: https://github.com/StevenStavrakis/obsidian-mcp (npm: obsidian-mcp).
+# Idempotent — skips if already registered. Opt out with --no-obsidian-mcp.
+
+install_obsidian_mcp() {
+  if [[ "$NO_OBSIDIAN_MCP" -eq 1 ]]; then
+    log "step 10.7: obsidian-mcp SKIPPED (--no-obsidian-mcp)"
+    return 0
+  fi
+  log "step 10.7: register obsidian-mcp"
+
+  if ! command -v claude >/dev/null 2>&1; then
+    warn "claude CLI not found — skipping obsidian-mcp registration"
+    return 0
+  fi
+  if [[ -z "${VAULT:-}" ]]; then
+    vlog "vault not set — skipping obsidian-mcp"
+    return 0
+  fi
+
+  # Already-registered fingerprint check (user-scope list).
+  if claude mcp list 2>/dev/null | grep -qE '^obsidian[[:space:]]'; then
+    log "obsidian-mcp already registered — skipping"
+    return 0
+  fi
+
+  if [[ "$APPLY" -eq 1 ]]; then
+    if claude mcp add --scope user obsidian -- npx -y obsidian-mcp "$VAULT" >/dev/null 2>&1; then
+      log "obsidian-mcp registered (vault: $VAULT)"
+    else
+      warn "obsidian-mcp registration failed — run manually: claude mcp add --scope user obsidian -- npx -y obsidian-mcp \"$VAULT\""
+    fi
+  else
+    log "would register obsidian-mcp: claude mcp add --scope user obsidian -- npx -y obsidian-mcp \"$VAULT\""
+  fi
+}
+
 # ---- step 11: tests ----------------------------------------------------------
 
 run_tests() {
@@ -820,6 +862,7 @@ run_doctor() {
 #   step 9.5  apply_claude_md_patch      idempotent CLAUDE.md patch (content-diff; no-op if same)
 #   step 10   install_launchd            scheduled/launchd/*.plist -> ~/Library/LaunchAgents
 #   step 10.5 install_intelligence       (opt-in --with-intelligence) helpers + hooks + pattern store
+#   step 10.7 install_obsidian_mcp       claude mcp add obsidian → vault; opt out w/ --no-obsidian-mcp
 #   step 11   run_tests                  tests/test_onboarding.sh (gated on --apply)
 #   step 12   run_doctor                 bin/doctor.sh (non-fatal — issues warn only)
 #
@@ -838,6 +881,7 @@ main() {
   apply_claude_md_patch
   install_launchd
   install_intelligence
+  install_obsidian_mcp
   run_tests
   run_doctor
   log "done."
