@@ -35,7 +35,7 @@
 
 I wanted a second brain. So I built one.
 
-The first version was called **2ndBrain-maxxing** — a lightly modded replica of the second-brain system Jens (the AI-influencer guy on IG, you know who I mean) had put out. It worked. For a while. Then I stared at it for six months and realized half the folders were doing nothing, the taxonomy had jargon I was learning on the fly, and every capture required thinking about three other captures first. That's when I went shopping.
+The first version was called **2ndBrain-maxxing** — a lightly modded replica of the second-brain system [**Jens Heitmann**](https://www.instagram.com/jens.heitmann/) had put out. It worked. For a while. Then I stared at it for six months and realized half the folders were doing nothing, the taxonomy had jargon I was learning on the fly, and every capture required thinking about three other captures first. That's when I went shopping.
 
 I tried **Karpathy's** Wiki-style LLM-powered second brain. I tried **AgriciDaniel's** claude-obsidian pack. I tried **eugeniu**'s system. I tried **NicholasSpisak**'s. And I kept going back to **Jens'** — not because it was the best, but because it was the one I already knew. Each of those had one thing the others didn't. None of them had everything.
 
@@ -254,7 +254,7 @@ This pack is an amalgamation — not an invention. The best ideas are all borrow
 
 - **AgriciDaniel** ([`claude-obsidian`](https://github.com/AgriciDaniel/claude-obsidian)) — the conversation-capture hygiene and the `owner: wiki` vs `owner: human` discipline that makes skills safe to run against live notes.
 - **eugeniu** — the concept-atomization rules that keep `03-Concepts/` from becoming a dumping ground.
-- **Jens** (AI-influencer, the one on IG) — the original folder structure I modded to death, and the taste-making starting point.
+- **[Jens Heitmann](https://www.instagram.com/jens.heitmann/)** — the original folder structure I modded to death, and the taste-making starting point.
 - **Karpathy** ([`LLM Wiki`](https://karpathy.ai/zero-to-hero.html)-era second brain) — the wiki-style synthesis pattern that became `/wiki` and `/emerge`.
 - **NicholasSpisak** — the Canvas-scratchpad pattern that became `/canvas`.
 - **ruvnet** ([`claude-flow` / `ruflo`](https://github.com/ruvnet/claude-flow)) — the pattern-graph intelligence tier (opt-in via `--with-intelligence`).
