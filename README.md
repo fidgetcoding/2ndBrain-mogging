@@ -39,11 +39,11 @@ The first version was called **2ndBrain-maxxing** — a lightly modded replica o
 
 I tried **Karpathy's** Wiki-style LLM-powered second brain. I tried **AgriciDaniel's** [claude-obsidian](https://github.com/AgriciDaniel/claude-obsidian). I tried [**eugeniu's system**](https://github.com/eugeniughelbur/obsidian-second-brain). I tried **NicholasSpisak's**. And I kept going back to [**Jens Heitmann's ai-second-brain-skills**](https://github.com/NulightJens/ai-second-brain-skills) — not because it was the best, but because it was the one I already knew. Each of those had one thing the others didn't. None of them had everything.
 
-So I merged them. I took the best 200 ideas from the five of them and threw out the other 800. I killed `00-Inbox/` (it's where good notes went to die). I killed `01-Fleeting/` (fleeting notes are just concepts you haven't written yet). I killed `05-Templates/` (templates belong in the plugin layer, not in your graph). I killed `06-Assets/` (Obsidian already handles attachments in place).
+So I merged them. I took what earned its keep from each of the five, threw out what didn't, and killed `00-Inbox/` (it's where good notes went to die). I killed `01-Fleeting/` (fleeting notes are just concepts you haven't written yet). I killed `05-Templates/` (templates belong in the plugin layer, not in your graph). I killed `06-Assets/` (Obsidian already handles attachments in place).
 
 What was left was seven folders, ten skills, and a vault that doesn't require a taxonomy degree to use. Built for a layman. No complicated language. No complicated anything.
 
-The last piece — and the reason the other five started to feel heavy — is a **self-learning tier**. Every other system I tried needed constant manual upkeep. Sorting the inbox. Promoting fleeting notes. Rewiring MOCs. This one watches what you do and fills itself in as the vault grows. You can ignore it forever and the pack still works, but when you turn it on, it stops feeling like a filing cabinet and starts feeling like… well, a second brain.
+The last piece — a **self-learning tier**. A couple of the originals had one, but bootstrapping them was heavy. This pack's is opt-in (`--with-intelligence`), ships clean, and fills itself in as you use the vault. Ignore it forever and the pack still works; turn it on and it stops feeling like a filing cabinet and starts feeling like… well, a second brain.
 
 So: we went from maxxing to absolutely **mogging** everybody. It's not the best because I think it is. It's the best because it's the best of five. And I've tested them all.
 
