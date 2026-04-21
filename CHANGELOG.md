@@ -8,16 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **`install.sh` step 10.7 — register `obsidian-mcp` with Claude Code.** `--apply` now runs `claude mcp add --scope user obsidian -- npx -y obsidian-mcp "$VAULT"` so Claude Code can read/write the vault out of the box. Idempotent (skips if already registered), opts out with `--no-obsidian-mcp`, and gracefully noops if the `claude` CLI isn't on PATH. Closes the cli-maxxing README cross-reference that previously promised this behavior before it existed (b0c38cd).
+- **`install.sh` step 10.8 — `~/.claude/.mogging-vault` marker file.** Install writes a marker pointing at the vault root so cli-maxxing's statusline can detect a mogged vault and render the correct `fidgetflo` / mogging indicator. Closes the second half of the cli-maxxing cross-reference (7feeedf).
 - **`install.sh` step 3.5 — vault-template seeding.** Fresh `--apply` runs now copy `vault-template/` into the target vault when the 7-folder layout is absent, including three placeholder projects (`example-project-1/2/3`) and a seed `Projects-Index.md` so `/tether` has something to audit on day one.
 - **`/import-claude` and `/import-notes` skills** — brought the shipped skill count to 12. `/import-claude` routes a Claude.ai Project export (conversations + knowledge + assets) into the matching `05-Projects/<PROJECT>/` subtree; `/import-notes` handles the more general "pile of files from somewhere else" case.
 - **FidgetFlo attribution in README** — the self-learning intelligence tier is sourced from FidgetFlo (a fork of ruvnet/ruflo@v3.5.80) and now credited as such.
 - **NicholasSpisak repo link** — added to the origin story and Credits.
 
 ### Fixed
-- **launchd plist PATH + flags.** The four `scheduled/launchd/*.plist` templates had (a) stale `--headless --audit` flags on the agent invocations, removed, and (b) a PATH that didn't always include Homebrew's `/opt/homebrew/bin` on Apple Silicon, patched at install time.
+- **launchd plist `node` PATH resolution.** The four `scheduled/launchd/*.plist` templates had a `PATH` that listed `/opt/homebrew/bin` but never sourced nvm, so scheduled agents on nvm-managed Node installs hit `sh: exec: node: not found` inside the SessionEnd hook. The plists now source `$HOME/.nvm/nvm.sh` inside `ProgramArguments`, which stays version-agnostic — no hardcoded `vN.N.N` path to maintain (04c796e).
+- **`install.sh` `merge_intelligence_hooks()` jq bug.** The merge pipeline was `(.[0] * .[1]) as $m | $m | .[0]...` — after the `$m |` step, the pipeline context is the merged object, so `.[0]` threw `Cannot index object with number` and the `--with-intelligence` install aborted mid-flight. Bind `$old` / `$new` before the merge, and the hook-array concat logic goes through untouched. Verified end-to-end: `install.sh --with-intelligence` completes, `doctor` passes, all 4 launchd jobs reload with working `node` PATH, Stop hook preserved, 5 intelligence hooks appended, `settings.json` stays valid JSON (04c796e).
+- **launchd plist flags.** Stale `--headless --audit` flags dropped from the agent invocations in the four `scheduled/launchd/*.plist` templates (pre-existing carry-over from pre-mogging).
 - **the operator → the operator sweep.** Purged every "the operator" / "the operator" reference from shipped skill MDs, commands, README, and migration docs. Canonical is the operator / <ORG-A>.
 - **Ruvnet/claude-flow/ruflo attribution.** Removed the inaccurate direct-descent claim from README in favor of the actual lineage (FidgetFlo fork).
-- **15-agent audit-and-fix pass** — this release. Full consistency sweep across `README.md`, `PHILOSOPHY.md`, `CHANGELOG.md`, `CONTRIBUTING.md`, `docs/**`, `references/wiki-schema.md`, and every `skills/*/SKILL.md` to close the residual drift between prose and shipped behavior after v0.1.4.
+- **15-agent audit-and-fix pass.** Full consistency sweep across `README.md`, `PHILOSOPHY.md`, `CHANGELOG.md`, `CONTRIBUTING.md`, `docs/**`, `references/wiki-schema.md`, and every `skills/*/SKILL.md` to close the residual drift between prose and shipped behavior after v0.1.4.
 
 ## [0.1.4] — 2026-04-17
 
