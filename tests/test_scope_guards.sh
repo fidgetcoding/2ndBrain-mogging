@@ -55,7 +55,6 @@ snapshot_dir "$VAULT/06-Tasks" > "$TASKS_BEFORE_SNAP"
 # Expect non-zero return code.
 # ---------------------------------------------------------------------------
 FORBIDDEN_REL="06-Tasks/INJECTED.md"
-FORBIDDEN_PATH="$VAULT/$FORBIDDEN_REL"
 
 set +e
 VAULT_DIR="$VAULT" "$WIKI_CMD" add \
