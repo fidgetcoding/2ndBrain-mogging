@@ -58,6 +58,7 @@ MERGE_STOP=0
 WITH_INTELLIGENCE=0
 USE_SYMLINK=0
 NO_SEED_VAULT=0
+NO_SHELL_SHORTCUTS=0
 
 usage() {
   cat <<'USAGE'
@@ -72,6 +73,9 @@ Options:
   --no-statusline-brain Skip writing ~/.claude/.mogging-vault (the vault-path
                        marker cli-maxxing's ⚡ fidgetflo statusline reads to
                        light up the 🧠 2ndBrain indicator)
+  --no-shell-shortcuts Skip writing cbrain/cbraintg shortcuts to ~/.local/bin
+                       (by default we install these so `cbrain` launches Claude
+                       Code inside the vault with skip-permissions)
   --skip-tests         Skip running tests/test_onboarding.sh
   --verbose            Verbose logging (does NOT echo settings.json contents)
   --merge-stop         Replace any existing Stop hook with ours instead of append
@@ -111,6 +115,7 @@ while [[ $# -gt 0 ]]; do
     --no-launchd)         NO_LAUNCHD=1; shift ;;
     --no-obsidian-mcp)    NO_OBSIDIAN_MCP=1; shift ;;
     --no-statusline-brain) NO_STATUSLINE_BRAIN=1; shift ;;
+    --no-shell-shortcuts) NO_SHELL_SHORTCUTS=1; shift ;;
     --skip-tests)         SKIP_TESTS=1; shift ;;
     --verbose)            VERBOSE=1; shift ;;
     --merge-stop)         MERGE_STOP=1; shift ;;
@@ -961,6 +966,125 @@ install_statusline_marker() {
   fi
 }
 
+# ---- step 10.9: shell shortcuts ---------------------------------------------
+#
+# Writes two scripts into $HOME/.local/bin:
+#   cbrain    — cd into the 2ndBrain vault, launch Claude Code with skip-permissions
+#   cbraintg  — cbrain + Telegram channel (requires cli-maxxing Step 6 bot token)
+#
+# Both read $HOME/.claude/.mogging-vault at runtime to locate the vault, so if
+# the vault ever moves, re-running install.sh --vault /new/path updates the
+# marker and the shortcuts follow automatically — no alias rewrite needed.
+#
+# Also idempotently ensures $HOME/.local/bin is on $PATH via ~/.zshrc and
+# ~/.bashrc. cli-maxxing Step 1 already adds this; we repeat it so mogging
+# works standalone.
+#
+# Opt out with --no-shell-shortcuts.
+
+install_shell_shortcuts() {
+  if [[ "$NO_SHELL_SHORTCUTS" -eq 1 ]]; then
+    log "step 10.9: shell shortcuts SKIPPED (--no-shell-shortcuts)"
+    return 0
+  fi
+  log "step 10.9: write cbrain / cbraintg shortcuts"
+
+  local bin_dir="$HOME/.local/bin"
+  local cbrain_path="$bin_dir/cbrain"
+  local cbraintg_path="$bin_dir/cbraintg"
+
+  if [[ "$APPLY" -ne 1 ]]; then
+    log "would write: $cbrain_path"
+    log "would write: $cbraintg_path"
+    log "would ensure $bin_dir is on PATH in ~/.zshrc and ~/.bashrc"
+    return 0
+  fi
+
+  mkdir -p "$bin_dir"
+
+  cat > "$cbrain_path" <<'CBRAIN_EOF'
+#!/usr/bin/env bash
+# cbrain — Launch Claude Code inside your 2ndBrain vault with skip-permissions.
+# Reads $HOME/.claude/.mogging-vault at runtime; re-run 2ndBrain-mogging
+# install.sh --vault /new/path to relocate.
+
+MARKER="$HOME/.claude/.mogging-vault"
+
+if [ ! -f "$MARKER" ]; then
+  echo ""
+  echo "cbrain: 2ndBrain vault marker not found ($MARKER)"
+  echo ""
+  echo "Install 2ndBrain-mogging first:"
+  echo "  bash <(curl -fsSL https://raw.githubusercontent.com/<ORG-A>/2ndBrain-mogging/main/install.sh) --vault ~/Desktop/BRAIN --apply"
+  echo ""
+  echo "Or use 'cskip' for skip-permissions without the vault."
+  echo ""
+  exit 1
+fi
+
+VAULT="$(head -n 1 "$MARKER")"
+if [ -z "$VAULT" ] || [ ! -d "$VAULT" ]; then
+  echo ""
+  echo "cbrain: vault path from marker is invalid: '$VAULT'"
+  echo "Re-run the installer with --vault /correct/path to fix."
+  echo ""
+  exit 1
+fi
+
+cd "$VAULT" || exit 1
+exec claude --dangerously-skip-permissions "$@"
+CBRAIN_EOF
+  chmod 0755 "$cbrain_path"
+  log "wrote $cbrain_path"
+
+  cat > "$cbraintg_path" <<'CBRAINTG_EOF'
+#!/usr/bin/env bash
+# cbraintg — cbrain + Telegram channel (requires cli-maxxing Step 6 bot token).
+
+MARKER="$HOME/.claude/.mogging-vault"
+TOKEN_FILE="$HOME/.claude/channels/telegram/.env"
+
+if [ ! -f "$MARKER" ]; then
+  echo "cbraintg: 2ndBrain vault marker not found — install 2ndBrain-mogging first."
+  exit 1
+fi
+
+if [ ! -f "$TOKEN_FILE" ] || ! grep -qE 'TELEGRAM_BOT_TOKEN=.+' "$TOKEN_FILE" 2>/dev/null; then
+  echo ""
+  echo "cbraintg: Telegram bot token not configured."
+  echo "Run cli-maxxing Step 6 to set it up, or use 'cbrain' without Telegram."
+  echo ""
+  exit 1
+fi
+
+VAULT="$(head -n 1 "$MARKER")"
+if [ -z "$VAULT" ] || [ ! -d "$VAULT" ]; then
+  echo "cbraintg: vault path from marker is invalid: '$VAULT'"
+  exit 1
+fi
+
+cd "$VAULT" || exit 1
+exec claude --dangerously-skip-permissions --channels plugin:telegram@claude-plugins-official "$@"
+CBRAINTG_EOF
+  chmod 0755 "$cbraintg_path"
+  log "wrote $cbraintg_path"
+
+  # Ensure ~/.local/bin is on PATH in both rc files (idempotent — skip if present).
+  local path_line='export PATH="$HOME/.local/bin:$PATH"'
+  local rc
+  for rc in "$HOME/.zshrc" "$HOME/.bashrc"; do
+    [[ -f "$rc" ]] || touch "$rc"
+    if ! grep -qF '$HOME/.local/bin:$PATH' "$rc" 2>/dev/null; then
+      printf '\n# Added by 2ndBrain-mogging install.sh (cbrain/cbraintg shortcuts)\n%s\n' "$path_line" >> "$rc"
+      log "added ~/.local/bin to PATH in $rc"
+    else
+      vlog "PATH already includes ~/.local/bin in $rc"
+    fi
+  done
+
+  log "cbrain / cbraintg ready — open a new terminal (or 'source ~/.zshrc') to use them"
+}
+
 # ---- step 11: tests ----------------------------------------------------------
 
 run_tests() {
@@ -1022,6 +1146,8 @@ run_doctor() {
 #   step 10.7 install_obsidian_mcp       claude mcp add obsidian → vault; opt out w/ --no-obsidian-mcp
 #   step 10.8 install_statusline_marker  write $HOME/.claude/.mogging-vault (vault path marker for
 #                                        cli-maxxing's 🧠 indicator); opt out w/ --no-statusline-brain
+#   step 10.9 install_shell_shortcuts    write cbrain + cbraintg to ~/.local/bin (reads vault from
+#                                        marker at runtime); opt out w/ --no-shell-shortcuts
 #   step 11   run_tests                  tests/test_onboarding.sh (gated on --apply)
 #   step 12   run_doctor                 bin/doctor.sh (non-fatal — issues warn only)
 #
@@ -1042,6 +1168,7 @@ main() {
   install_intelligence
   install_obsidian_mcp
   install_statusline_marker
+  install_shell_shortcuts
   run_tests
   run_doctor
   log "done."

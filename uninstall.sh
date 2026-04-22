@@ -164,6 +164,36 @@ purge_backups() {
   fi
 }
 
+remove_shell_shortcuts() {
+  local cbrain_path="$HOME/.local/bin/cbrain"
+  local cbraintg_path="$HOME/.local/bin/cbraintg"
+  local removed=0
+  if [[ -f "$cbrain_path" ]]; then
+    rm -f "$cbrain_path"
+    log "removed $cbrain_path"
+    removed=1
+  fi
+  if [[ -f "$cbraintg_path" ]]; then
+    rm -f "$cbraintg_path"
+    log "removed $cbraintg_path"
+    removed=1
+  fi
+  [[ "$removed" -eq 0 ]] && vlog "no cbrain/cbraintg shortcuts to remove"
+  # Leave the ~/.local/bin PATH export in ~/.zshrc / ~/.bashrc — cli-maxxing
+  # Step 1 also relies on it for its ctg script, so removing it would break
+  # unrelated tooling.
+}
+
+remove_statusline_marker() {
+  local marker="$HOME/.claude/.mogging-vault"
+  if [[ -f "$marker" ]]; then
+    rm -f "$marker"
+    log "removed $marker"
+  else
+    vlog "statusline marker not present"
+  fi
+}
+
 main() {
   log "starting uninstall"
   uninstall_launchd
@@ -172,6 +202,8 @@ main() {
   unlink_kind "agents"
   restore_settings
   remove_claude_memory_link
+  remove_statusline_marker
+  remove_shell_shortcuts
   purge_backups
   log "done. Vault content untouched."
 }
