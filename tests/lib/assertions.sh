@@ -3,8 +3,12 @@
 # Shared assertion helpers for the 2ndBrain-mogging test harness.
 # Pure bash, no external runners. macOS + Linux compatible.
 
-# Guard against double-sourcing.
+# Guard against double-sourcing. When sourced, `return 0` works; when run
+# directly (executed as a script), `return` fails and we fall through to
+# `exit 0`. shellcheck sees the `exit 0` branch as unreachable because it
+# can't tell sourced-vs-executed context — SC2317 disabled on purpose.
 if [[ -n "${__2B_ASSERTIONS_SH_LOADED:-}" ]]; then
+  # shellcheck disable=SC2317
   return 0 2>/dev/null || exit 0
 fi
 __2B_ASSERTIONS_SH_LOADED=1
@@ -265,6 +269,12 @@ assert_command_fails() {
 assert_eq() {
   local actual="$1"
   local expected="$2"
+  # The single quotes inside the default-value branch are literal characters
+  # in the output — the outer double quotes mean $expected/$actual still
+  # expand. shellcheck misreads this because the quotes-inside-quotes pattern
+  # usually indicates an escape bug, but here it's the intended shape:
+  # expected 'foo', got 'bar'.
+  # shellcheck disable=SC2016
   local msg="${3:-expected '$expected', got '$actual'}"
   if [[ "$actual" == "$expected" ]]; then
     _pass "$msg"

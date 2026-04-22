@@ -23,16 +23,18 @@ mkdir -p "$LEARNING_DIR" "$METRICS_DIR"
 
 should_run() {
   if [ ! -f "$LAST_RUN_FILE" ]; then return 0; fi
-  local last_run=$(cat "$LAST_RUN_FILE" 2>/dev/null || echo "0")
-  local now=$(date +%s)
+  local last_run now
+  last_run=$(cat "$LAST_RUN_FILE" 2>/dev/null || echo "0")
+  now=$(date +%s)
   [ $((now - last_run)) -ge 1800 ]  # 30 minutes
 }
 
 calculate_routing_accuracy() {
   if [ -f "$PATTERNS_DB" ] && command -v sqlite3 &>/dev/null; then
     # Calculate based on pattern quality distribution
-    local high_quality=$(sqlite3 "$PATTERNS_DB" "SELECT COUNT(*) FROM short_term_patterns WHERE quality > 0.7" 2>/dev/null || echo "0")
-    local total=$(sqlite3 "$PATTERNS_DB" "SELECT COUNT(*) FROM short_term_patterns" 2>/dev/null || echo "1")
+    local high_quality total
+    high_quality=$(sqlite3 "$PATTERNS_DB" "SELECT COUNT(*) FROM short_term_patterns WHERE quality > 0.7" 2>/dev/null || echo "0")
+    total=$(sqlite3 "$PATTERNS_DB" "SELECT COUNT(*) FROM short_term_patterns" 2>/dev/null || echo "1")
 
     if [ "$total" -gt 0 ]; then
       echo $((high_quality * 100 / total))
@@ -69,17 +71,30 @@ optimize_patterns() {
   " 2>/dev/null || true
 
   # Calculate metrics
-  local short_count=$(sqlite3 "$PATTERNS_DB" "SELECT COUNT(*) FROM short_term_patterns" 2>/dev/null || echo "0")
-  local long_count=$(sqlite3 "$PATTERNS_DB" "SELECT COUNT(*) FROM long_term_patterns" 2>/dev/null || echo "0")
-  local avg_quality=$(sqlite3 "$PATTERNS_DB" "SELECT ROUND(AVG(quality), 3) FROM short_term_patterns" 2>/dev/null || echo "0")
-  local routing_accuracy=$(calculate_routing_accuracy)
+  local short_count long_count avg_quality routing_accuracy
+  short_count=$(sqlite3 "$PATTERNS_DB" "SELECT COUNT(*) FROM short_term_patterns" 2>/dev/null || echo "0")
+  long_count=$(sqlite3 "$PATTERNS_DB" "SELECT COUNT(*) FROM long_term_patterns" 2>/dev/null || echo "0")
+  avg_quality=$(sqlite3 "$PATTERNS_DB" "SELECT ROUND(AVG(quality), 3) FROM short_term_patterns" 2>/dev/null || echo "0")
+  routing_accuracy=$(calculate_routing_accuracy)
 
   # Calculate intelligence score
   local pattern_score=$((short_count + long_count * 2))
   [ "$pattern_score" -gt 100 ] && pattern_score=100
-  local quality_score=$(echo "$avg_quality * 40" | bc 2>/dev/null | cut -d. -f1 || echo "0")
+  local quality_score
+  quality_score=$(echo "$avg_quality * 40" | bc 2>/dev/null | cut -d. -f1 || echo "0")
   local intel_score=$((pattern_score * 60 / 100 + quality_score))
   [ "$intel_score" -gt 100 ] && intel_score=100
+
+  # Derive a human-readable tier label. The old single-line nested
+  # A && B || C || D form trips SC2015 because `A && B || C` can fall through
+  # to C when B itself fails (not just when A is false). Using a plain if/elif
+  # chain sidesteps the ambiguity and is clearer to read.
+  local intel_level
+  if   [ "$intel_score" -lt 25 ]; then intel_level="learning"
+  elif [ "$intel_score" -lt 50 ]; then intel_level="developing"
+  elif [ "$intel_score" -lt 75 ]; then intel_level="proficient"
+  else                                  intel_level="expert"
+  fi
 
   # Write learning metrics
   cat > "$LEARNING_FILE" << EOF
@@ -95,7 +110,7 @@ optimize_patterns() {
   },
   "intelligence": {
     "score": $intel_score,
-    "level": "$([ $intel_score -lt 25 ] && echo "learning" || ([ $intel_score -lt 50 ] && echo "developing" || ([ $intel_score -lt 75 ] && echo "proficient" || echo "expert")))"
+    "level": "$intel_level"
   },
   "sona": {
     "adaptationTime": "0.05ms",

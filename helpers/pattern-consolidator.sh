@@ -21,8 +21,9 @@ mkdir -p "$METRICS_DIR"
 
 should_run() {
   if [ ! -f "$LAST_RUN_FILE" ]; then return 0; fi
-  local last_run=$(cat "$LAST_RUN_FILE" 2>/dev/null || echo "0")
-  local now=$(date +%s)
+  local last_run now
+  last_run=$(cat "$LAST_RUN_FILE" 2>/dev/null || echo "0")
+  now=$(date +%s)
   [ $((now - last_run)) -ge 900 ]  # 15 minutes
 }
 
@@ -35,7 +36,8 @@ consolidate_patterns() {
   echo "[$(date +%H:%M:%S)] Consolidating patterns..."
 
   # Count before
-  local before=$(sqlite3 "$PATTERNS_DB" "SELECT COUNT(*) FROM short_term_patterns" 2>/dev/null || echo "0")
+  local before
+  before=$(sqlite3 "$PATTERNS_DB" "SELECT COUNT(*) FROM short_term_patterns" 2>/dev/null || echo "0")
 
   # Remove duplicates (keep highest quality)
   sqlite3 "$PATTERNS_DB" "
@@ -69,7 +71,8 @@ consolidate_patterns() {
   " 2>/dev/null || true
 
   # Count after
-  local after=$(sqlite3 "$PATTERNS_DB" "SELECT COUNT(*) FROM short_term_patterns" 2>/dev/null || echo "0")
+  local after
+  after=$(sqlite3 "$PATTERNS_DB" "SELECT COUNT(*) FROM short_term_patterns" 2>/dev/null || echo "0")
   local removed=$((before - after))
 
   echo "[$(date +%H:%M:%S)] ✓ Consolidated: $before → $after patterns (removed $removed)"
