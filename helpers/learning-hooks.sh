@@ -9,6 +9,14 @@
 # Claude Flow V3 - Learning Hooks
 # Integrates learning-service.mjs with session lifecycle
 
+# Fail-closed on unset vars + pipeline failures. Matches the sibling
+# helpers (learning-optimizer.sh, pattern-consolidator.sh) and prevents
+# silent partial-failure modes during session-end flush. We intentionally
+# do NOT set -e because several branches inspect $? after a command that
+# may legitimately fail (learning-service node call with no patterns yet,
+# benchmark on empty DB).
+set -uo pipefail
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 LEARNING_SERVICE="$SCRIPT_DIR/learning-service.mjs"
@@ -55,12 +63,11 @@ session_start() {
 
   # Initialize learning service
   local init_result
-  init_result=$(node "$LEARNING_SERVICE" init "$session_id" 2>&1)
-
-  if [ $? -eq 0 ]; then
+  if init_result=$(node "$LEARNING_SERVICE" init "$session_id" 2>&1); then
     # Parse and display stats
-    local short_term=$(echo "$init_result" | grep -o '"shortTermPatterns":[0-9]*' | cut -d: -f2)
-    local long_term=$(echo "$init_result" | grep -o '"longTermPatterns":[0-9]*' | cut -d: -f2)
+    local short_term long_term
+    short_term=$(echo "$init_result" | grep -o '"shortTermPatterns":[0-9]*' | cut -d: -f2)
+    long_term=$(echo "$init_result" | grep -o '"longTermPatterns":[0-9]*' | cut -d: -f2)
 
     success "Learning service initialized"
     echo -e "  ${DIM}├─ Short-term patterns: ${short_term:-0}${RESET}"
@@ -104,24 +111,22 @@ session_end() {
 
   # Export session data
   local export_result
-  export_result=$(node "$LEARNING_SERVICE" export 2>&1)
-
-  if [ $? -eq 0 ]; then
+  if export_result=$(node "$LEARNING_SERVICE" export 2>&1); then
     # Save export
     echo "$export_result" > "$LEARNING_DIR/session-export-$(date +%Y%m%d_%H%M%S).json"
 
-    local patterns=$(echo "$export_result" | grep -o '"patterns":[0-9]*' | cut -d: -f2)
+    local patterns
+    patterns=$(echo "$export_result" | grep -o '"patterns":[0-9]*' | cut -d: -f2)
     log "Session exported: $patterns patterns"
   fi
 
   # Run consolidation
   local consolidate_result
-  consolidate_result=$(node "$LEARNING_SERVICE" consolidate 2>&1)
-
-  if [ $? -eq 0 ]; then
-    local removed=$(echo "$consolidate_result" | grep -o '"duplicatesRemoved":[0-9]*' | cut -d: -f2)
-    local pruned=$(echo "$consolidate_result" | grep -o '"patternsProned":[0-9]*' | cut -d: -f2)
-    local duration=$(echo "$consolidate_result" | grep -o '"durationMs":[0-9]*' | cut -d: -f2)
+  if consolidate_result=$(node "$LEARNING_SERVICE" consolidate 2>&1); then
+    local removed pruned duration
+    removed=$(echo "$consolidate_result" | grep -o '"duplicatesRemoved":[0-9]*' | cut -d: -f2)
+    pruned=$(echo "$consolidate_result" | grep -o '"patternsProned":[0-9]*' | cut -d: -f2)
+    duration=$(echo "$consolidate_result" | grep -o '"durationMs":[0-9]*' | cut -d: -f2)
 
     success "Consolidation complete"
     echo -e "  ${DIM}├─ Duplicates removed: ${removed:-0}${RESET}"
@@ -133,14 +138,13 @@ session_end() {
 
   # Get final stats
   local stats_result
-  stats_result=$(node "$LEARNING_SERVICE" stats 2>&1)
-
-  if [ $? -eq 0 ]; then
+  if stats_result=$(node "$LEARNING_SERVICE" stats 2>&1); then
     echo "$stats_result" > "$METRICS_DIR/learning-final-stats.json"
 
-    local total_short=$(echo "$stats_result" | grep -o '"shortTermPatterns":[0-9]*' | cut -d: -f2)
-    local total_long=$(echo "$stats_result" | grep -o '"longTermPatterns":[0-9]*' | cut -d: -f2)
-    local avg_search=$(echo "$stats_result" | grep -o '"avgSearchTimeMs":[0-9.]*' | cut -d: -f2)
+    local total_short total_long avg_search
+    total_short=$(echo "$stats_result" | grep -o '"shortTermPatterns":[0-9]*' | cut -d: -f2)
+    total_long=$(echo "$stats_result" | grep -o '"longTermPatterns":[0-9]*' | cut -d: -f2)
+    avg_search=$(echo "$stats_result" | grep -o '"avgSearchTimeMs":[0-9.]*' | cut -d: -f2)
 
     log "Final stats:"
     echo -e "  ${DIM}├─ Short-term: ${total_short:-0}${RESET}"
@@ -160,6 +164,11 @@ session_end() {
 store_pattern() {
   local strategy="$1"
   local domain="${2:-general}"
+  # `quality` is part of the public CLI surface (store <strategy> <domain>
+  # <quality>) but the current learning-service.mjs signature only accepts
+  # strategy+domain. Keep the positional slot so callers don't break when the
+  # service grows a quality arg — shellcheck-disable covers the unused case.
+  # shellcheck disable=SC2034
   local quality="${3:-0.7}"
 
   if [ -z "$strategy" ]; then
@@ -171,11 +180,10 @@ store_pattern() {
   local escaped_strategy="${strategy//\"/\\\"}"
 
   local result
-  result=$(node "$LEARNING_SERVICE" store "$escaped_strategy" "$domain" 2>&1)
-
-  if [ $? -eq 0 ]; then
-    local action=$(echo "$result" | grep -o '"action":"[^"]*"' | cut -d'"' -f4)
-    local id=$(echo "$result" | grep -o '"id":"[^"]*"' | cut -d'"' -f4)
+  if result=$(node "$LEARNING_SERVICE" store "$escaped_strategy" "$domain" 2>&1); then
+    local action id
+    action=$(echo "$result" | grep -o '"action":"[^"]*"' | cut -d'"' -f4)
+    id=$(echo "$result" | grep -o '"id":"[^"]*"' | cut -d'"' -f4)
 
     if [ "$action" = "created" ]; then
       success "Pattern stored: $id"
@@ -205,11 +213,10 @@ search_patterns() {
   local escaped_query="${query//\"/\\\"}"
 
   local result
-  result=$(node "$LEARNING_SERVICE" search "$escaped_query" "$k" 2>&1)
-
-  if [ $? -eq 0 ]; then
-    local patterns=$(echo "$result" | grep -o '"patterns":\[' | wc -l)
-    local search_time=$(echo "$result" | grep -o '"searchTimeMs":[0-9.]*' | cut -d: -f2)
+  if result=$(node "$LEARNING_SERVICE" search "$escaped_query" "$k" 2>&1); then
+    local patterns search_time
+    patterns=$(echo "$result" | grep -o '"patterns":\[' | wc -l)
+    search_time=$(echo "$result" | grep -o '"searchTimeMs":[0-9.]*' | cut -d: -f2)
 
     echo "$result"
 
@@ -246,12 +253,11 @@ run_benchmark() {
   log "Running HNSW benchmark..."
 
   local result
-  result=$(node "$LEARNING_SERVICE" benchmark 2>&1)
-
-  if [ $? -eq 0 ]; then
-    local avg_search=$(echo "$result" | grep -o '"avgSearchMs":"[^"]*"' | cut -d'"' -f4)
-    local p95_search=$(echo "$result" | grep -o '"p95SearchMs":"[^"]*"' | cut -d'"' -f4)
-    local improvement=$(echo "$result" | grep -o '"searchImprovementEstimate":"[^"]*"' | cut -d'"' -f4)
+  if result=$(node "$LEARNING_SERVICE" benchmark 2>&1); then
+    local avg_search p95_search improvement
+    avg_search=$(echo "$result" | grep -o '"avgSearchMs":"[^"]*"' | cut -d'"' -f4)
+    p95_search=$(echo "$result" | grep -o '"p95SearchMs":"[^"]*"' | cut -d'"' -f4)
+    improvement=$(echo "$result" | grep -o '"searchImprovementEstimate":"[^"]*"' | cut -d'"' -f4)
 
     success "HNSW Benchmark Complete"
     echo -e "  ${DIM}├─ Avg search: ${avg_search}ms${RESET}"
@@ -272,9 +278,7 @@ run_benchmark() {
 ***REMOVED***=
 get_stats() {
   local result
-  result=$(node "$LEARNING_SERVICE" stats 2>&1)
-
-  if [ $? -eq 0 ]; then
+  if result=$(node "$LEARNING_SERVICE" stats 2>&1); then
     echo "$result"
     return 0
   else
