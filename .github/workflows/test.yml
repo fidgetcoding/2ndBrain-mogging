@@ -1,0 +1,75 @@
+name: Tests
+
+# ----------------------------------------------------------------------------
+# Runs the 2ndBrain-mogging shell test harness on every push/PR to main.
+# The harness lives at tests/run_all.sh and orchestrates every test_*.sh
+# script, distinguishing PASS / SKIP / FAIL via a SKIP sentinel.
+#
+# We do NOT run with --strict yet because several skills still legitimately
+# skip when their runnable entrypoint is not yet wired. Flip to --strict
+# once every test has a real entrypoint.
+# ----------------------------------------------------------------------------
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'why-not-*.md'
+      - 'NOTICE'
+      - 'LICENSE'
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'why-not-*.md'
+      - 'NOTICE'
+      - 'LICENSE'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  harness:
+    name: Shell test harness (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+
+      - name: Install jq (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends jq
+
+      - name: Install jq (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install jq || brew upgrade jq
+
+      - name: Assert bash >= 4 is available
+        run: |
+          # macOS ships bash 3.2; install.sh + tests require bash 4+.
+          if [ "${{ runner.os }}" = "macOS" ]; then
+            brew install bash || brew upgrade bash
+            /opt/homebrew/bin/bash --version || /usr/local/bin/bash --version
+          fi
+          bash --version
+
+      - name: Run tests/run_all.sh
+        run: |
+          chmod +x tests/run_all.sh
+          bash tests/run_all.sh

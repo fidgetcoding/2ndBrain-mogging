@@ -1,0 +1,82 @@
+name: Lint Shell Scripts
+
+# ----------------------------------------------------------------------------
+# ShellCheck + bash -n gate for every shell script in the repo.
+# Matches the pinned SHA convention used by cli-maxxing and creativity-maxxing.
+#
+# ShellCheck action is pinned to 00cae500 = ludeeus/action-shellcheck@v2.0.0
+# because trilogy-group v2.0.0 and prior were moving tags. See
+# `reference_action_shellcheck_pin` in the operator's memory for history.
+# ----------------------------------------------------------------------------
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'README*'
+      - 'NOTICE'
+      - 'LICENSE'
+      - 'why-not-*.md'
+      - '.github/CODEOWNERS'
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'README*'
+      - 'NOTICE'
+      - 'LICENSE'
+      - 'why-not-*.md'
+      - '.github/CODEOWNERS'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  shellcheck:
+    name: ShellCheck (warning severity)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+      - name: Run ShellCheck
+        uses: ludeeus/action-shellcheck@00cae500b08a931fb5698e11e79bfbd38e612a38 # v2.0.0
+        with:
+          scandir: '.'
+          severity: warning
+          ignore_paths: node_modules tests/fixtures
+
+  syntax-check:
+    name: bash -n syntax check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+      - name: Parse every shell script with bash -n
+        run: |
+          failed=0
+          while IFS= read -r -d '' f; do
+            if ! bash -n "$f" 2>&1; then
+              echo "::error file=$f::bash -n parse failed"
+              failed=1
+            fi
+          done < <(find . \
+            -type f -name "*.sh" \
+            -not -path "./.git/*" \
+            -not -path "./node_modules/*" \
+            -not -path "./tests/fixtures/*" \
+            -print0)
+          if [ "$failed" -ne 0 ]; then
+            exit 1
+          fi
+          echo "All shell scripts parsed cleanly"
