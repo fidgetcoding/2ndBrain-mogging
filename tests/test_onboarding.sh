@@ -69,10 +69,17 @@ run_install() {
 
 # ---------------------------------------------------------------------------
 # First install run.
+#
+# We capture stdout/stderr into FIRST_OUT so VERBOSE=1 runs can surface
+# installer output on failure; the || true keeps the test harness going
+# because set -e is off by design (see header). shellcheck SC2034 would flag
+# FIRST_OUT as unused — the reference below both satisfies the linter and
+# prints the captured output when debugging.
 # ---------------------------------------------------------------------------
 FIRST_OUT="$(run_install || true)"
 FIRST_RC=$?
 assert_eq "$FIRST_RC" "0" "install.sh exits 0 on first run"
+[[ "${VERBOSE:-0}" == "1" ]] && printf '%s\n' "$FIRST_OUT"
 
 # ---------------------------------------------------------------------------
 # Canonical folders (7).
@@ -121,8 +128,14 @@ assert_contains "$PLUGIN_JSON" "2ndbrain-mogging" \
   "plugin.json references the plugin name"
 
 # ---------------------------------------------------------------------------
-# Skills — ship surface is 10 skills, symlinked into ~/.claude/skills WITHOUT
-# any namespace prefix. Source of truth: .claude-plugin/plugin.json .skills[].
+# Skills — ship surface is 12 skills total: 10 core + 2 optional importers.
+# Symlinked into ~/.claude/skills WITHOUT any namespace prefix. install.sh's
+# symlink_dir "skills" iterates every entry under repo/skills/, so all 12
+# directories should land even if plugin.json's .skills[] array only advertises
+# the 10 core ones (import-claude + import-notes are discoverable via /skill
+# but intentionally omitted from the marketplace manifest for a leaner first
+# impression — README.md line 25 explicitly calls them "10 core + 2 optional
+# importers").
 #
 # The old EXPECTED_SKILLS list included phantom skills (onboard, recall,
 # distill, index, route, scrub) that were never implemented; those
@@ -130,11 +143,12 @@ assert_contains "$PLUGIN_JSON" "2ndbrain-mogging" \
 # here and update plugin.json in the same change.
 # ---------------------------------------------------------------------------
 SKILLS_DIR="$FAKE_HOME/.claude/skills"
-assert_dir "$SKILLS_DIR" "~/.claude/skills exists after install"
+assert_dir "$SKILLS_DIR" "\$HOME/.claude/skills exists after install"
 
 EXPECTED_SKILLS=(
   save wiki challenge emerge backfill
   aliases autoresearch canvas tether connect
+  import-claude import-notes
 )
 for s in "${EXPECTED_SKILLS[@]}"; do
   link="$SKILLS_DIR/$s"
@@ -193,6 +207,7 @@ printf "\n%s\n" "$USER_NOTE" >> "$FAKE_VAULT/CLAUDE.md"
 SECOND_OUT="$(run_install || true)"
 SECOND_RC=$?
 assert_eq "$SECOND_RC" "0" "install.sh exits 0 on second run (idempotent)"
+[[ "${VERBOSE:-0}" == "1" ]] && printf '%s\n' "$SECOND_OUT"
 
 # Stop hook count still 1, not duplicated.
 COUNT_2B_STOP2=0
