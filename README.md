@@ -77,6 +77,34 @@ The pack installs the Obsidian *configuration* — it assumes Obsidian itself is
 
 ---
 
+## Prerequisites
+
+Before running the installer you need two things on your machine. Takes about 5 minutes if you don't have them yet.
+
+**1. Claude Code** — the CLI that runs all the skills.
+
+```bash
+# Fastest way — this one-liner handles everything (Homebrew, Node, claude, aliases)
+bash <(curl -fsSL https://raw.githubusercontent.com/<ORG-A>/cli-maxxing/main/step-1/step-1-install.sh)
+```
+
+Already have it? Run `claude --version` to confirm. If that prints a version number, you're good.
+
+**2. `jq`** — a command-line JSON tool the installer uses to merge your settings file safely.
+
+```bash
+# macOS
+brew install jq
+
+# Already have Homebrew? That's all you need. No Homebrew yet? The cli-maxxing Step 1 above installs it.
+```
+
+Already have it? Run `jq --version` to confirm.
+
+> **Coming from cli-maxxing?** If you've already run cli-maxxing Step 1 + Step 3, you have both. Skip straight to [Install the mogging pack](#install-the-mogging-pack).
+
+---
+
 ## Install the mogging pack
 
 Once Obsidian is installed and you have a vault folder (e.g. `~/Desktop/BRAIN/`), the pack's installer takes over.
@@ -201,7 +229,7 @@ If you're coming from an older second-brain kit, you'll notice these are gone:
 - `05-Templates/` → retired. Templates belong in the plugin layer, not in your graph. The `2ndbrain-mogging` skills carry them now.
 - `06-Assets/` → retired. Obsidian's attachment defaults handle assets in place; a centralized assets folder exists mostly to make your graph view lie to you about which notes are "connected."
 
-Deep rationale for each kill is in [`PHILOSOPHY.md`](PHILOSOPHY.md).
+Deep rationale for each skill is in [`PHILOSOPHY.md`](PHILOSOPHY.md).
 
 ---
 

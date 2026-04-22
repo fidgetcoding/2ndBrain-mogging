@@ -134,7 +134,17 @@ mode_banner() {
   if [[ "$APPLY" -eq 1 ]]; then
     log "mode=APPLY — changes will be made"
   else
-    log "mode=DRY-RUN — no changes will be made (pass --apply to execute)"
+    echo ""
+    echo "┌──────────────────────────────────────────────────────────────┐"
+    echo "│  DRY-RUN MODE — nothing is installed yet                     │"
+    echo "│                                                              │"
+    echo "│  This run only SHOWS what would happen. To actually install: │"
+    echo "│                                                              │"
+    echo "│    ./install.sh --vault ~/Desktop/BRAIN --apply              │"
+    echo "│                                                              │"
+    echo "│  Replace ~/Desktop/BRAIN with your actual Obsidian vault path│"
+    echo "└──────────────────────────────────────────────────────────────┘"
+    echo ""
   fi
 }
 
@@ -153,11 +163,31 @@ run() {
 preflight() {
   log "step 1: preflight"
 
-  command -v claude    >/dev/null 2>&1 || { err "missing: claude";    exit 10; }
-  command -v jq        >/dev/null 2>&1 || { err "missing: jq";        exit 11; }
-  command -v git       >/dev/null 2>&1 || { err "missing: git";       exit 11; }
+  command -v claude    >/dev/null 2>&1 || {
+    err "Claude Code is not installed."
+    err "Fix: bash <(curl -fsSL https://raw.githubusercontent.com/<ORG-A>/cli-maxxing/main/step-1/step-1-install.sh)"
+    err "Then open a new terminal and re-run this installer."
+    exit 10
+  }
+  command -v jq        >/dev/null 2>&1 || {
+    err "jq is not installed."
+    err "Fix (macOS): brew install jq"
+    err "Fix (Linux):  sudo apt-get install -y jq   OR   sudo dnf install -y jq"
+    err "Then re-run this installer."
+    exit 11
+  }
+  command -v git       >/dev/null 2>&1 || {
+    err "git is not installed."
+    err "Fix (macOS): brew install git"
+    err "Fix (Linux):  sudo apt-get install -y git"
+    exit 11
+  }
   command -v bash      >/dev/null 2>&1 || { err "missing: bash";      exit 11; }
-  command -v osascript >/dev/null 2>&1 || { err "missing: osascript"; exit 12; }
+  command -v osascript >/dev/null 2>&1 || {
+    err "osascript not found — are you on macOS?"
+    err "This installer requires macOS. Linux support is in progress."
+    exit 12
+  }
 
   local raw major minor
   raw="$(claude --version 2>/dev/null | head -n1 | awk '{print $1}' | tr -d '[:space:]')"
@@ -186,11 +216,14 @@ preflight() {
 validate_vault() {
   log "step 2/3: validate vault"
   if [[ "$APPLY" -eq 1 && -z "$VAULT" ]]; then
-    err "--apply requires --vault PATH"
+    err "--apply requires --vault PATH  (the path to your Obsidian vault folder)"
+    err "Example: ./install.sh --vault ~/Desktop/BRAIN --apply"
+    err "Not sure where your vault is? Open Obsidian → Settings → Files and Links → Vault path."
     exit 20
   fi
   if [[ -n "$VAULT" && ! -d "$VAULT" ]]; then
     err "--vault is not a directory: $VAULT"
+    err "Make sure the folder exists. Create a new Obsidian vault first (obsidian.md/download)."
     exit 21
   fi
   export VAULT
