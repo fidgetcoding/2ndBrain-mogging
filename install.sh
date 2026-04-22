@@ -93,9 +93,9 @@ Exit codes:
   0   success
   10  missing dependency: claude
   11  missing dependency: jq / git / bash
-  12  missing dependency: osascript / claude version too old
+  12  claude version too old (osascript missing = warn, not fatal)
   20  --apply given without --vault
-  21  --vault not a directory
+  21  --vault not a directory OR contains '..' traversal
   30  test failure
   40  jq merge failure
   41  CLAUDE.md patch extraction failure
@@ -149,12 +149,23 @@ mode_banner() {
 }
 
 # run() executes in apply mode, logs the command in dry-run.
+# NOTE: IFS is `\n\t` for safety, which makes naked `$*` expand newline-joined
+# in messages. Build a space-joined display string manually so the dry-run
+# output stays on one readable line per command instead of one arg per line.
 run() {
+  local _display="" _arg
+  for _arg in "$@"; do
+    if [[ -z "$_display" ]]; then
+      _display="$_arg"
+    else
+      _display="$_display $_arg"
+    fi
+  done
   if [[ "$APPLY" -eq 1 ]]; then
-    vlog "exec: $*"
+    vlog "exec: $_display"
     "$@"
   else
-    log "would run: $*"
+    log "would run: $_display"
   fi
 }
 
@@ -183,11 +194,15 @@ preflight() {
     exit 11
   }
   command -v bash      >/dev/null 2>&1 || { err "missing: bash";      exit 11; }
-  command -v osascript >/dev/null 2>&1 || {
-    err "osascript not found — are you on macOS?"
-    err "This installer requires macOS. Linux support is in progress."
-    exit 12
-  }
+  # osascript is macOS-only. We use it indirectly via the launchd path (plists
+  # are macOS-only) and for a couple of optional prompts. On Linux, warn and
+  # continue — skills, commands, agents, hooks, obsidian-mcp, and the
+  # statusline marker all work cross-platform. Launchd install will no-op.
+  if ! command -v osascript >/dev/null 2>&1; then
+    warn "osascript not found — not on macOS."
+    warn "Linux install proceeds, but launchd scheduled agents (morning/nightly/weekly/health) will be skipped."
+    warn "Pass --no-launchd to silence this and the step-10 plist loop."
+  fi
 
   local raw major minor
   raw="$(claude --version 2>/dev/null | head -n1 | awk '{print $1}' | tr -d '[:space:]')"
@@ -221,11 +236,46 @@ validate_vault() {
     err "Not sure where your vault is? Open Obsidian → Settings → Files and Links → Vault path."
     exit 20
   fi
+
+  # Directory-traversal guard. Reject any path containing a `..` component.
+  # `..` anywhere in the chain lets a caller escape the intended vault root
+  # (e.g. --vault ~/Desktop/BRAIN/../../.ssh) and we refuse to install there.
+  # Pure-prefix matches like "..safe/foo" are NOT rejected — we only match a
+  # `..` that stands alone between separators or at the ends of the path.
+  if [[ -n "$VAULT" ]]; then
+    case "/$VAULT/" in
+      */../*)
+        err "--vault path contains '..' traversal — refusing for safety: $VAULT"
+        err "Pass an absolute, fully-resolved path (no '..' components)."
+        exit 21
+        ;;
+    esac
+  fi
+
   if [[ -n "$VAULT" && ! -d "$VAULT" ]]; then
+    # Offer to create the vault directory. Obsidian treats any folder with a
+    # `.obsidian/` subdir (which it creates on first open) as a vault, so
+    # `mkdir -p` is enough to bootstrap a target. We still refuse creation
+    # without --apply so dry-run never mutates.
     err "--vault is not a directory: $VAULT"
-    err "Make sure the folder exists. Create a new Obsidian vault first (obsidian.md/download)."
+    if [[ "$APPLY" -eq 1 ]]; then
+      err "Create it now? Re-run:"
+      err "    mkdir -p \"$VAULT\" && ./install.sh --vault \"$VAULT\" --apply"
+      err "Or point --vault at an existing folder. Open Obsidian → Settings → Files and Links → Vault path."
+    else
+      err "Dry-run: would fail on --apply. Create the folder or point --vault elsewhere."
+    fi
     exit 21
   fi
+
+  # Normalize to an absolute, resolved path so every downstream path builder
+  # (Claude-Memory symlink, statusline marker, seed copy) sees the same root.
+  if [[ -n "$VAULT" ]]; then
+    local resolved
+    resolved="$(cd -P "$VAULT" >/dev/null 2>&1 && pwd)" || resolved="$VAULT"
+    VAULT="$resolved"
+  fi
+
   export VAULT
   vlog "vault=${VAULT:-<unset>}"
 }
@@ -313,12 +363,15 @@ backup_settings() {
 merge_stop_hook() {
   log "step 5: merge Stop hook into settings.json"
 
-  local our_hook_src="$REPO_ROOT/hooks/stop-hook.json"
-  if [[ ! -f "$our_hook_src" ]]; then
-    # Define a minimal default hook-overlay inline if repo ships none.
-    local tmp_overlay
-    tmp_overlay="$(mktemp -t mogging-stop-overlay.XXXXXX)"
-    cat >"$tmp_overlay" <<'JSON'
+  # The Stop-hook overlay is generated inline — there is intentionally no
+  # hooks/stop-hook.json in the repo. The single source of truth for what
+  # the hook runs is hooks/stop-save.sh; we only need a JSON wrapper so jq
+  # can merge it into ~/.claude/settings.json. Keeping the wrapper inline
+  # (rather than shipping an extra file) avoids drift between the wrapper
+  # and the script it invokes.
+  local our_hook_src
+  our_hook_src="$(mktemp -t mogging-stop-overlay.XXXXXX)"
+  cat >"$our_hook_src" <<'JSON'
 {
   "hooks": {
     "Stop": [
@@ -333,14 +386,21 @@ merge_stop_hook() {
   }
 }
 JSON
-    our_hook_src="$tmp_overlay"
-    vlog "using default inline Stop overlay (no hooks/stop-hook.json in repo)"
-  fi
+  vlog "generated inline Stop overlay (wraps $REPO_ROOT/hooks/stop-save.sh)"
 
-  # Starting base: existing settings or {}
-  local base="{}"
+  # Starting base: existing settings or a tempfile containing `{}`.
+  # `jq -s` reads its non-option args as file paths, so passing the literal
+  # string "{}" crashes with "Could not open file {}". When settings.json
+  # doesn't exist yet (brand-new Claude install), materialize an empty
+  # object to a tempfile and merge onto that. This tempfile is removed
+  # alongside the other mktemp'd artifacts at the bottom of this function.
+  local base base_was_synthesized=0
   if [[ -f "$SETTINGS_PATH" ]]; then
     base="$SETTINGS_PATH"
+  else
+    base="$(mktemp -t mogging-base.XXXXXX)"
+    printf '{}\n' > "$base"
+    base_was_synthesized=1
   fi
 
   # Detect existing Stop hook (count only — NEVER print contents)
@@ -356,9 +416,20 @@ JSON
     fi
   fi
 
+  # Local cleanup helper — remove every tempfile this function may have
+  # created. Safe to call multiple times; `rm -f` on an empty/missing arg is
+  # a no-op. Writes to the synthesized base only when we created one.
+  _cleanup_stop_tmps() {
+    rm -f "$our_hook_src" "${overlay_resolved:-}" "${merged:-}"
+    if (( base_was_synthesized == 1 )); then
+      rm -f "$base"
+    fi
+  }
+
   local merge_mode="append"
   if (( ours_already_present == 1 )) && [[ "$MERGE_STOP" -ne 1 ]]; then
     log "our Stop hook already present in settings.json — skipping merge (pass --merge-stop to force replace)"
+    _cleanup_stop_tmps
     return 0
   fi
   if (( existing_stop_count > 0 )) && [[ "$MERGE_STOP" -eq 1 ]]; then
@@ -376,7 +447,7 @@ JSON
 
   if ! jq empty "$overlay_resolved" >/dev/null 2>&1; then
     err "overlay JSON is invalid; aborting merge"
-    rm -f "$overlay_resolved"
+    _cleanup_stop_tmps
     exit 40
   fi
 
@@ -386,7 +457,7 @@ JSON
     # Deep overlay; .[1] wins for scalars/arrays at the same path.
     if ! jq -s '.[0] * .[1]' "$base" "$overlay_resolved" > "$merged" 2>/dev/null; then
       err "jq replace merge failed"
-      rm -f "$overlay_resolved" "$merged"
+      _cleanup_stop_tmps
       exit 40
     fi
   else
@@ -405,7 +476,7 @@ JSON
         | ($a * $b) * { hooks: (($a.hooks // {}) * ($b.hooks // {}) * { Stop: ((($a.hooks.Stop) // []) + (($b.hooks.Stop) // [])) }) }
       ' "$base" "$overlay_resolved" > "$merged" 2>/dev/null; then
         err "jq append merge failed"
-        rm -f "$overlay_resolved" "$merged"
+        _cleanup_stop_tmps
         exit 40
       fi
     fi
@@ -413,7 +484,7 @@ JSON
 
   if ! jq empty "$merged" >/dev/null 2>&1; then
     err "merged settings.json is invalid JSON"
-    rm -f "$overlay_resolved" "$merged"
+    _cleanup_stop_tmps
     exit 40
   fi
 
@@ -429,7 +500,7 @@ JSON
     log "would write merged settings.json to $SETTINGS_PATH (0600)"
   fi
 
-  rm -f "$overlay_resolved" "$merged"
+  _cleanup_stop_tmps
 }
 
 # ---- steps 6/7/8: symlink skills/commands/agents ----------------------------
@@ -591,6 +662,14 @@ apply_claude_md_patch() {
 install_launchd() {
   if [[ "$NO_LAUNCHD" -eq 1 ]]; then
     log "step 10: launchd SKIPPED (--no-launchd)"
+    return 0
+  fi
+  # Launchd is macOS-only — on Linux (no launchctl), skip with a note rather
+  # than failing. A cron-equivalent scheduler is on the roadmap; until then
+  # Linux users run the agents manually or via their own cron.
+  if ! command -v launchctl >/dev/null 2>&1; then
+    log "step 10: launchd SKIPPED (launchctl not on PATH — not on macOS)"
+    log "         set up cron manually if you want scheduled audits on Linux."
     return 0
   fi
   log "step 10: install launchd plists"
