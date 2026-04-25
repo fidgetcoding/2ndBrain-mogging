@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- README: social-links badge strip (X · LinkedIn · YouTube · Instagram, ruvnet-style for-the-badge) inserted into the centered header block beneath the project license badge.
 - **`install.sh` step 10.7 — register `obsidian-mcp` with Claude Code.** `--apply` now runs `claude mcp add --scope user obsidian -- npx -y obsidian-mcp "$VAULT"` so Claude Code can read/write the vault out of the box. Idempotent (skips if already registered), opts out with `--no-obsidian-mcp`, and gracefully noops if the `claude` CLI isn't on PATH. Closes the cli-maxxing README cross-reference that previously promised this behavior before it existed (b0c38cd).
 - **`install.sh` step 10.8 — `~/.claude/.mogging-vault` marker file.** Install writes a marker pointing at the vault root so cli-maxxing's statusline can detect a mogged vault and render the correct `fidgetflo` / mogging indicator. Closes the second half of the cli-maxxing cross-reference (7feeedf).
 - **`install.sh` step 3.5 — vault-template seeding.** Fresh `--apply` runs now copy `vault-template/` into the target vault when the 7-folder layout is absent, including three placeholder projects (`example-project-1/2/3`) and a seed `Projects-Index.md` so `/tether` has something to audit on day one.
@@ -22,6 +23,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **the operator → the operator sweep.** Purged every "the operator" / "the operator" reference from shipped skill MDs, commands, README, and migration docs. Canonical is the operator / <ORG-A>.
 - **Ruvnet/claude-flow/ruflo attribution.** Removed the inaccurate direct-descent claim from README in favor of the actual lineage (FidgetFlo fork).
 - **15-agent audit-and-fix pass.** Full consistency sweep across `README.md`, `PHILOSOPHY.md`, `CHANGELOG.md`, `CONTRIBUTING.md`, `docs/**`, `references/wiki-schema.md`, and every `skills/*/SKILL.md` to close the residual drift between prose and shipped behavior after v0.1.4.
+
+### Changed
+- Git history rewrite: `git filter-repo` collapsed all author/committer identities into a single `the operator <operator@example.com>` identity across `main` and all release tags. All `Co-authored-by:` trailers stripped. Two stale dependabot/* branches deleted from the remote. Tag commit hashes for v0.1.0 / v0.1.1 changed; this repo has no published npm artifact, so no downstream impact.
 
 ## [0.1.4] — 2026-04-17
 
