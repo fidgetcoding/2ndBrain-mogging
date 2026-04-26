@@ -22,7 +22,7 @@
 |---|---|---|---|
 | [Why this exists](#why-this-exists) | Origin | The maxxing → mogging story | ~2 min |
 | [What you get](#what-you-get) | Overview | TL;DR of the kit | ~1 min |
-| [Install Obsidian first](#install-obsidian-first) | Setup | Manual download + folder suggestion | ~3 min |
+| [Install Obsidian (auto)](#install-obsidian-first) | Setup | Auto-installed by the installer; manual download is the fallback | ~1 min |
 | [Install the mogging pack](#install-the-mogging-pack) | Setup | Clone, dry-run, apply | ~2 min |
 | [The 12 skills](#the-12-skills) | Reference | Every slash command in plain English | ~3 min |
 | [Vault structure](#vault-structure) | Reference | The 7-folder layout, with example projects | ~2 min |
@@ -63,7 +63,9 @@ So: we went from maxxing to absolutely **mogging** everybody.
 
 ## Install Obsidian first
 
-The pack installs the Obsidian *configuration* — it assumes Obsidian itself is already on your machine. The installer for the Obsidian app is a one-time thing you do manually; I don't automate it because the official installer is the only one that reliably works across macOS/Windows/Linux quirks.
+**TL;DR — you can skip this whole section on macOS.** The installer auto-installs Obsidian.app via `brew install --cask obsidian` if it's missing, and auto-creates the vault directory if you point `--vault` at a folder that doesn't exist yet. Pass `--no-obsidian-app` to opt out of the auto-install if you'd rather grab Obsidian yourself.
+
+The pack installs the Obsidian *configuration* on top of the Obsidian app. If the auto-install runs, you're done with this step — jump to [Install the mogging pack](#install-the-mogging-pack). Otherwise (Linux / Windows / no Homebrew / `--no-obsidian-app`), do it manually:
 
 1. Go to **[obsidian.md](https://obsidian.md/download)** and download the installer for your OS.
 2. Run the installer. It takes about 30 seconds.
@@ -75,7 +77,7 @@ The pack installs the Obsidian *configuration* — it assumes Obsidian itself is
 5. Accept the "Create new vault" prompt. Obsidian makes the folder.
 6. **Done — close Obsidian.** The next step runs from the terminal and wants the vault folder empty-ish.
 
-> If you hit any install weirdness, the fix is almost always "use the official installer, not a script." I've tried. It fights me every time.
+> If you hit any install weirdness, the fix is almost always "use the official installer, not a script." That's why the auto-install path is `brew install --cask obsidian` (Homebrew's cask uses the official installer under the hood) and why we don't curl-pipe-shell the Obsidian binary ourselves.
 
 ---
 

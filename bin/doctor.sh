@@ -30,6 +30,21 @@ REPO_ROOT="$(cd -P "$BIN_DIR/.." >/dev/null 2>&1 && pwd)"
 CLAUDE_HOME="${CLAUDE_HOME:-$HOME/.claude}"
 LAUNCHAGENTS_DIR="$HOME/Library/LaunchAgents"
 
+# Vault path is discovered at runtime from the statusline marker that
+# install.sh step 10.8 writes (~/.claude/.mogging-vault). Falls back to
+# the $VAULT environment variable if it's set, then to empty (in which
+# case vault-scoped checks are skipped with [doctor:info], not failed —
+# doctor on a non-vault host is a valid scenario).
+MOGGING_VAULT_MARKER="$CLAUDE_HOME/.mogging-vault"
+VAULT_PATH=""
+if [[ -f "$MOGGING_VAULT_MARKER" ]]; then
+  # Marker contains a single line: the absolute vault path.
+  VAULT_PATH="$(head -n 1 "$MOGGING_VAULT_MARKER" 2>/dev/null | tr -d '\r\n' || true)"
+fi
+if [[ -z "$VAULT_PATH" && -n "${VAULT:-}" ]]; then
+  VAULT_PATH="$VAULT"
+fi
+
 FAIL_COUNT=0
 # Exit code for "one or more FAILs fired" — non-standard on purpose so
 # callers can distinguish a real health-check failure (exit 3) from
@@ -129,12 +144,145 @@ check_plugin_registered() {
   fi
 }
 
+# ---- npm cache ownership check (<ORG-D> install-call 2026-04-22 item 7) -------
+#
+# obsidian-mcp / magic-mcp / any npx-driven MCP fails silently when ~/.npm is
+# root-owned (legacy `sudo npm install` damage). Doctor surfaces this with the
+# literal one-liner that fixes it — DO NOT print "npm cache fix" (not a real
+# subcommand; see <ORG-D> install-call item 6). The fix is always:
+#
+#     sudo chown -R $(whoami) ~/.npm
+#
+# Note: -maxdepth 2 keeps the find cheap on huge ~/.npm caches; root-owned
+# damage from a legacy `sudo npm install` lands at the top levels, not deep.
+
+check_npm_cache_ownership() {
+  info "checking ~/.npm cache ownership"
+  local npm_dir="$HOME/.npm"
+  if [[ ! -d "$npm_dir" ]]; then
+    info "no ~/.npm directory yet (npm/npx not run); skipping"
+    return 0
+  fi
+  # Use -print -quit to bail at the first hit — we don't need a full listing,
+  # we just need to know whether ANY root-owned file lives in the top of the
+  # cache. 2>/dev/null swallows permission-denied noise from inaccessible subdirs.
+  if find "$npm_dir" -maxdepth 2 -user root -print -quit 2>/dev/null | grep -q .; then
+    fail "~/.npm contains root-owned files (legacy 'sudo npm install' damage)"
+    fail "fix with this exact command (copy/paste — no shell substitution gotchas):"
+    fail "    sudo chown -R \$(whoami) ~/.npm"
+    fail "or, if even that hits a substitution issue, the fully literal form:"
+    fail "    sudo chown -R $(whoami):staff ~/.npm"
+  else
+    pass "~/.npm cache ownership clean (no root-owned files in top 2 levels)"
+  fi
+}
+
+# ---- vault project-index filename=foldername check (item 9) -----------------
+#
+# Hard rule from CLAUDE.md: every project folder under 05-Projects/ must have
+# an index note where filename = foldername (e.g. <ORG-B>/<ORG-B>.md, never
+# <ORG-B>/<ORG-B>-Index.md). Folder renames (e.g. example-project-1 →
+# NiFe-WARS-Kostas) leave the inner .md unchanged, breaking [[PROJECT]]
+# wikilink resolution. Surface drift, suggest the rename, never auto-rename
+# (project index files are owner=human; CLAUDE.md forbids auto-rewrite).
+
+check_project_filename_equals_folder() {
+  info "checking 05-Projects/<folder>/<folder>.md filename-equals-foldername rule"
+  if [[ -z "$VAULT_PATH" ]]; then
+    info "no vault path discovered (marker $MOGGING_VAULT_MARKER missing); skipping"
+    return 0
+  fi
+  local projects_dir="$VAULT_PATH/05-Projects"
+  if [[ ! -d "$projects_dir" ]]; then
+    info "$projects_dir not found; skipping (vault may not be a mogged vault yet)"
+    return 0
+  fi
+  shopt -s nullglob
+  local folder name expected_index local_fail=0
+  for folder in "$projects_dir"/*/; do
+    # Strip trailing slash → bare folder name
+    name="$(basename "$folder")"
+    expected_index="${folder%/}/${name}.md"
+    if [[ -f "$expected_index" ]]; then
+      pass "05-Projects/$name/$name.md"
+    else
+      # Look for any .md inside the folder so we can suggest a rename
+      shopt -s nullglob
+      local candidates=( "${folder}"*.md )
+      shopt -u nullglob
+      if [[ ${#candidates[@]} -gt 0 ]]; then
+        local first="$(basename "${candidates[0]}")"
+        fail "05-Projects/$name/ missing $name.md (found ${first} — rename it: mv \"${candidates[0]}\" \"$expected_index\")"
+      else
+        fail "05-Projects/$name/ missing $name.md (no .md files inside the folder at all — create one or remove the empty folder)"
+      fi
+      local_fail=1
+    fi
+  done
+  shopt -u nullglob
+  if [[ "$local_fail" -eq 0 ]]; then
+    pass "all 05-Projects/ folders satisfy filename=foldername"
+  fi
+}
+
+# ---- Projects-Index.md stale wikilink check (item 10) -----------------------
+#
+# Projects-Index.md keeps placeholder wikilinks for deleted example projects,
+# leaving ghost nodes in graph view. Surface stale wikilinks, but DO NOT
+# auto-delete (vault hard rule: "Never remove a note or wikilink without
+# flagging it for the human first").
+
+check_projects_index_stale_wikilinks() {
+  info "checking 04-Index/Projects-Index.md for stale wikilinks"
+  if [[ -z "$VAULT_PATH" ]]; then
+    info "no vault path discovered; skipping"
+    return 0
+  fi
+  local index_file="$VAULT_PATH/04-Index/Projects-Index.md"
+  if [[ ! -f "$index_file" ]]; then
+    info "$index_file not found; skipping"
+    return 0
+  fi
+  local projects_dir="$VAULT_PATH/05-Projects"
+  if [[ ! -d "$projects_dir" ]]; then
+    info "$projects_dir not found; skipping"
+    return 0
+  fi
+  # Extract candidate wikilink targets. We want the substring between [[ and
+  # the first | or ]] — the target, not the alias. grep + sed handles this
+  # without pulling in awk regex juggling.
+  local stale_count=0
+  while IFS= read -r target; do
+    [[ -z "$target" ]] && continue
+    # Strip any heading anchor (#section) or block ref (^id) — they don't
+    # change which file the link resolves to.
+    local file_target="${target%%#*}"
+    file_target="${file_target%%^*}"
+    [[ -z "$file_target" ]] && continue
+    # Skip well-known non-project wikilinks (other index hubs, common refs).
+    case "$file_target" in
+      Projects-Index|Home-Index|Tech-Index|Poetry-Index|Index|TASKS|GITHUB|<ORG-A>) continue ;;
+    esac
+    if [[ ! -f "$projects_dir/$file_target/$file_target.md" ]]; then
+      fail "Projects-Index.md links to [[$file_target]] but 05-Projects/$file_target/$file_target.md is missing"
+      fail "  flag for human review (do NOT auto-delete; CLAUDE.md hard rule)"
+      stale_count=$((stale_count + 1))
+    fi
+  done < <(grep -oE '\[\[[^]|]+' "$index_file" | sed 's/^\[\[//')
+  if [[ "$stale_count" -eq 0 ]]; then
+    pass "Projects-Index.md wikilinks all resolve to existing project folders"
+  fi
+}
+
 main() {
   check_symlinks_for_kind "skills"
   check_symlinks_for_kind "commands"
   check_symlinks_for_kind "agents"
   check_launchd
   check_plugin_registered
+  check_npm_cache_ownership
+  check_project_filename_equals_folder
+  check_projects_index_stale_wikilinks
   if [[ "$FAIL_COUNT" -eq 0 ]]; then
     printf '[doctor] all checks passed\n'
     exit 0
