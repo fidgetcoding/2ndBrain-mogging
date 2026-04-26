@@ -10,7 +10,7 @@
 #   install.sh [--vault PATH] [--apply] [--dry-run] [--no-launchd]
 #              [--skip-tests] [--verbose] [--merge-stop]
 #              [--with-intelligence] [--symlink] [--no-obsidian-mcp]
-#              [--no-statusline-brain]
+#              [--no-statusline-brain] [--no-obsidian-app]
 #
 # NEVER uses `set -x`. Settings.json contents must never be echoed
 # or logged. This script handles secrets-adjacent data.
@@ -52,6 +52,7 @@ APPLY=0
 NO_LAUNCHD=0
 NO_OBSIDIAN_MCP=0
 NO_STATUSLINE_BRAIN=0
+NO_OBSIDIAN_APP=0
 SKIP_TESTS=0
 VERBOSE=0
 MERGE_STOP=0
@@ -73,6 +74,9 @@ Options:
   --no-statusline-brain Skip writing ~/.claude/.mogging-vault (the vault-path
                        marker cli-maxxing's ⚡ fidgetflo statusline reads to
                        light up the 🧠 2ndBrain indicator)
+  --no-obsidian-app    Skip auto-installing the Obsidian.app desktop client
+                       (macOS only; default behavior is to run
+                       `brew install --cask obsidian` if the app is missing)
   --no-shell-shortcuts Skip writing cbrain/cbraintg shortcuts to ~/.local/bin
                        (by default we install these so `cbrain` launches Claude
                        Code inside the vault with skip-permissions)
@@ -115,6 +119,7 @@ while [[ $# -gt 0 ]]; do
     --no-launchd)         NO_LAUNCHD=1; shift ;;
     --no-obsidian-mcp)    NO_OBSIDIAN_MCP=1; shift ;;
     --no-statusline-brain) NO_STATUSLINE_BRAIN=1; shift ;;
+    --no-obsidian-app)    NO_OBSIDIAN_APP=1; shift ;;
     --no-shell-shortcuts) NO_SHELL_SHORTCUTS=1; shift ;;
     --skip-tests)         SKIP_TESTS=1; shift ;;
     --verbose)            VERBOSE=1; shift ;;
@@ -229,6 +234,101 @@ preflight() {
     exit 12
   fi
   vlog "claude version ok: $raw"
+
+  # <ORG-D> install-call (2026-04-22): three teammates hit a silent obsidian-mcp
+  # failure caused by `~/.npm` being root-owned (legacy `sudo npm install`
+  # damage). The error messages we used to print referenced "npm cache fix" —
+  # which is NOT a real npm subcommand, just internal jargon. The real fix is
+  # `sudo chown -R <user>:staff ~/.npm`. Surface this proactively here so users
+  # don't waste minutes Googling a non-existent command.
+  check_npm_cache_ownership
+}
+
+# ---- npm cache ownership check (post-<ORG-D> 2026-04-22) ----------------------
+#
+# Detect the legacy `sudo npm install` damage (root-owned ~/.npm) and print
+# the LITERAL fix the user can paste. Non-fatal — we warn, then continue,
+# because most npx invocations will still work; obsidian-mcp + magic-mcp are
+# the two known canaries that fail silently on this. See <ORG-D> install-call
+# transcript 2026-04-22 for full repro.
+#
+# IMPORTANT: do NOT print "run npm cache fix" — that string was the original
+# bug report and is NOT a real npm subcommand. The literal command below is.
+
+check_npm_cache_ownership() {
+  local cache_dir="$HOME/.npm"
+  [[ -d "$cache_dir" ]] || return 0  # nothing to check yet
+
+  # stat -c is GNU; stat -f %u is BSD. Use the portable shell test instead.
+  if [[ ! -O "$cache_dir" ]]; then
+    warn "~/.npm is not owned by you ($(whoami))."
+    warn "This breaks npx-based MCP installs (obsidian-mcp, magic, etc.) silently."
+    warn "Fix — copy/paste this exact command (it's the real fix, not 'npm cache fix'):"
+    warn ""
+    warn "    sudo chown -R \"\$(whoami)\":staff \"\$HOME/.npm\""
+    warn ""
+    warn "On Linux, replace :staff with :\$(id -gn). Then re-run this installer."
+    # Non-fatal — many users will not hit downstream MCP installs in this run.
+  else
+    vlog "~/.npm ownership ok (owned by current user)"
+  fi
+}
+
+# ---- step 1.5: ensure Obsidian.app is installed -----------------------------
+#
+# <ORG-D> install-call (2026-04-22) — three teammates independently hit the same
+# wall: they didn't have Obsidian.app installed yet, the vault folder didn't
+# exist, and install.sh bailed at step 2. Auto-install the desktop client on
+# macOS via Homebrew so the rest of the pipeline can proceed. Idempotent
+# (skips cleanly when already installed). Linux falls back to a manual-install
+# message because there's no single canonical package across distros.
+#
+# Security notes (per /safetycheck mindset):
+#   - We invoke `brew install --cask obsidian`. No curl-pipe-shell.
+#   - No user-supplied paths flow into the brew call.
+#   - We don't sudo. Homebrew refuses sudo by design on macOS.
+
+ensure_obsidian_app() {
+  if [[ "$NO_OBSIDIAN_APP" -eq 1 ]]; then
+    log "step 1.5: Obsidian.app auto-install SKIPPED (--no-obsidian-app)"
+    return 0
+  fi
+  log "step 1.5: ensure Obsidian.app is installed"
+
+  local uname_s=""
+  uname_s="$(uname -s 2>/dev/null || echo unknown)"
+
+  if [[ "$uname_s" != "Darwin" ]]; then
+    # Linux / WSL / other — provide a clear pointer instead of failing.
+    log "Non-macOS detected ($uname_s); skipping auto-install."
+    log "If Obsidian isn't installed yet, grab it from https://obsidian.md/download"
+    return 0
+  fi
+
+  if [[ -d "/Applications/Obsidian.app" ]]; then
+    vlog "Obsidian.app already installed at /Applications/Obsidian.app — skipping"
+    return 0
+  fi
+
+  if ! command -v brew >/dev/null 2>&1; then
+    warn "Obsidian.app missing AND Homebrew not on PATH — cannot auto-install."
+    warn "Fix: install Homebrew (https://brew.sh) then re-run this installer,"
+    warn "     OR download Obsidian manually from https://obsidian.md/download"
+    warn "     OR pass --no-obsidian-app to silence this check."
+    return 0
+  fi
+
+  if [[ "$APPLY" -eq 1 ]]; then
+    log "Installing Obsidian.app via: brew install --cask obsidian"
+    if brew install --cask obsidian; then
+      log "Obsidian.app installed successfully"
+    else
+      warn "brew install --cask obsidian failed (exit $?). Install manually from https://obsidian.md/download."
+      warn "Continuing — vault setup does not strictly require the desktop app."
+    fi
+  else
+    log "would run: brew install --cask obsidian"
+  fi
 }
 
 # ---- step 2/3: validate --vault ---------------------------------------------
@@ -258,19 +358,27 @@ validate_vault() {
   fi
 
   if [[ -n "$VAULT" && ! -d "$VAULT" ]]; then
-    # Offer to create the vault directory. Obsidian treats any folder with a
-    # `.obsidian/` subdir (which it creates on first open) as a vault, so
-    # `mkdir -p` is enough to bootstrap a target. We still refuse creation
-    # without --apply so dry-run never mutates.
-    err "--vault is not a directory: $VAULT"
+    # <ORG-D> install-call (2026-04-22): teammates were getting bounced here when
+    # they'd just installed Obsidian and the vault folder didn't exist yet
+    # (e.g. Obsidian created `~/Desktop/BRAIN` but they passed
+    # `--vault ~/Desktop/BRAIN/`-with-typo, OR they hadn't opened Obsidian
+    # at all). Auto-create the directory in --apply mode and let the
+    # vault-template seed step (3.5) populate it.
+    #
+    # Safety: VAULT has already been guarded against `..` traversal above.
+    # We do NOT create vault paths inside system directories or above $HOME
+    # without an explicit user-passed path — this only ever runs because the
+    # user asked for it via --vault.
     if [[ "$APPLY" -eq 1 ]]; then
-      err "Create it now? Re-run:"
-      err "    mkdir -p \"$VAULT\" && ./install.sh --vault \"$VAULT\" --apply"
-      err "Or point --vault at an existing folder. Open Obsidian → Settings → Files and Links → Vault path."
+      log "[INFO] --vault path does not exist; creating it: $VAULT"
+      if ! mkdir -p "$VAULT"; then
+        err "Failed to mkdir -p \"$VAULT\" — check permissions on the parent directory."
+        exit 21
+      fi
+      log "[INFO] Created vault directory: $VAULT"
     else
-      err "Dry-run: would fail on --apply. Create the folder or point --vault elsewhere."
+      log "would create vault directory: $VAULT (does not exist yet)"
     fi
-    exit 21
   fi
 
   # Normalize to an absolute, resolved path so every downstream path builder
@@ -549,10 +657,20 @@ link_claude_memory() {
   local encoded="${VAULT//\//-}"
   CLAUDE_MEMORY_SRC="$CLAUDE_HOME/projects/${encoded}/memory"
   vlog "claude memory src: $CLAUDE_MEMORY_SRC"
+
+  # <ORG-D> install-call (2026-04-22): the previous behavior was "skip the
+  # symlink if the Claude-encoded project-memory dir doesn't exist yet,"
+  # which forced a 2-pass install (run cbrain once to make Claude Code mint
+  # the dir, then re-run install.sh --apply to actually link it). Eliminate
+  # the 2-pass requirement by mkdir -p'ing the source ourselves. Claude
+  # Code's first-run behavior is to mkdir -p the same path before writing,
+  # so creating it ahead of time is a no-op for Claude — we're just racing
+  # to do the work first.
   if [[ ! -d "$CLAUDE_MEMORY_SRC" ]]; then
-    warn "Claude memory source not found; skipping: $CLAUDE_MEMORY_SRC"
-    return 0
+    vlog "creating Claude memory source dir ahead of first cbrain: $CLAUDE_MEMORY_SRC"
+    run mkdir -p "$CLAUDE_MEMORY_SRC"
   fi
+
   local dest="$VAULT/Claude-Memory"
   if [[ -e "$dest" || -L "$dest" ]]; then
     vlog "Claude-Memory link already present; refreshing"
@@ -1132,7 +1250,8 @@ run_doctor() {
 # without spelunking the shell functions.
 #
 #   step 1    preflight                  claude + jq/git/bash + osascript + version gate
-#   step 2/3  validate_vault             --apply requires --vault; must be a directory
+#   step 1.5  ensure_obsidian_app        macOS: brew install --cask obsidian if missing; opt out w/ --no-obsidian-app
+#   step 2/3  validate_vault             --apply requires --vault; auto-creates the directory if missing
 #   step 3.5  seed_vault_from_template   additive copy of 7-folder layout + template files
 #   step 4    backup_settings            timestamped ~/.claude/.backups/<ts>/settings.json
 #   step 5    merge_stop_hook            jq-merge Stop hook (append | replace | skip-if-present)
@@ -1150,11 +1269,14 @@ run_doctor() {
 #                                        marker at runtime); opt out w/ --no-shell-shortcuts
 #   step 11   run_tests                  tests/test_onboarding.sh (gated on --apply)
 #   step 12   run_doctor                 bin/doctor.sh (non-fatal — issues warn only)
+#   step 13   print_install_summary      explicit on/off summary for self-learning tier +
+#                                        opt-out states (post-<ORG-D> clarity fix)
 #
 
 main() {
   mode_banner
   preflight
+  ensure_obsidian_app
   validate_vault
   seed_vault_from_template
   backup_settings
@@ -1171,7 +1293,56 @@ main() {
   install_shell_shortcuts
   run_tests
   run_doctor
+  print_install_summary
   log "done."
+}
+
+# ---- install summary (post-<ORG-D> 2026-04-22 messaging) ----------------------
+#
+# Three teammates thought their install was broken because they didn't see a
+# `helpers/` dir under the vault. Cause: --with-intelligence is opt-in, so
+# `helpers/` only appears when the flag is passed. Make the opt-in vs not
+# state explicit at the end of every install so nobody has to guess.
+#
+# Also reminds about the Obsidian.app + npm-cache items so the <ORG-D> fixes
+# are visible at the top of the user's terminal scrollback when install ends.
+
+print_install_summary() {
+  echo ""
+  echo "┌──────────────────────────────────────────────────────────────┐"
+  echo "│  install summary                                             │"
+  echo "├──────────────────────────────────────────────────────────────┤"
+  if [[ "$WITH_INTELLIGENCE" -eq 1 ]]; then
+    echo "│  Self-learning tier:    ON   (helpers/ + intelligence hooks) │"
+  else
+    echo "│  Self-learning tier:    OFF  (opt-in via --with-intelligence)│"
+    echo "│    └── this is NORMAL — installation is NOT broken if you    │"
+    echo "│        don't see helpers/ in your vault. Pass the flag if    │"
+    echo "│        you want the self-learning loop wired in.             │"
+  fi
+  if [[ "$NO_OBSIDIAN_APP" -eq 1 ]]; then
+    echo "│  Obsidian.app auto-install: SKIPPED (--no-obsidian-app)     │"
+  fi
+  if [[ "$NO_OBSIDIAN_MCP" -eq 1 ]]; then
+    echo "│  obsidian-mcp registration: SKIPPED (--no-obsidian-mcp)     │"
+  fi
+  echo "└──────────────────────────────────────────────────────────────┘"
+  echo ""
+
+  # <ORG-D> install-call (2026-04-22) item 7: surface root-owned ~/.npm at
+  # the END of install so the fix is visible without running `doctor`
+  # separately. We re-implement the cheap top-level scan inline rather
+  # than sourcing bin/doctor.sh — keeps install.sh self-contained.
+  if [[ -d "$HOME/.npm" ]]; then
+    if find "$HOME/.npm" -maxdepth 2 -user root -print -quit 2>/dev/null | grep -q .; then
+      warn "POST-INSTALL CHECK FAILED: ~/.npm contains root-owned files."
+      warn "This will silently break npx-driven MCPs (obsidian-mcp, magic, etc)."
+      warn "Fix with this exact command (copy/paste — no shell substitution gotchas):"
+      warn "    sudo chown -R \$(whoami) ~/.npm"
+      warn "If even that hits a substitution issue, the fully literal form:"
+      warn "    sudo chown -R $(whoami):staff ~/.npm"
+    fi
+  fi
 }
 
 main "$@"
