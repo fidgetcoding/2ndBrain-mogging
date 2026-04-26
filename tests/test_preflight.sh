@@ -173,20 +173,40 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# Case 5: --vault points at a non-directory → exit 21.
+# Case 5: --vault points at a non-existent path → installer auto-creates it.
+#
+# <ORG-D> install-call (2026-04-22, item 5) intentionally changed this behavior:
+# teammates were getting bounced when their freshly-installed Obsidian had not
+# yet created the vault folder, so install.sh now `mkdir -p`s the path inside
+# validate_vault and continues. The earlier exit-21 contract is dead. We pin
+# the new contract here:
+#   - rc = 0 (no early bail)
+#   - the directory exists after the run
+#   - the installer logs that it created the path
+#
+# The path is rooted under TMPROOT so it never escapes the test sandbox, and
+# the trap-cleanup in this file recursively rms TMPROOT regardless.
 # ---------------------------------------------------------------------------
-NOEXIST="$TMPROOT/does-not-exist-$$"
+NOEXIST="$TMPROOT/created-by-installer-$$"
 set +e
-NOEXIST_OUT="$(HOME="$TMPROOT/home" \
-  bash "$INSTALL_SH" --apply --vault "$NOEXIST" 2>&1)"
+NOEXIST_OUT="$(HOME="$TMPROOT/home-noexist" \
+  bash "$INSTALL_SH" --apply --vault "$NOEXIST" \
+    --no-launchd --no-obsidian-app --no-obsidian-mcp \
+    --no-statusline-brain --no-shell-shortcuts --skip-tests 2>&1)"
 NOEXIST_RC=$?
 set -e 2>/dev/null || true
 
-assert_eq "$NOEXIST_RC" "21" "install.sh exits 21 when --vault is not a directory"
-if echo "$NOEXIST_OUT" | grep -qi 'not a directory\|does not exist'; then
-  _pass "non-directory error mentions the missing folder"
+assert_eq "$NOEXIST_RC" "0" "install.sh exits 0 and auto-creates --vault when path missing"
+if [[ -d "$NOEXIST" ]]; then
+  _pass "missing --vault path was created on disk"
 else
-  _fail "non-directory error did not clearly state missing folder"
+  _fail "installer did not create the missing --vault path"
+fi
+if echo "$NOEXIST_OUT" | grep -qiE 'creating it|created vault directory'; then
+  _pass "installer logged auto-create line for the missing vault"
+else
+  _fail "installer did not log auto-create message for missing vault"
+  printf '  saw: %s\n' "${NOEXIST_OUT:0:400}" 1>&2
 fi
 
 # ---------------------------------------------------------------------------

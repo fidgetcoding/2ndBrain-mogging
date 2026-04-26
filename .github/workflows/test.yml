@@ -69,6 +69,44 @@ jobs:
           fi
           bash --version
 
+      - name: Install fake claude shim on PATH
+        run: |
+          # install.sh's preflight (step 1) requires `claude` on PATH and a
+          # version >= 1.4.0. The runner has no Claude Code install, so we
+          # drop a stub binary into a directory we know is on PATH on both
+          # runners (/usr/local/bin works on Linux + Intel macOS; for ARM
+          # macOS runners we additionally cover /opt/homebrew/bin).
+          #
+          # The shim never executes any of the real install side-effects —
+          # it only answers `--version` and exits 0 for everything else, so
+          # any `claude mcp add ...` calls become no-ops the install loops
+          # treat as success. Tests that need to assert specific MCP wiring
+          # (e.g. tests/test_obsidian_mcp.sh) still install their own
+          # call-logging mock at the front of PATH, which wins over this one.
+          #
+          # We write the shim with printf instead of a heredoc so YAML's
+          # leading-whitespace handling can't accidentally break the EOF
+          # marker (heredoc closers must be flush-left).
+          shim_dir=/usr/local/bin
+          sudo install -d -m 0755 "$shim_dir"
+          tmp_shim="$(mktemp)"
+          printf '%s\n' \
+            '#!/usr/bin/env bash' \
+            'if [[ "${1:-}" == "--version" ]]; then' \
+            '  echo "2.1.0 (Claude Code)"' \
+            '  exit 0' \
+            'fi' \
+            'exit 0' \
+            > "$tmp_shim"
+          sudo install -m 0755 "$tmp_shim" "$shim_dir/claude"
+          rm -f "$tmp_shim"
+          if [ "${{ runner.os }}" = "macOS" ] && [ -d /opt/homebrew/bin ]; then
+            sudo cp "$shim_dir/claude" /opt/homebrew/bin/claude
+            sudo chmod 0755 /opt/homebrew/bin/claude
+          fi
+          command -v claude
+          claude --version
+
       - name: Run tests/run_all.sh
         run: |
           chmod +x tests/run_all.sh

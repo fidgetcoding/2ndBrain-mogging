@@ -167,12 +167,16 @@ check_npm_cache_ownership() {
   # we just need to know whether ANY root-owned file lives in the top of the
   # cache. 2>/dev/null swallows permission-denied noise from inaccessible subdirs.
   if find "$npm_dir" -maxdepth 2 -user root -print -quit 2>/dev/null | grep -q .; then
+    # Tildes below are LITERAL display text shown to the user — they need to
+    # see "~/.npm" so they can paste it into their shell, not "$HOME/.npm".
+    # shellcheck disable=SC2088
     fail "~/.npm contains root-owned files (legacy 'sudo npm install' damage)"
     fail "fix with this exact command (copy/paste — no shell substitution gotchas):"
     fail "    sudo chown -R \$(whoami) ~/.npm"
     fail "or, if even that hits a substitution issue, the fully literal form:"
     fail "    sudo chown -R $(whoami):staff ~/.npm"
   else
+    # shellcheck disable=SC2088
     pass "~/.npm cache ownership clean (no root-owned files in top 2 levels)"
   fi
 }
@@ -211,7 +215,8 @@ check_project_filename_equals_folder() {
       local candidates=( "${folder}"*.md )
       shopt -u nullglob
       if [[ ${#candidates[@]} -gt 0 ]]; then
-        local first="$(basename "${candidates[0]}")"
+        local first
+        first="$(basename "${candidates[0]}")"
         fail "05-Projects/$name/ missing $name.md (found ${first} — rename it: mv \"${candidates[0]}\" \"$expected_index\")"
       else
         fail "05-Projects/$name/ missing $name.md (no .md files inside the folder at all — create one or remove the empty folder)"
