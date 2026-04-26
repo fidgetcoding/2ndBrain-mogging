@@ -261,6 +261,9 @@ check_npm_cache_ownership() {
 
   # stat -c is GNU; stat -f %u is BSD. Use the portable shell test instead.
   if [[ ! -O "$cache_dir" ]]; then
+    # Tildes below are LITERAL display text shown to the user — they need to
+    # see "~/.npm" so they can paste it into their shell, not "$HOME/.npm".
+    # shellcheck disable=SC2088
     warn "~/.npm is not owned by you ($(whoami))."
     warn "This breaks npx-based MCP installs (obsidian-mcp, magic, etc.) silently."
     warn "Fix — copy/paste this exact command (it's the real fix, not 'npm cache fix'):"
@@ -270,6 +273,7 @@ check_npm_cache_ownership() {
     warn "On Linux, replace :staff with :\$(id -gn). Then re-run this installer."
     # Non-fatal — many users will not hit downstream MCP installs in this run.
   else
+    # shellcheck disable=SC2088
     vlog "~/.npm ownership ok (owned by current user)"
   fi
 }

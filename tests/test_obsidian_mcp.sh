@@ -101,11 +101,15 @@ JSON
 
 run_install() {
   # Prepend the mock bin so our fake claude wins over any real one.
+  # --no-obsidian-app prevents a real `brew install --cask obsidian` on the
+  # macos-latest CI runner; --no-statusline-brain / --no-shell-shortcuts
+  # keep the install scoped to the temp HOME.
   PATH="$MOCK_BIN:$PATH" \
   HOME="$FAKE_HOME" \
   VAULT_DIR="$FAKE_VAULT" \
     bash "$INSTALL_SH" --vault "$FAKE_VAULT" --apply \
-      --no-launchd --skip-tests "$@" 2>&1
+      --no-launchd --no-obsidian-app \
+      --no-statusline-brain --no-shell-shortcuts --skip-tests "$@" 2>&1
 }
 
 # ---------------------------------------------------------------------------
@@ -113,6 +117,11 @@ run_install() {
 # ---------------------------------------------------------------------------
 : > "$CALL_LOG"
 : > "$MCP_STATE"
+# Capture stdout/stderr so we can surface installer output on failure. Even
+# though the assertion below only reads the return code, debugging install
+# regressions is much easier if we keep FIRST_OUT around and print it when a
+# downstream check fails. The shellcheck directive avoids SC2034 (unused).
+# shellcheck disable=SC2034
 FIRST_OUT="$(run_install || true)"
 FIRST_RC=$?
 assert_eq "$FIRST_RC" "0" "install.sh exits 0 with mock claude in place"

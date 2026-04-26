@@ -62,9 +62,15 @@ if [[ ! -f "$INSTALL_SH" ]]; then
 fi
 
 run_install() {
+  # CI matrix runs this on macos-latest where /Applications/Obsidian.app is
+  # absent and Homebrew IS on PATH — without --no-obsidian-app the installer
+  # would attempt a real `brew install --cask obsidian` (slow + flaky in CI).
+  # The other --no-* flags isolate the install to the temp HOME.
   HOME="$FAKE_HOME" \
   VAULT_DIR="$FAKE_VAULT" \
-    bash "$INSTALL_SH" --vault "$FAKE_VAULT" --apply --no-launchd --skip-tests 2>&1
+    bash "$INSTALL_SH" --vault "$FAKE_VAULT" --apply \
+      --no-launchd --no-obsidian-app --no-obsidian-mcp \
+      --no-statusline-brain --no-shell-shortcuts --skip-tests 2>&1
 }
 
 # ---------------------------------------------------------------------------
