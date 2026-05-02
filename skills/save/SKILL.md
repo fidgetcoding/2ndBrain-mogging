@@ -12,7 +12,15 @@ Shared schema: see `../references/wiki-schema.md` (source of truth for frontmatt
 
 ## 1. Entry prompt
 
-When invoked, the skill MUST first print exactly this menu and wait for a number:
+`/save` with no args takes the **FAST PATH**: branch 1 (whole conversation), depth 3 (full transcript), tool-call traces ON, artifacts ON. No menu. No Q&A. Skip directly to classification (§2) → preview (§3) → write/commit. The user has run this enough times that the menu is friction; the answer is always `1` then `3yy`.
+
+The menu is still reachable explicitly:
+
+- `/save menu` — print the menu and wait for `1..5`.
+- `/save 2`, `/save 3`, `/save 4` — jump straight to that branch (no menu shown).
+- `/save 1 --ask` — branch 1 but with the original Q&A (rare; only when defaults are wrong for this one capture).
+
+The menu, when shown, MUST be exactly:
 
 ```
 What are you saving?
@@ -23,7 +31,7 @@ What are you saving?
   5. Exit
 ```
 
-No other branches. No freeform "save it however you think best" path. If the user types a number not in `1..5`, re-prompt. If they describe the content instead of picking, infer the branch but announce the inference (e.g., "Reading that as branch 2 — specific passage. Confirm?") and wait for `y`.
+If the user types a number not in `1..5`, re-prompt. If they describe the content instead of picking (only relevant when they explicitly invoked `/save menu`), infer the branch but announce the inference (e.g., "Reading that as branch 2 — specific passage. Confirm?") and wait for `y`.
 
 ## 2. Aliases as classification source
 
@@ -80,15 +88,40 @@ Proceed? (y/n/edit)
 
 `edit` drops the user into a mini-loop where they can re-map any row (`row 2 → <ORG-A>/stripe.md`). Only `y` triggers writes. `n` aborts cleanly with zero side effects.
 
+### Auto-commit when nothing is ambiguous
+
+The `Proceed? (y/n/edit)` prompt is **skipped entirely** — the skill writes + commits without asking — when ALL of the following are true:
+
+- No 50/50 ambiguity row (no `[stub]` entries in the table).
+- No security-scrub redactions fired (§9 found nothing).
+- No destination is blocked by `owner: human` frontmatter.
+- No forbidden-path violations (§13).
+- The top classification candidate is at least 0.60 confidence AND the second candidate is below 0.40 (clear winner, no near-tie).
+
+When auto-committing, the skill still prints the preview table after the fact, plus the commit SHA, so the user can see what landed. Auto-commit is the default-default — the explicit `Proceed? (y/n/edit)` prompt fires only when at least one of the above flags trips. To force the prompt regardless, pass `--confirm` (e.g., `/save --confirm`).
+
 ## 4. Branch 1 — Whole conversation
 
-Q&A tree after selecting `1`:
+**Defaults (the fast path, no Q&A):**
 
-1. "Summary depth? 1=headlines, 2=decisions-and-why, 3=full transcript preserved." Default 2.
-2. "Include tool-call traces? (y/n)" — if `y`, each tool call is captured as an indented code block.
-3. "Include artifacts emitted in this thread? (y/n)" — if `y`, any files the thread wrote are listed with absolute paths and a one-line purpose note.
-4. Classification pass against `aliases.yaml`. Print preview table.
-5. On `y`: write per alias destination. For depth 3, split the transcript into `02-Sources/LIT-conversation-<slug>-<date>.md` plus per-project pointer notes that link to it.
+- Depth 3 — full transcript preserved.
+- Tool-call traces: ON.
+- Artifacts: ON (any files written this thread are listed with absolute paths + one-line purpose).
+
+These match what the operator picks every time. Skip directly to classification + preview + write.
+
+Behavior:
+
+1. Classification pass against `aliases.yaml`.
+2. Print preview table (§3).
+3. Auto-commit if no flags fire (§3 auto-commit rule); else prompt `y/n/edit`.
+4. On write: split per depth-3 layout — `02-Sources/LIT-conversation-<slug>-<date>.md` (the canonical full-transcript file) plus a pointer note in `01-Conversations/<project-mirror>/YYYY-MM-DD-<slug>.md` that wikilinks to the LIT mirror.
+
+**Q&A tree (only on `/save 1 --ask`):**
+
+1. "Summary depth? 1=headlines, 2=decisions-and-why, 3=full transcript preserved." Default 3.
+2. "Include tool-call traces? (y/n)" Default y.
+3. "Include artifacts emitted in this thread? (y/n)" Default y.
 
 Frontmatter for the primary capture file:
 
