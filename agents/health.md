@@ -38,9 +38,9 @@ Existence check only — do NOT read plugin content (`.obsidian/**` is in the fo
 
 ### Gate C — n8n sync freshness
 
-Query the n8n MCP (or read the cached last-execution timestamp in `Claude-Memory/n8n-last-exec.json`) for the W1 workflow. Healthy: last successful execution was within the last 90 minutes (the polling window is 60m + 30m slack).
+Query the n8n MCP (or read the cached last-execution timestamp in `Claude-Memory/n8n-last-exec.json`) for the W1 workflow. Healthy: last successful execution was within the last 30 minutes (the polling window is 20m + 10m slack — the orchestrator `W0-Sync-Orchestrator` runs `Every 20 Minutes → W2 → W1`, so a healthy W1 commit lands at most every 20 minutes).
 
-If stale: flag + suggest the user check the n8n dashboard.
+If stale: flag + suggest the user check the n8n dashboard. There's also an hourly `Sync-Health-Watchdog` workflow (`mzpCCbqD1MvxJhAm`) that auto-opens a GitHub issue + Telegram alert when the gap exceeds 60m — Gate C tightens that threshold for the weekly rollup.
 
 ### Gate D — Morgen ↔ Obsidian task-count parity
 
@@ -77,8 +77,8 @@ Following the status line, a diagnostics block with one `## Gate <A|B|C|D>` sect
 
 ## 3. Thresholds for WARN vs. FAIL
 
-- **FAIL** if: Gate A has ≥1 broken symlink OR Gate B is missing obsidian-tasks-plugin OR Gate C is >6 hours stale OR Gate D delta is >20.
-- **WARN** if: Gate C is 90m–6h stale OR Gate D delta is 6–20 OR any informational plugin (dataview, templater) is missing.
+- **FAIL** if: Gate A has ≥1 broken symlink OR Gate B is missing obsidian-tasks-plugin OR Gate C is >90 minutes stale OR Gate D delta is >20.
+- **WARN** if: Gate C is 30m–90m stale OR Gate D delta is 6–20 OR any informational plugin (dataview, templater) is missing.
 - **OK** otherwise.
 
 ## 4. Commit
