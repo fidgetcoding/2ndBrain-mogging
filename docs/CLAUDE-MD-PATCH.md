@@ -112,7 +112,7 @@ Local installs use **hardlinks** (preferred) or symlinks — `install.sh --apply
 | `weekly` | Friday 18:00 | `01-Conversations/VAULT/reports/WEEKLY-<date>.md` | `/emerge` pass over `03-Concepts/`. |
 | `health` | Sunday 21:00 | `01-Conversations/VAULT/reports/HEALTH-<date>.md` | Broken wikilinks, orphan files, missing frontmatter. |
 
-Scheduled agents are audit-only by default. Any write-capable scheduled agent requires explicit opt-in via its plist. Every scheduled write carries commit prefix `[bot:<agent>]` so the n8n 3-way sync skips it.
+Scheduled agents are audit-only by default. Any write-capable scheduled agent requires explicit opt-in via its plist. Every scheduled write carries commit prefix `[bot:<agent>]` so the n8n 2-way sync's loop-prevention skips it. (Notion was dropped from the sync stack on 2026-05-04 — `task-maxxing` is now Obsidian ↔ Morgen only; the W3 worker is a no-op stub.)
 
 ### 3 non-negotiables
 

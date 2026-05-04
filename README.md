@@ -196,7 +196,7 @@ BRAIN/
 ├── 03-Concepts/         # Atomic concepts — one idea per note, densely linked. The graph lives here.
 ├── 04-Index/            # Maps of Content — navigation hubs + audits
 ├── 05-Projects/         # Active work. One folder per project. See below.
-├── 06-Tasks/            # Obsidian Tasks plugin area files. Optional 3-way Notion + Morgen sync via task-maxxing.
+├── 06-Tasks/            # Obsidian Tasks plugin area files. Optional 2-way Morgen sync via task-maxxing (Notion dropped 2026-05-04).
 └── Claude-Memory/       # Symlink to ~/.claude/projects/<vault>/memory — aliases.yaml + auto-memory shards
 ```
 
