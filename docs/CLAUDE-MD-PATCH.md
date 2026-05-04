@@ -37,7 +37,7 @@ Every write path in every skill resolves its target against this table. If a ski
 | `03-Concepts/` | Refined atomic concept notes — one concept per file | `wiki` | Needs ≥1 inbound from a `02-Sources/` note and ≥1 outbound to `04-Index/`. First write sets `needs_review: true`; `wiki promote` flips it once the note has 3+ inbound links. Replaces legacy `03-Permanent/`. Existing notes grandfathered with `owner: human` are never silently rewritten. |
 | `04-Index/` | Maps of content (indexes), hub pages, topic guides | `wiki`, `tether` | Never freeform prose — only link lists + terse one-liners. Must list every concept in its topic cluster. Contains `Index.md`, `Home-Index`, `Projects-Index`, `Poetry-Index`, `Tech-Index`, and `Map.canvas`. Replaces legacy `04-MOC/`. |
 | `05-Projects/` | Project hubs mirroring Claude Projects; includes `INCUBATOR/` | `save` (branches 1–3), `tether` | Every project folder has an index note where filename = folder name (`FOO/FOO.md`, never `FOO-Index.md`). Bidirectional links up to `04-Index/Projects-Index.md` are mandatory. |
-| `06-Tasks/` | Obsidian Tasks plugin files + inline tasks | `save` (UUID-preserving edits only) | `/wiki` and `/autoresearch` are FORBIDDEN from writing here. `/save` is edit-safe only with strict UUID preservation. No agent writes here. Live n8n ↔ Morgen ↔ Notion sync is wired through this folder; the `06-Tasks/` git submodule is preserved. |
+| `06-Tasks/` | Obsidian Tasks plugin files + inline tasks | `save` (UUID-preserving edits only) | `/wiki` and `/autoresearch` are FORBIDDEN from writing here. `/save` is edit-safe only with strict UUID preservation. No agent writes here. Live n8n ↔ Morgen 2-way sync is wired through this folder (Notion was dropped 2026-05-04); the `06-Tasks/` git submodule is preserved. |
 | `Claude-Memory/` | Plugin working state: aliases, ADRs, session manifests, hot context | `aliases`, `save` (ADR branch + backfill manifest), `emerge` (hot.md) | Symlink to `~/.claude/projects/<project-slug>/memory/`. Treat as config, not user-facing notes. `aliases.yaml` is the canonical alias source; `adr/` holds ADRs; `backfill-manifest.jsonl` is append-only. |
 
 **Killed folders** (pre-mogging layout, do not recreate): `00-Inbox/`, `01-Fleeting/`, `05-Templates/`, `06-Assets/`. If a skill sees one of these in a legacy vault, it treats the content as residue and routes it through `/save` migration — it does not reanimate the folder.
@@ -120,7 +120,7 @@ These override every skill-local policy. A skill that skips one of these is brok
 
 1. **Backup before mutation.** Before any multi-file structural change, tarball the vault to `~/Desktop/2ndBrain-backup-*.tar.gz`. Before overwriting ANY single file that already exists, snapshot it to `Claude-Memory/backups/YYYY-MM-DD/HHMMSS--<relpath>.bak`. If the backup write fails (disk full, permissions), abort the primary write. No exceptions.
 2. **Stop-hook jq-merge discipline.** The `Stop` hook payload MUST be merged into `~/.claude/settings.json` using `jq --slurp 'add'` semantics — never naive concatenation, never overwrite. Raw string append corrupts settings and breaks `/save --backfill --resume`. If `jq` is unavailable on the system path, the hook prints a WARN and no-ops rather than writing partial state.
-3. **n8n path filters stay current.** Any skill that adds a new top-level vault folder or a new externally-synced `05-Projects/<ORG>/<repo>/` subtree MUST update the n8n W1 path filter so the new subtree is ingested. The W1/W2/W3 filters have been migrated from legacy `08-Tasks/` to `06-Tasks/` as of the 2026-04-17 swarm; W2 phantom-write prefix is removed, defensive strippers are left as no-ops. The canonical path-filter file lives in the private `obsidian-tasks-sync` config repo — if it is not mounted, the skill prints a TODO row in its report and continues rather than silently creating an untracked subtree.
+3. **n8n path filters stay current.** Any skill that adds a new top-level vault folder or a new externally-synced `05-Projects/<ORG>/<repo>/` subtree MUST update the n8n W1 path filter so the new subtree is ingested. The W1/W2 filters have been migrated from legacy `08-Tasks/` to `06-Tasks/` as of the 2026-04-17 swarm; W2 phantom-write prefix is removed, defensive strippers are left as no-ops. (W3 was deprecated 2026-05-04 when Notion was dropped from the sync stack.) The canonical path-filter file lives in the private `obsidian-tasks-sync` config repo — if it is not mounted, the skill prints a TODO row in its report and continues rather than silently creating an untracked subtree.
 
 ### Bot-prefix commits
 
@@ -159,15 +159,15 @@ Every prefix in this table MUST be listed in the n8n W1 filter.
 Canonical line (token order is mandatory — the Tasks plugin parses positionally):
 
 ```
-- [ ] <task text> <priority?> 📅 YYYY-MM-DD <🔁 recurrence?> 🆔 <uuidv4>
+- [ ] <task text> <priority?> 📅 YYYY-MM-DD <🔁 recurrence?> 🆔 m-XXXXXXXX
 ```
 
 - Priorities: 🔺 highest · ⏫ high · 🔼 medium · 🔽 low · ⏬ lowest
 - Dates: 📅 due · ⏳ scheduled · 🛫 start · ✅ done · ❌ cancelled
 - Recurrence: `🔁 every week`, `🔁 every 2 weeks`, `🔁 every month on the 1st`
-- 🆔 is a lowercase UUIDv4, mandatory on every new task. Edits preserve it byte-for-byte. Missing UUID on a legacy line is mint-and-log (appended to `Claude-Memory/task-uuid-mints.log`), never rewrite.
+- 🆔 is `m-XXXXXXXX` (8 lowercase hex chars), mandatory on every new task — minted by W1 on first sync. Edits preserve it byte-for-byte. Missing 🆔 on a legacy line is mint-and-log (appended to `Claude-Memory/task-uuid-mints.log`), never rewrite. (Pre-2026-05-04 entries used UUIDv4 format; W1 only matches `m-[0-9a-f]{8}` so legacy entries are stranded but archived — do not auto-rewrite.)
 
-Rewriting tokens in the wrong order or dropping the UUID breaks the n8n W1/W2/W3 sync and creates duplicate tasks in Morgen and Notion that cost ~15 minutes of manual deduping to undo.
+Rewriting tokens in the wrong order or dropping the 🆔 breaks the n8n W1/W2 sync and creates duplicate tasks in Morgen that cost ~15 minutes of manual deduping to undo. (W3 was deprecated 2026-05-04 when Notion was dropped from the sync stack.)
 
 ### Calendar + task ops default
 

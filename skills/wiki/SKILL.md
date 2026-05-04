@@ -31,7 +31,7 @@ These are non-negotiable and apply to every branch below:
 
 1. **Never write files with `owner: human` in their frontmatter.** Read the target file's frontmatter BEFORE any Edit/Write. If `owner: human` is present, route around it (log-only, or create a sibling `-wiki.md` file).
 2. **Never write to `05-Projects/*/<project-name>.md` or any file directly named as a project index.** Project index files are human-curated (per vault rules in `CLAUDE.md`). `wiki` may LINK into them but never mutate them. Scaffolding new projects is explicitly out of scope for this skill.
-3. **Never write anywhere under `06-Tasks/`.** Task state is owned by the Obsidian Tasks plugin and the n8n 3-way sync. `wiki` may READ tasks to resolve wikilink targets but never creates, edits, completes, or deletes a task.
+3. **Never write anywhere under `06-Tasks/`.** Task state is owned by the Obsidian Tasks plugin and the n8n 2-way sync (Obsidian ↔ Morgen, post-2026-05-04 Notion drop). `wiki` may READ tasks to resolve wikilink targets but never creates, edits, completes, or deletes a task.
 4. **Every branch that writes uses its own git branch.** No direct writes to `main`. Branch names below are the contract.
 5. **Every write file includes the frontmatter keys `source_of_truth`, `last_confirmed`, and `owner` per `../references/wiki-schema.md`.**
 6. **Branch pollution discipline.** If a branch already exists for today, append to it; do not create `-v2` siblings.
@@ -328,7 +328,7 @@ A critical FIND rule: the skill MUST NOT emit a `[[wikilink]]` to a page that is
 ## 8. Non-goals (explicitly out of scope)
 
 - `wiki` does not scaffold new projects in `05-Projects/`. Use the documented human workflow in `CLAUDE.md` (`### Project Index Note Rules`).
-- `wiki` does not manage tasks. Tasks live in `06-Tasks/` + Obsidian Tasks plugin + the n8n 3-way sync.
+- `wiki` does not manage tasks. Tasks live in `06-Tasks/` + Obsidian Tasks plugin + the n8n 2-way sync (Obsidian ↔ Morgen, post-2026-05-04 Notion drop).
 - `wiki` does not deploy anything, run migrations, or modify `.env*`, `.claude/`, or `node_modules/`.
 - `wiki` does not delete files. Even in HEAL, deletion requires a human.
 - `wiki` does not call external paid services during AUDIT — AUDIT is pure regex + graph arithmetic.
