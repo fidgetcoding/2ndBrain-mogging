@@ -215,7 +215,7 @@ Re-running is a no-op because of the marker grep. If a vault still carries the p
 
 ### E1. n8n workflow path filters
 
-n8n workflows reference the vault by **GitHub API path**, not local filesystem. Before reactivating W1/W2/W3:
+n8n workflows reference the vault by **GitHub API path**, not local filesystem. Before reactivating W1/W2 (W3 was archived 2026-05-04 when Notion was dropped from the sync stack — the post-cutover orchestrator is `W0-Sync-Orchestrator`):
 
 1. Export each workflow JSON.
 2. Search for `08-Tasks` and `07-Projects` in the JSON.

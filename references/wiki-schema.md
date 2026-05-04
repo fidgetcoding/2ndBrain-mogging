@@ -114,7 +114,7 @@ superseded_by: "[[ADR-012-new-name]]"        # optional; filled when a later ADR
 
 ## 5. Obsidian Tasks plugin syntax
 
-the operator's task pipeline (Obsidian ↔ Morgen ↔ Notion via n8n W1/W2/W3) is downstream of this exact shape. Rewriting tokens in the wrong order or dropping the UUID breaks sync.
+the operator's task pipeline (Obsidian ↔ Morgen via n8n W1/W2, orchestrated by `W0-Sync-Orchestrator`) is downstream of this exact shape. Rewriting tokens in the wrong order or dropping the UUID breaks sync. (Notion was dropped from the sync stack on 2026-05-04; the historical W3 worker is archived.)
 
 ### Canonical line
 
@@ -134,7 +134,7 @@ Glyphs:
 ### UUID rules (non-negotiable)
 
 1. **Every new task gets a 🆔.** Generate with `uuidgen | tr '[:upper:]' '[:lower:]'`. Append AFTER date/recurrence tokens, never inside the body.
-2. **Edits preserve 🆔 byte-for-byte.** A rewrite that changes or drops the UUID creates a duplicate task in Morgen and Notion that cannot be silently undone. The fix costs the operator 15+ minutes of manual deduping.
+2. **Edits preserve 🆔 byte-for-byte.** A rewrite that changes or drops the UUID creates a duplicate task in Morgen that cannot be silently undone. The fix costs the operator 15+ minutes of manual deduping. (Pre-2026-05-04 the duplicate also appeared in Notion; Notion was dropped from the sync stack on 2026-05-04.)
 3. **Missing UUID on a legacy task = mint + log.** If a skill touches a task line that lacks 🆔, it mints one AND appends a line to `Claude-Memory/task-uuid-mints.log` recording (file, line, uuid, timestamp). The mint is a side effect, so it must be auditable.
 
 ## 6. Security scrub
