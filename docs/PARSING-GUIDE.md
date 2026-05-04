@@ -63,7 +63,7 @@ This is the post-mogging vault layout. The folders below are the only writable t
 
 - One `TASKS-<AREA>.md` per project area (mirrors `05-Projects/`).
 - Tasks use the Obsidian Tasks plugin syntax + a stable `🆔 <uuid>` per task.
-- If `task-maxxing` is running, this folder is a git submodule with its own live 3-way sync to Notion + Morgen.
+- If `task-maxxing` is running, this folder is a git submodule with its own live 2-way sync to Morgen. (Notion was dropped from the sync stack on 2026-05-04.)
 - **Never auto-write task lines.** Tasks need the Obsidian Tasks UUID format, and `/import-notes` refuses to generate them. Point the user at their Tasks panel.
 
 ### `Claude-Memory/` — persistent memory + aliases
