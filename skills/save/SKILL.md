@@ -169,7 +169,7 @@ Anything the skill emits into `06-Tasks/` (any branch, any path under that prefi
 Required grammar:
 
 ```
-- [ ] <task text> <priority?> 📅 YYYY-MM-DD <🔁 recurrence?> 🆔 <uuidv4>
+- [ ] <task text> <priority?> 📅 YYYY-MM-DD <🔁 recurrence?> 🆔 m-XXXXXXXX
 ```
 
 Priority glyphs: 🔺 highest · ⏫ high · 🔼 medium · 🔽 low · ⏬ lowest.
@@ -178,7 +178,7 @@ Recurrence example: `🔁 every week`, `🔁 every 2 weeks`, `🔁 every month o
 
 ### UUID preservation rule
 
-On edit of an existing task line, the skill MUST preserve the `🆔 <uuid>` verbatim — byte-for-byte. The UUID is the stable join key for the n8n 3-way sync (Obsidian ↔ Morgen ↔ Notion). Rewriting it creates a duplicate in Morgen and Notion that cannot be silently undone.
+On edit of an existing task line, the skill MUST preserve the `🆔 m-XXXXXXXX` verbatim — byte-for-byte. The 🆔 is the stable join key for the n8n 2-way sync (Obsidian ↔ Morgen, post-2026-05-04 Notion drop). Rewriting it creates a duplicate in Morgen that cannot be silently undone.
 
 On create of a new task line, generate a fresh UUIDv4:
 
