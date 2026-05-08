@@ -115,7 +115,12 @@ Behavior:
 1. Classification pass against `aliases.yaml`.
 2. Print preview table (§3).
 3. Auto-commit if no flags fire (§3 auto-commit rule); else prompt `y/n/edit`.
-4. On write: split per depth-3 layout — `02-Sources/LIT-conversation-<slug>-<date>.md` (the canonical full-transcript file) plus a pointer note in `01-Conversations/<project-mirror>/YYYY-MM-DD-<slug>.md` that wikilinks to the LIT mirror.
+4. On write — choose path by classification (post-2026-05-08 conversations-into-projects restructure):
+   - **Project-tied** (alias resolves to a single `05-Projects/<PROJECT>/`): write the full transcript to `05-Projects/<PROJECT>/conversations/[<sub>/]<YYYY-MM-DD>-<slug>.md`. **No pointer, no LIT mirror** — the project folder is the sole source of truth. If the project has substructure (e.g. `<ORG-B>/<PROJECT-A>/`, `<ORG-A>/career/`), mirror it under `conversations/` (Pattern A flat).
+   - **Cross-cutting** (no single project owner — multi-project strategy threads, generic dictation, vault-spanning topics): write to `02-Sources/LIT-conversation-<slug>-<date>.md`. LIT is reserved for cross-cutting captures only.
+   - **Vault-meta** (vault architecture sessions, graph repairs, mogging-pack-dev work, scheduled-agent reports): write to `05-Projects/VAULT/conversations/[<sub>/]<YYYY-MM-DD>-<slug>.md`. Subfolders: `architecture-sessions/`, `graph-repairs/`, `mogging-pack-dev/`, `reports/`.
+   - **Meeting-style captures** (Granola transcripts, multi-stakeholder calls): optionally route under `<PROJECT>/conversations/meetings/` for tighter organization.
+   - The pre-2026-05-08 dual-write pattern (full transcript in LIT + pointer stub in `01-Conversations/`) is retired. `01-Conversations/` no longer exists.
 
 **Q&A tree (only on `/save 1 --ask`):**
 
