@@ -26,7 +26,7 @@ cp -R "$HERE/fixtures/sample-vault/." "$VAULT/"
 UUID1="abc123"
 UUID2="def456"
 UUID3="ghi789"
-TASKS_FILE="$VAULT/06-Tasks/TASKS-UUID.md"
+TASKS_FILE="$VAULT/05-Tasks/TASKS-UUID.md"
 
 cat > "$TASKS_FILE" <<EOF
 # TASKS-UUID

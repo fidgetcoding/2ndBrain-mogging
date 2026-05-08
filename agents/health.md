@@ -5,11 +5,11 @@ schedule: "0 21 * * 0 America/New_York"
 plist: scheduled/launchd/io.lorecraft.mogging.health.plist
 allowed-tools: Read, Glob, Bash, Write
 writes:
-  - 01-Conversations/VAULT/reports/health-YYYY-MM-DD.md
+  - 01-Projects/VAULT/conversations/reports/health-YYYY-MM-DD.md
 reads:
   - vault root symlinks
   - .obsidian/plugins/ (existence check only, no content read)
-  - 06-Tasks/**/*.md (count only)
+  - 05-Tasks/**/*.md (count only)
   - Morgen MCP (list_tasks, count)
   - n8n last execution timestamp (via n8n MCP or cached)
 ---
@@ -22,7 +22,7 @@ Triggered by `scheduled/launchd/io.lorecraft.mogging.health.plist` at 21:00 Amer
 
 ### Gate A — Symlinks resolve
 
-The live vault has a handful of project symlinks (e.g., the `06-Tasks/obsidian-tasks-sync` git submodule → a repo elsewhere on disk; or any repo submoduled under `05-Projects/FIDGETCODING/GITHUB/LORECRAFT-REPOS/`). A broken symlink creates ghost paths in `Glob` output and confuses every downstream skill.
+The live vault has a handful of project symlinks (e.g., the `05-Tasks/obsidian-tasks-sync` git submodule → a repo elsewhere on disk; or any repo submoduled under `01-Projects/FIDGETCODING/GITHUB/LORECRAFT-REPOS/`). A broken symlink creates ghost paths in `Glob` output and confuses every downstream skill.
 
 Check: `find <vault-root> -maxdepth 5 -type l` and `test -e` each target. Report count of broken vs. resolved.
 
@@ -44,7 +44,7 @@ If stale: flag + suggest the user check the n8n dashboard. There's also an hourl
 
 ### Gate D — Morgen ↔ Obsidian task-count parity
 
-Pull the Morgen task count (`list_tasks` with `limit=500` per `reference_morgen_api_pagination`). Pull the Obsidian task count via `Grep -c` on `^- \[ \]` across `06-Tasks/**/*.md` plus an aggregated scan of inline tasks in the project subtrees.
+Pull the Morgen task count (`list_tasks` with `limit=500` per `reference_morgen_api_pagination`). Pull the Obsidian task count via `Grep -c` on `^- \[ \]` across `05-Tasks/**/*.md` plus an aggregated scan of inline tasks in the project subtrees.
 
 The counts should match within ±5 (the in-flight tolerance covers tasks written to Obsidian in the last 15 minutes that haven't round-tripped through W1 to Morgen yet, per Nate's `feedback_task_state_source_of_truth` rule).
 
@@ -52,7 +52,7 @@ If the delta exceeds tolerance: flag the sync as drifting and include the top 10
 
 ## 2. Report output
 
-Target: `01-Conversations/VAULT/reports/health-YYYY-MM-DD.md`. Overwrite allowed. Frontmatter:
+Target: `01-Projects/VAULT/conversations/reports/health-YYYY-MM-DD.md`. Overwrite allowed. Frontmatter:
 
 ```yaml
 ---

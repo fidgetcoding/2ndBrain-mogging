@@ -11,7 +11,7 @@ The vault gets denser every day. Some of that density is signal — a concept sh
 ## When to Invoke
 
 - User runs `/emerge` manually, usually at end of week or start of a review.
-- Scheduled weekly agent (Friday 6pm ET) runs `/emerge --days 7 --audit` non-interactively and writes the report to `01-Conversations/VAULT/reports/emerge-YYYY-WW.md`.
+- Scheduled weekly agent (Friday 6pm ET) runs `/emerge --days 7 --audit` non-interactively and writes the report to `01-Projects/VAULT/conversations/reports/emerge-YYYY-WW.md`.
 - After a burst of activity (e.g. Nate just closed a Lava deliverable sprint and wants to see what emerged).
 
 Do NOT auto-run `/emerge` inside another skill's pipeline except the scheduled agent. It's expensive and slow.
@@ -21,7 +21,7 @@ Do NOT auto-run `/emerge` inside another skill's pipeline except the scheduled a
 ```
 /emerge
 /emerge --days 14
-/emerge --days 7 --scope 05-Projects/FIDGETCODING --min-cluster 2
+/emerge --days 7 --scope 01-Projects/FIDGETCODING --min-cluster 2
 /emerge --days 7 --audit
 /emerge --promote cluster-3
 ```
@@ -31,7 +31,7 @@ Do NOT auto-run `/emerge` inside another skill's pipeline except the scheduled a
 | Flag | Default | Behavior |
 |---|---|---|
 | `--days N` | 30 | Only consider files modified in the last N days. |
-| `--scope <path>` | whole vault | Restrict to a single folder (e.g. `05-Projects/LAVA-NET`). |
+| `--scope <path>` | whole vault | Restrict to a single folder (e.g. `01-Projects/LAVA-NET`). |
 | `--min-cluster N` | 3 | Minimum file count for a cluster to be reported. Below this, treated as noise. |
 | `--audit` | off | Non-interactive mode for the scheduled weekly agent. Writes directly to the reports folder, no prompts. |
 | `--promote <pattern-id>` | — | Skip mining. Take a previously-identified cluster and promote it to a full `03-Concepts/<slug>.md` note. |
@@ -42,7 +42,7 @@ Do NOT auto-run `/emerge` inside another skill's pipeline except the scheduled a
 
 Glob all vault files modified in the time window. Exclude `node_modules/`, `.obsidian/`, `.git/`, `.claude/`, `.agents/`. **Cap at 500 files.** If over cap, sample by:
 - Recency (newer = higher weight)
-- Project diversity (one `05-Projects/FIDGETCODING/content/` note ≠ ten of them — cap per-folder contribution)
+- Project diversity (one `01-Projects/FIDGETCODING/content/` note ≠ ten of them — cap per-folder contribution)
 
 ### 2. Extract signals
 
@@ -129,7 +129,7 @@ Before emitting a cluster, check `03-Concepts/` for overlapping notes (the pre-m
 ### 8. --promote behavior
 
 `/emerge --promote cluster-3` from the last run:
-- Read cached cluster data from `01-Conversations/VAULT/reports/emerge-YYYY-WW.md`.
+- Read cached cluster data from `01-Projects/VAULT/conversations/reports/emerge-YYYY-WW.md`.
 - Create `03-Concepts/<slug>.md` with frontmatter:
   ```yaml
   ---
@@ -154,8 +154,8 @@ Before emitting a cluster, check `03-Concepts/` for overlapping notes (the pre-m
 Weekly agent config (managed in `~/.claude/hooks/` not here):
 - Trigger: Friday 6pm ET
 - Command: `/emerge --days 7 --audit`
-- Output: `01-Conversations/VAULT/reports/emerge-YYYY-WW.md` (ISO week number)
-- Side effect: appends one-line summary to `01-Conversations/VAULT/reports/emerge-log.md` (run ID, cluster count, top cluster name).
+- Output: `01-Projects/VAULT/conversations/reports/emerge-YYYY-WW.md` (ISO week number)
+- Side effect: appends one-line summary to `01-Projects/VAULT/conversations/reports/emerge-log.md` (run ID, cluster count, top cluster name).
 
 The `--audit` flag means:
 - No interactive prompts.

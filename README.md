@@ -25,7 +25,7 @@
 | [Install Obsidian (auto)](#install-obsidian-first) | Setup | Auto-installed by the installer; manual download is the fallback | ~1 min |
 | [Install the mogging pack](#install-the-mogging-pack) | Setup | Clone, dry-run, apply | ~2 min |
 | [The 12 skills](#the-12-skills) | Reference | Every slash command in plain English | ~3 min |
-| [Vault structure](#vault-structure) | Reference | The 7-folder layout, with example projects | ~2 min |
+| [Vault structure](#vault-structure) | Reference | The 6-folder layout, with example projects | ~2 min |
 | [Self-learning tier](#self-learning-tier-opt-in) | Optional | Turns the pack into a pattern-graph that gets smarter as you go | ~1 min |
 | [Bring your existing stuff in](#bring-your-existing-stuff-in-optional) | Optional | Import Claude / ChatGPT conversations + Apple Notes / OneNote / Notion / Evernote | ~3 min |
 | [Credits](#credits) | Meta | The 5 originals I mogged | — |
@@ -53,7 +53,7 @@ So: we went from maxxing to absolutely **mogging** everybody.
 
 ## What you get
 
-- **The 7-folder vault-mogging layout** — the contract you install against, pre-wired to the skills below.
+- **The 6-folder vault-mogging layout** — the contract you install against, pre-wired to the skills below.
 - **12 Claude Code skills** (10 core + 2 optional importers) that read + write against that layout with a shared alias dictionary + dry-run previews.
 - **Four scheduled agents** (morning / nightly / weekly / health) that audit the vault in the background so you don't have to.
 - **An opt-in self-learning tier** from **[FidgetFlo](https://github.com/lorecraft-io/fidgetflo)** (my MIT-licensed fork of [ruvnet's `ruflo@v3.5.80`](https://github.com/ruvnet/ruflo/tree/v3.5.80), made better) — a pattern-graph that makes routing smarter the longer you use the vault.
@@ -136,11 +136,11 @@ cd 2ndBrain-mogging
 | `--no-statusline-brain` | off | Skip writing `~/.claude/.mogging-vault` — the vault-path marker [cli-maxxing](https://github.com/lorecraft-io/cli-maxxing)'s ⚡ fidgetflo statusline reads to light up the 🧠 2ndBrain indicator. |
 | `--skip-tests` | off | Skip the onboarding test suite at the end. |
 | `--merge-stop` | off | Replace the existing Stop hook instead of jq-merging onto it. |
-| `--no-seed-vault` | off | Skip seeding the 7-folder vault layout from `vault-template/`. By default the installer copies in any of `01-Conversations/`, `02-Sources/`, `03-Concepts/`, `04-Index/Projects-Index.md`, `05-Projects/{example-project-1, example-project-2, example-project-3, INCUBATOR}/`, `06-Tasks/`, `Claude-Memory/`, `CLAUDE.md`, `AGENTS.md` that are missing. Existing files are never overwritten. |
+| `--no-seed-vault` | off | Skip seeding the 6-folder vault layout from `vault-template/`. By default the installer copies in any of `01-Projects/<PROJECT>/conversations/` (post-2026-05-08; `01-Projects/<PROJECT>/conversations/` was retired), `02-Sources/`, `03-Concepts/`, `04-Index/Projects-Index.md`, `01-Projects/{example-project-1, example-project-2, example-project-3, INCUBATOR}/`, `05-Tasks/`, `Claude-Memory/`, `CLAUDE.md`, `AGENTS.md` that are missing. Existing files are never overwritten. |
 | `--with-intelligence` | off | Install the self-learning tier. See [Self-learning tier](#self-learning-tier-opt-in) below. |
 | `--symlink` | off | With `--with-intelligence`: symlink helpers instead of hardlinking. |
 
-On `--apply`, the installer, in order: validates the vault path, **seeds the 7-folder vault layout from `vault-template/` (any folder/file already in your vault is left untouched)**, backs up `~/.claude/settings.json`, jq-merges the Stop hook (never overwrites), symlinks skills + commands + agents into `~/.claude/`, symlinks `$VAULT/Claude-Memory/` to Claude Code's per-project memory dir, patches the canonical post-mogging contract block into your vault's `CLAUDE.md` (backs up the old one to `$VAULT/Claude-Memory/backups/<timestamp>/` first — idempotent marker block, never duplicates), installs the launchd plists (unless `--no-launchd`), installs the self-learning tier if `--with-intelligence` was passed, **registers the `obsidian-mcp` server with Claude Code pointed at your vault** (unless `--no-obsidian-mcp`), **writes `~/.claude/.mogging-vault` so cli-maxxing's statusline can light up the 🧠 2ndBrain indicator** (unless `--no-statusline-brain`), runs the onboarding tests (unless `--skip-tests`), and finally runs `bin/doctor.sh` to sanity-check the install.
+On `--apply`, the installer, in order: validates the vault path, **seeds the 6-folder vault layout from `vault-template/` (any folder/file already in your vault is left untouched)**, backs up `~/.claude/settings.json`, jq-merges the Stop hook (never overwrites), symlinks skills + commands + agents into `~/.claude/`, symlinks `$VAULT/Claude-Memory/` to Claude Code's per-project memory dir, patches the canonical post-mogging contract block into your vault's `CLAUDE.md` (backs up the old one to `$VAULT/Claude-Memory/backups/<timestamp>/` first — idempotent marker block, never duplicates), installs the launchd plists (unless `--no-launchd`), installs the self-learning tier if `--with-intelligence` was passed, **registers the `obsidian-mcp` server with Claude Code pointed at your vault** (unless `--no-obsidian-mcp`), **writes `~/.claude/.mogging-vault` so cli-maxxing's statusline can light up the 🧠 2ndBrain indicator** (unless `--no-statusline-brain`), runs the onboarding tests (unless `--skip-tests`), and finally runs `bin/doctor.sh` to sanity-check the install.
 
 ### Obsidian MCP
 
@@ -187,25 +187,24 @@ All twelve are auto-namespaced under the `2ndbrain-mogging` plugin. Both `/save`
 
 ## Vault structure
 
-The post-mogging 7-folder layout. This is what the installer creates (and what every skill is hard-wired to target):
+The post-mogging 6-folder layout. This is what the installer creates (and what every skill is hard-wired to target):
 
 ```
 BRAIN/
-├── 01-Conversations/    # /save output — full-fidelity chat captures, mirrors 05-Projects subfolders
-├── 02-Sources/          # External inputs — articles, videos, podcasts, book notes, conversation mirrors
+├── 01-Projects/         # Active work. One folder per project. /save output now lives in `<PROJECT>/conversations/` (post-2026-05-08 restructure absorbed the old top-level `01-Projects/<PROJECT>/conversations/`).
+├── 02-Sources/          # External inputs — articles, videos, podcasts, book notes, cross-cutting LIT conversation mirrors
 ├── 03-Concepts/         # Atomic concepts — one idea per note, densely linked. The graph lives here.
 ├── 04-Index/            # Maps of Content — navigation hubs + audits
-├── 05-Projects/         # Active work. One folder per project. See below.
-├── 06-Tasks/            # Obsidian Tasks plugin area files. Optional 2-way Morgen sync via task-maxxing (Notion dropped 2026-05-04).
+├── 05-Tasks/            # Obsidian Tasks plugin area files. Optional 2-way Morgen sync via task-maxxing (Notion dropped 2026-05-04).
 └── Claude-Memory/       # Symlink to ~/.claude/projects/<vault>/memory — aliases.yaml + auto-memory shards
 ```
 
-### `05-Projects/` in detail — example layout
+### `01-Projects/` in detail — example layout
 
 Each project gets its own folder. The folder name **equals** the index filename exactly (no `-Index` suffix), so `[[example-project-1]]` resolves from anywhere in the vault.
 
 ```
-05-Projects/
+01-Projects/
 ├── example-project-1/
 │   ├── example-project-1.md    ← index note (filename = folder name)
 │   ├── content/                 ← write-ups, specs, decks, session logs
@@ -259,7 +258,7 @@ If you've been keeping notes somewhere else, you don't have to abandon them. The
    bash scripts/import-claude.sh
    ```
    It unzips the export into `<vault>/.import-staging/<timestamp>-claude/` and prints the next step.
-3. **Inside Claude Code, run `/import-claude`** — scan first, dry-run, then apply. Each conversation becomes a full-fidelity capture in `01-Conversations/`, a factual LIT-mirror in `02-Sources/`, and (where ideas repeat) a concept stub in `03-Concepts/`.
+3. **Inside Claude Code, run `/import-claude`** — scan first, dry-run, then apply. Each conversation becomes a full-fidelity capture in `01-Projects/<PROJECT>/conversations/` (post-2026-05-08; `01-Projects/<PROJECT>/conversations/` was retired), a factual LIT-mirror in `02-Sources/`, and (where ideas repeat) a concept stub in `03-Concepts/`.
 
 ### Apple Notes / OneNote / Notion / Evernote / raw files → vault
 

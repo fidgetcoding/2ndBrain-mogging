@@ -183,7 +183,7 @@ check_npm_cache_ownership() {
 
 # ---- vault project-index filename=foldername check (item 9) -----------------
 #
-# Hard rule from CLAUDE.md: every project folder under 05-Projects/ must have
+# Hard rule from CLAUDE.md: every project folder under 01-Projects/ must have
 # an index note where filename = foldername (e.g. PARZVL/PARZVL.md, never
 # PARZVL/PARZVL-Index.md). Folder renames (e.g. example-project-1 →
 # NiFe-WARS-Kostas) leave the inner .md unchanged, breaking [[PROJECT]]
@@ -191,7 +191,7 @@ check_npm_cache_ownership() {
 # (project index files are owner=human; CLAUDE.md forbids auto-rewrite).
 
 check_project_filename_equals_folder() {
-  info "checking 05-Projects/<folder>/<folder>.md filename-equals-foldername rule"
+  info "checking 01-Projects/<folder>/<folder>.md filename-equals-foldername rule"
   if [[ -z "$VAULT_PATH" ]]; then
     info "no vault path discovered (marker $MOGGING_VAULT_MARKER missing); skipping"
     return 0
@@ -208,7 +208,7 @@ check_project_filename_equals_folder() {
     name="$(basename "$folder")"
     expected_index="${folder%/}/${name}.md"
     if [[ -f "$expected_index" ]]; then
-      pass "05-Projects/$name/$name.md"
+      pass "01-Projects/$name/$name.md"
     else
       # Look for any .md inside the folder so we can suggest a rename
       shopt -s nullglob
@@ -217,16 +217,16 @@ check_project_filename_equals_folder() {
       if [[ ${#candidates[@]} -gt 0 ]]; then
         local first
         first="$(basename "${candidates[0]}")"
-        fail "05-Projects/$name/ missing $name.md (found ${first} — rename it: mv \"${candidates[0]}\" \"$expected_index\")"
+        fail "01-Projects/$name/ missing $name.md (found ${first} — rename it: mv \"${candidates[0]}\" \"$expected_index\")"
       else
-        fail "05-Projects/$name/ missing $name.md (no .md files inside the folder at all — create one or remove the empty folder)"
+        fail "01-Projects/$name/ missing $name.md (no .md files inside the folder at all — create one or remove the empty folder)"
       fi
       local_fail=1
     fi
   done
   shopt -u nullglob
   if [[ "$local_fail" -eq 0 ]]; then
-    pass "all 05-Projects/ folders satisfy filename=foldername"
+    pass "all 01-Projects/ folders satisfy filename=foldername"
   fi
 }
 
@@ -269,7 +269,7 @@ check_projects_index_stale_wikilinks() {
       Projects-Index|Home-Index|Tech-Index|Poetry-Index|Index|TASKS|GITHUB|LORECRAFT-HQ) continue ;;
     esac
     if [[ ! -f "$projects_dir/$file_target/$file_target.md" ]]; then
-      fail "Projects-Index.md links to [[$file_target]] but 05-Projects/$file_target/$file_target.md is missing"
+      fail "Projects-Index.md links to [[$file_target]] but 01-Projects/$file_target/$file_target.md is missing"
       fail "  flag for human review (do NOT auto-delete; CLAUDE.md hard rule)"
       stale_count=$((stale_count + 1))
     fi

@@ -194,7 +194,7 @@ if [ -z "$VAULT_PATH" ]; then
     fi
 
     if [ "${#VAULT_CANDIDATES[@]}" -eq 0 ]; then
-        fail "Couldn't find a mogged vault (needs 02-Sources/, 05-Projects/, CLAUDE.md). Install 2ndBrain-mogging first, or pass --vault /absolute/path/to/vault."
+        fail "Couldn't find a mogged vault (needs 02-Sources/, 01-Projects/, CLAUDE.md). Install 2ndBrain-mogging first, or pass --vault /absolute/path/to/vault."
     elif [ "${#VAULT_CANDIDATES[@]}" -eq 1 ]; then
         VAULT_PATH="${VAULT_CANDIDATES[0]}"
         info "Auto-discovered vault: $VAULT_PATH"
@@ -226,7 +226,7 @@ if [ -z "$VAULT_PATH" ]; then
 fi
 
 if [ -z "$VAULT_PATH" ] || ! is_mogged_vault "$VAULT_PATH"; then
-    fail "Vault path '$VAULT_PATH' is not a mogged vault (missing 02-Sources/, 05-Projects/, or CLAUDE.md)."
+    fail "Vault path '$VAULT_PATH' is not a mogged vault (missing 02-Sources/, 01-Projects/, or CLAUDE.md)."
 fi
 
 success "Vault: $VAULT_PATH  (source: $VAULT_SOURCE)"
@@ -367,10 +367,10 @@ echo "    /import-claude"
 echo ""
 echo "  …and point it at the staging path above. The skill will:"
 echo "    - Sort conversations by their source Claude Project (or topic)"
-echo "    - Route each into 01-Conversations/<project-mirror>/ as full-fidelity captures"
+echo "    - Route each into 01-Projects/<PROJECT>/conversations/<sub>/ as full-fidelity captures"
 echo "    - Mirror each as a factual LIT-* note in 02-Sources/"
 echo "    - Spawn linked concept stubs in 03-Concepts/ where ideas repeat"
-echo "    - Update 04-Index/ + 05-Projects/<project>/ backlinks"
+echo "    - Update 04-Index/ + 01-Projects/<project>/ backlinks"
 echo ""
 echo "  If you prefer manual control, /backfill handles the same payload as a"
 echo "  /save loop — slower but shows every write."

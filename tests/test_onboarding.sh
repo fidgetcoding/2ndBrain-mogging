@@ -90,7 +90,7 @@ assert_eq "$FIRST_RC" "0" "install.sh exits 0 on first run"
 # ---------------------------------------------------------------------------
 # Canonical folders (7).
 # ---------------------------------------------------------------------------
-for d in 01-Conversations 02-Sources 03-Concepts 04-Index 05-Projects 06-Tasks Claude-Memory; do
+for d in 02-Sources 03-Concepts 04-Index 01-Projects 05-Tasks Claude-Memory; do
   assert_dir "$FAKE_VAULT/$d" "canonical folder created: $d"
 done
 
@@ -104,8 +104,8 @@ done
 # ---------------------------------------------------------------------------
 # CLAUDE.md routing headers + folder references.
 # ---------------------------------------------------------------------------
-assert_contains "$FAKE_VAULT/CLAUDE.md" "01-Conversations" \
-  "CLAUDE.md mentions 01-Conversations"
+assert_contains "$FAKE_VAULT/CLAUDE.md" "01-Projects" \
+  "CLAUDE.md mentions 01-Projects"
 assert_contains "$FAKE_VAULT/CLAUDE.md" "02-Sources" \
   "CLAUDE.md mentions 02-Sources"
 # Routing headers — check the two most load-bearing section markers. Accept
@@ -247,7 +247,7 @@ assert_eq "$COUNT_USER_STOP2" "1" "user Stop hook still preserved after re-insta
 assert_json_valid "$SETTINGS" "settings.json still valid after re-install"
 
 # Folders still present (didn't get wiped).
-for d in 01-Conversations 02-Sources 03-Concepts 04-Index 05-Projects 06-Tasks Claude-Memory; do
+for d in 02-Sources 03-Concepts 04-Index 01-Projects 05-Tasks Claude-Memory; do
   assert_dir "$FAKE_VAULT/$d" "folder still present after re-install: $d"
 done
 

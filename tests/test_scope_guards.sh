@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # tests/test_scope_guards.sh
-# /wiki refuses to write into 06-Tasks/.
-# - attempt --target 06-Tasks/INJECTED.md -> rc != 0, TASKS files unchanged
+# /wiki refuses to write into 05-Tasks/.
+# - attempt --target 05-Tasks/INJECTED.md -> rc != 0, TASKS files unchanged
 # - no INJECTED.md exists anywhere in the vault
 # - writing into 02-Sources still works (positive control)
 
@@ -35,7 +35,7 @@ do
 done
 
 if [[ -z "$WIKI_CMD" ]]; then
-  # Forward-looking SKIP. The 06-Tasks scope guard is enforced by /wiki
+  # Forward-looking SKIP. The 05-Tasks scope guard is enforced by /wiki
   # which ships as a SKILL.md only — no shell entrypoint, so the forbidden
   # --target path cannot be exercised here. When a wiki CLI lands, this
   # test auto-activates via the candidate loop above.
@@ -45,16 +45,16 @@ if [[ -z "$WIKI_CMD" ]]; then
 fi
 
 # ---------------------------------------------------------------------------
-# Snapshot the 06-Tasks directory BEFORE any wiki invocation.
+# Snapshot the 05-Tasks directory BEFORE any wiki invocation.
 # ---------------------------------------------------------------------------
 TASKS_BEFORE_SNAP="$TMPROOT/tasks.before"
-snapshot_dir "$VAULT/06-Tasks" > "$TASKS_BEFORE_SNAP"
+snapshot_dir "$VAULT/05-Tasks" > "$TASKS_BEFORE_SNAP"
 
 # ---------------------------------------------------------------------------
-# Attempt forbidden target: 06-Tasks/INJECTED.md
+# Attempt forbidden target: 05-Tasks/INJECTED.md
 # Expect non-zero return code.
 # ---------------------------------------------------------------------------
-FORBIDDEN_REL="06-Tasks/INJECTED.md"
+FORBIDDEN_REL="05-Tasks/INJECTED.md"
 
 set +e
 VAULT_DIR="$VAULT" "$WIKI_CMD" add \
@@ -75,19 +75,19 @@ fi
 INJECTED_HITS="$(find "$VAULT" -type f -name 'INJECTED.md' | wc -l | tr -d ' ')"
 assert_eq "$INJECTED_HITS" "0" "no INJECTED.md anywhere in vault"
 
-# 06-Tasks snapshot unchanged.
+# 05-Tasks snapshot unchanged.
 TASKS_AFTER_SNAP="$TMPROOT/tasks.after"
-snapshot_dir "$VAULT/06-Tasks" > "$TASKS_AFTER_SNAP"
+snapshot_dir "$VAULT/05-Tasks" > "$TASKS_AFTER_SNAP"
 
 if diff -q "$TASKS_BEFORE_SNAP" "$TASKS_AFTER_SNAP" >/dev/null; then
-  _pass "06-Tasks/ byte-identical after forbidden wiki attempt"
+  _pass "05-Tasks/ byte-identical after forbidden wiki attempt"
 else
-  _fail "06-Tasks/ changed despite scope-guard rejection"
+  _fail "05-Tasks/ changed despite scope-guard rejection"
   diff "$TASKS_BEFORE_SNAP" "$TASKS_AFTER_SNAP" 1>&2 || true
 fi
 
 # Specifically the fixture's TASKS-SAMPLE.md must be unchanged.
-SAMPLE="$VAULT/06-Tasks/TASKS-SAMPLE.md"
+SAMPLE="$VAULT/05-Tasks/TASKS-SAMPLE.md"
 if [[ -f "$SAMPLE" ]]; then
   SAMPLE_MD5_BEFORE="$(md5_of "$SAMPLE")"
   # We captured it already in the snapshot — recompute to be explicit.

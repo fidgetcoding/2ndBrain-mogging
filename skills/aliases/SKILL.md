@@ -37,13 +37,13 @@ updated: 2026-04-16
 
 projects:
   PARZVL:
-    path: 05-Projects/PARZVL
+    path: 01-Projects/PARZVL
     aliases: ["parzvl", "Parzvl"]
   PARZVL/<PROJECT-A>:
-    path: 05-Projects/PARZVL/<PROJECT-A>
+    path: 01-Projects/PARZVL/<PROJECT-A>
     aliases: ["<project-a-lower>", "<PROJECT-A>", "<project-a-colloquial>"]
   MMA/<PROJECT-B>:
-    path: 05-Projects/MMA/<PROJECT-B>
+    path: 01-Projects/MMA/<PROJECT-B>
     aliases: ["<project-b-short>", "<project-b-lower>", "<PROJECT-C>", "<project-c-amp>", "<PERSON-H>'s funnel"]
   # ...one entry per 05-Projects folder
 
@@ -146,10 +146,10 @@ Two distinct people. Never collapse.
 
 `--bootstrap` populates `aliases.yaml` by pulling from:
 
-1. **Folder scan of `05-Projects/`.** Every direct child folder becomes an entry in `projects:`. Sub-project folders (`PARZVL/<PROJECT-A>`, `MMA/<PROJECT-B>`) get their own entries.
+1. **Folder scan of `01-Projects/`.** Every direct child folder becomes an entry in `projects:`. Sub-project folders (`PARZVL/<PROJECT-A>`, `MMA/<PROJECT-B>`) get their own entries.
 2. **Memory file grep.** Walk `~/.claude/projects/**/memory/MEMORY.md` and the project-specific memory files referenced there. Extract canonical IDs (`project_*`, `person_*`, `user_*`, `concept_*`).
 3. **Proper-noun scan of the vault.** Run a capitalized-word frequency analysis across all `.md` files. Candidates with ≥ 3 mentions get surfaced as person/concept proposals.
-4. **Task file `@name` mentions.** `Grep` `06-Tasks/**` for `@Name` patterns — Obsidian Tasks assignee mentions.
+4. **Task file `@name` mentions.** `Grep` `05-Tasks/**` for `@Name` patterns — Obsidian Tasks assignee mentions.
 5. **Frontmatter `related:` arrays.** Every `related: [[X]]` is evidence that `X` is a canonical thing. Harvest the referenced targets.
 
 Bootstrap never writes directly to `aliases.yaml` if one exists. It always writes to `Claude-Memory/aliases-pending.md` for review.
@@ -169,10 +169,10 @@ Output goes to `aliases-pending.md`. Never overwrites canonical.
 Run as a read-only audit. Each check that fails is reported with a line reference:
 
 1. **No duplicate keys.** Every top-level key under `people:`, `concepts:`, `orgs:`, `projects:` is unique.
-2. **Every `project:` path exists** in `05-Projects/`. Dangling paths are errors.
+2. **Every `project:` path exists** in `01-Projects/`. Dangling paths are errors.
 3. **Disambig pairs both have `disambig_note`.** If two entries share a canonical-ish name (<PERSON-C>/<PERSON-B>), both must explain the distinction.
 4. **No cyclic aliases.** An alias cannot point to another alias that points back (or forward-chains back).
-5. **Orphan check.** Every folder under `05-Projects/` must appear under `projects:`. A folder with no `projects:` entry is an orphan and gets surfaced for `--bootstrap` to fill.
+5. **Orphan check.** Every folder under `01-Projects/` must appear under `projects:`. A folder with no `projects:` entry is an orphan and gets surfaced for `--bootstrap` to fill.
 
 `--validate` exits non-zero if any check fails. Use in CI-style workflows before `/backfill --apply`.
 

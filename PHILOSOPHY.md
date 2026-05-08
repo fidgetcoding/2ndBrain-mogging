@@ -40,7 +40,7 @@ Compilation is slower per query. It's also much higher quality, and it produces 
 
 ## The folder is the app
 
-From the Jens project, expressed as a design constraint: the Obsidian folder structure **is** the application's data model. There is no separate index, no sidecar database, no external registry. If a file exists at `05-Projects/LORECRAFT-HQ/LORECRAFT-HQ.md`, the plugin knows that note is a project index for `LORECRAFT-HQ`. If a file exists at `06-Tasks/TASKS-LORECRAFT.md`, the plugin knows it's the Tasks hub for the same project.
+From the Jens project, expressed as a design constraint: the Obsidian folder structure **is** the application's data model. There is no separate index, no sidecar database, no external registry. If a file exists at `01-Projects/LORECRAFT-HQ/LORECRAFT-HQ.md`, the plugin knows that note is a project index for `LORECRAFT-HQ`. If a file exists at `05-Tasks/TASKS-LORECRAFT.md`, the plugin knows it's the Tasks hub for the same project.
 
 This is a discipline. It means the plugin cannot invent new structural concepts without expressing them as a folder or file naming rule, which keeps the surface honest. It also means an operator can move files around outside the plugin and the plugin will rediscover them correctly next run. No "re-index" step. No stale database.
 
