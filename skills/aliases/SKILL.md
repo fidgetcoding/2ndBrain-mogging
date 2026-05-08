@@ -45,7 +45,7 @@ projects:
   MMA/<PROJECT-B>:
     path: 01-Projects/MMA/<PROJECT-B>
     aliases: ["<project-b-short>", "<project-b-lower>", "<PROJECT-C>", "<project-c-amp>", "<PERSON-H>'s funnel"]
-  # ...one entry per 05-Projects folder
+  # ...one entry per 01-Projects folder
 
 people:
   person_a_<ORG-B>:

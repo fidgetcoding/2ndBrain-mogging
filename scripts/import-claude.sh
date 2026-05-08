@@ -160,7 +160,7 @@ echo ""
 #    Priority: --vault flag > VAULT_PATH env > auto-discovery
 # -----------------------------------------------------------------------------
 is_mogged_vault() {
-    [ -d "$1/02-Sources" ] && [ -d "$1/05-Projects" ] && [ -f "$1/CLAUDE.md" ]
+    [ -d "$1/02-Sources" ] && [ -d "$1/01-Projects" ] && [ -f "$1/CLAUDE.md" ]
 }
 
 VAULT_SOURCE="auto-discovery"
