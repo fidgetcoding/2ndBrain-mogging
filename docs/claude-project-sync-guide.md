@@ -7,7 +7,7 @@ How to route the contents of a single Claude.ai Project (or ChatGPT folder) into
 ## Per-project layout
 
 ```
-05-Projects/
+01-Projects/
   PROJECT-NAME/
     PROJECT-NAME.md      ← index note (knowledge base + conversation log + related links)
     conversations/       ← all conversation markdown files for this project

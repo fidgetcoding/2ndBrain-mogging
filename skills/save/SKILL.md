@@ -41,12 +41,12 @@ Before routing any content, load `Claude-Memory/aliases.yaml` from the vault roo
 aliases:
   - key: <person-h>
     names: [<person-h>, <person-h>, <project-b>, <project-c>]
-    destination: 05-Projects/MMA/<PROJECT-B>/<PROJECT-B>.md
+    destination: 01-Projects/MMA/<PROJECT-B>/<PROJECT-B>.md
     tags: [mma, client, <person-h>]
     confidence_boost: 0.15
   - key: morgen-mcp
     names: [morgen mcp, morgen-mcp, morgen bot, w1, obsidian-tasks-sync]
-    destination: 05-Projects/<ORG-A>/morgen-mcp.md
+    destination: 01-Projects/<ORG-A>/morgen-mcp.md
     ...
 ```
 
@@ -77,9 +77,9 @@ Before any `Write` or `Edit`, print a table:
 ┌───────────────────────────────┬────────────────────────────────────────────────────┬──────────────┐
 │ Signal                        │ Destination                                        │ Confidence   │
 ├───────────────────────────────┼────────────────────────────────────────────────────┼──────────────┤
-│ "<person-h>", "<project-c>"   │ 05-Projects/MMA/<PROJECT-B>/…/2026-04-16.md        │ 0.88         │
-│ "stripe webhook" (ambiguous)  │ 05-Projects/<ORG-A>/stripe-notes.md  [stub]   │ 0.41         │
-│ "tax deduction"               │ 05-Projects/LEGAL-FINANCE/tax-notes-2025.md        │ 0.72         │
+│ "<person-h>", "<project-c>"   │ 01-Projects/MMA/<PROJECT-B>/…/2026-04-16.md        │ 0.88         │
+│ "stripe webhook" (ambiguous)  │ 01-Projects/<ORG-A>/stripe-notes.md  [stub]   │ 0.41         │
+│ "tax deduction"               │ 01-Projects/LEGAL-FINANCE/tax-notes-2025.md        │ 0.72         │
 └───────────────────────────────┴────────────────────────────────────────────────────┴──────────────┘
 
 Commit on all writes: [bot:save] capture <person-h> session 2026-04-16
@@ -116,11 +116,11 @@ Behavior:
 2. Print preview table (§3).
 3. Auto-commit if no flags fire (§3 auto-commit rule); else prompt `y/n/edit`.
 4. On write — choose path by classification (post-2026-05-08 conversations-into-projects restructure):
-   - **Project-tied** (alias resolves to a single `05-Projects/<PROJECT>/`): write the full transcript to `05-Projects/<PROJECT>/conversations/[<sub>/]<YYYY-MM-DD>-<slug>.md`. **No pointer, no LIT mirror** — the project folder is the sole source of truth. If the project has substructure (e.g. `<ORG-B>/<PROJECT-A>/`, `<ORG-A>/career/`), mirror it under `conversations/` (Pattern A flat).
+   - **Project-tied** (alias resolves to a single `01-Projects/<PROJECT>/`): write the full transcript to `01-Projects/<PROJECT>/conversations/[<sub>/]<YYYY-MM-DD>-<slug>.md`. **No pointer, no LIT mirror** — the project folder is the sole source of truth. If the project has substructure (e.g. `<ORG-B>/<PROJECT-A>/`, `<ORG-A>/career/`), mirror it under `conversations/` (Pattern A flat).
    - **Cross-cutting** (no single project owner — multi-project strategy threads, generic dictation, vault-spanning topics): write to `02-Sources/LIT-conversation-<slug>-<date>.md`. LIT is reserved for cross-cutting captures only.
-   - **Vault-meta** (vault architecture sessions, graph repairs, mogging-pack-dev work, scheduled-agent reports): write to `05-Projects/VAULT/conversations/[<sub>/]<YYYY-MM-DD>-<slug>.md`. Subfolders: `architecture-sessions/`, `graph-repairs/`, `mogging-pack-dev/`, `reports/`.
+   - **Vault-meta** (vault architecture sessions, graph repairs, mogging-pack-dev work, scheduled-agent reports): write to `01-Projects/VAULT/conversations/[<sub>/]<YYYY-MM-DD>-<slug>.md`. Subfolders: `architecture-sessions/`, `graph-repairs/`, `mogging-pack-dev/`, `reports/`.
    - **Meeting-style captures** (Granola transcripts, multi-stakeholder calls): optionally route under `<PROJECT>/conversations/meetings/` for tighter organization.
-   - The pre-2026-05-08 dual-write pattern (full transcript in LIT + pointer stub in `01-Conversations/`) is retired. `01-Conversations/` no longer exists.
+   - The pre-2026-05-08 dual-write pattern (full transcript in LIT + pointer stub in `01-Projects/<PROJECT>/conversations/` (post-2026-05-08; `01-Projects/<PROJECT>/conversations/` was retired)) is retired. `01-Projects/<PROJECT>/conversations/` (post-2026-05-08; `01-Projects/<PROJECT>/conversations/` was retired) no longer exists.
 
 **Q&A tree (only on `/save 1 --ask`):**
 
@@ -169,7 +169,7 @@ Write to `Claude-Memory/adr/ADR-<nnn>-<slug>.md`. Auto-link in `Claude-Memory/ad
 
 ## 8. Obsidian Tasks plugin syntax (06-Tasks writes)
 
-Anything the skill emits into `06-Tasks/` (any branch, any path under that prefix) MUST obey the plugin grammar — the operator's entire task pipeline is downstream of this file's exact shape.
+Anything the skill emits into `05-Tasks/` (any branch, any path under that prefix) MUST obey the plugin grammar — the operator's entire task pipeline is downstream of this file's exact shape.
 
 Required grammar:
 
@@ -281,8 +281,8 @@ Backfill commits use `[bot:save --backfill]` as the prefix so they're still W1-t
 
 ## 14. Non-goals (explicitly out of scope)
 
-- `save` does not write to `05-Projects/*/index.md` files. Project index maintenance is the `wiki` skill's job.
-- `save` does not touch `06-Tasks/` other than obeying the plugin grammar when the user-provided content happens to land there. It never auto-creates tasks from conversational intent.
+- `save` does not write to `01-Projects/*/index.md` files. Project index maintenance is the `wiki` skill's job.
+- `save` does not touch `05-Tasks/` other than obeying the plugin grammar when the user-provided content happens to land there. It never auto-creates tasks from conversational intent.
 - `save` does not run audits, heals, or contradiction detection — that is also `wiki`.
 - `save` does not touch `.env*`, `.claude/settings.json`, or anything outside the vault tree.
 

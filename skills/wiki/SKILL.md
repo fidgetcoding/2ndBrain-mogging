@@ -1,6 +1,6 @@
 ---
 name: wiki
-description: Add, audit, heal, and find across the 2ndBrain Obsidian vault. Single skill with four branches — ADD ingests sources (URL/file/paste/YouTube/PDF) into the 02-Sources → 03-Concepts → 04-Index pipeline with discuss-before-write; AUDIT is read-only integrity scan; HEAL applies safe repairs on a dry-run branch; FIND is semantic retrieval with wikilink-cited synthesis. Never writes owner:human files, never touches 05-Projects/*/index or 06-Tasks/.
+description: Add, audit, heal, and find across the 2ndBrain Obsidian vault. Single skill with four branches — ADD ingests sources (URL/file/paste/YouTube/PDF) into the 02-Sources → 03-Concepts → 04-Index pipeline with discuss-before-write; AUDIT is read-only integrity scan; HEAL applies safe repairs on a dry-run branch; FIND is semantic retrieval with wikilink-cited synthesis. Never writes owner:human files, never touches 01-Projects/*/index or 05-Tasks/.
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash
 ---
 
@@ -30,8 +30,8 @@ Numbers not in `1..5` → re-prompt. Natural-language input ("ingest this URL") 
 These are non-negotiable and apply to every branch below:
 
 1. **Never write files with `owner: human` in their frontmatter.** Read the target file's frontmatter BEFORE any Edit/Write. If `owner: human` is present, route around it (log-only, or create a sibling `-wiki.md` file).
-2. **Never write to `05-Projects/*/<project-name>.md` or any file directly named as a project index.** Project index files are human-curated (per vault rules in `CLAUDE.md`). `wiki` may LINK into them but never mutate them. Scaffolding new projects is explicitly out of scope for this skill.
-3. **Never write anywhere under `06-Tasks/`.** Task state is owned by the Obsidian Tasks plugin and the n8n 2-way sync (Obsidian ↔ Morgen, post-2026-05-04 Notion drop). `wiki` may READ tasks to resolve wikilink targets but never creates, edits, completes, or deletes a task.
+2. **Never write to `01-Projects/*/<project-name>.md` or any file directly named as a project index.** Project index files are human-curated (per vault rules in `CLAUDE.md`). `wiki` may LINK into them but never mutate them. Scaffolding new projects is explicitly out of scope for this skill.
+3. **Never write anywhere under `05-Tasks/`.** Task state is owned by the Obsidian Tasks plugin and the n8n 2-way sync (Obsidian ↔ Morgen, post-2026-05-04 Notion drop). `wiki` may READ tasks to resolve wikilink targets but never creates, edits, completes, or deletes a task.
 4. **Every branch that writes uses its own git branch.** No direct writes to `main`. Branch names below are the contract.
 5. **Every write file includes the frontmatter keys `source_of_truth`, `last_confirmed`, and `owner` per `../references/wiki-schema.md`.**
 6. **Branch pollution discipline.** If a branch already exists for today, append to it; do not create `-v2` siblings.
@@ -176,7 +176,7 @@ Build two in-memory sets:
 
 ### 4.2 Output
 
-Write the report to `01-Conversations/VAULT/reports/audit-YYYY-MM-DD.md` (the canonical scheduled-agent reports location per `docs/CLAUDE-MD-PATCH.md §scheduled-agents`; this matches the nightly agent's output path so AUDIT reports live beside nightly-agent outputs and aren't second-sourced under `04-Index/`). Shape:
+Write the report to `01-Projects/VAULT/conversations/reports/audit-YYYY-MM-DD.md` (the canonical scheduled-agent reports location per `docs/CLAUDE-MD-PATCH.md §scheduled-agents`; this matches the nightly agent's output path so AUDIT reports live beside nightly-agent outputs and aren't second-sourced under `04-Index/`). Shape:
 
 ```markdown
 ---
@@ -227,7 +227,7 @@ HEAL is the only branch that mutates the graph outside ADD. It operates in dry-r
 - Merging concept pages (too easy to lose evidence links).
 - Renaming pages (breaks every wikilink pointing at them; must be a deliberate human action).
 - Changing `owner: human` frontmatter.
-- Touching `05-Projects/*/<index>.md` or `06-Tasks/**`.
+- Touching `01-Projects/*/<index>.md` or `05-Tasks/**`.
 
 ### 5.3 Stub pages
 
@@ -271,7 +271,7 @@ Strikethrough preserves reader intent ("there was supposed to be a link here") w
 
 1. Create branch: `git checkout -b wiki-heal/2026-04-16` (if vault is a git repo; else skip and operate in-place with a WARN).
 2. Apply all HEAL edits.
-3. Write `01-Conversations/VAULT/reports/heal-plan-2026-04-16.md` summarizing every change (same reports folder as the audit output — never `04-Index/`).
+3. Write `01-Projects/VAULT/conversations/reports/heal-plan-2026-04-16.md` summarizing every change (same reports folder as the audit output — never `04-Index/`).
 4. Commit each category as a separate commit for reviewability:
    - `wiki-heal: stub pages for N missing concepts`
    - `wiki-heal: wrap unlinked concept names`
@@ -327,8 +327,8 @@ A critical FIND rule: the skill MUST NOT emit a `[[wikilink]]` to a page that is
 
 ## 8. Non-goals (explicitly out of scope)
 
-- `wiki` does not scaffold new projects in `05-Projects/`. Use the documented human workflow in `CLAUDE.md` (`### Project Index Note Rules`).
-- `wiki` does not manage tasks. Tasks live in `06-Tasks/` + Obsidian Tasks plugin + the n8n 2-way sync (Obsidian ↔ Morgen, post-2026-05-04 Notion drop).
+- `wiki` does not scaffold new projects in `01-Projects/`. Use the documented human workflow in `CLAUDE.md` (`### Project Index Note Rules`).
+- `wiki` does not manage tasks. Tasks live in `05-Tasks/` + Obsidian Tasks plugin + the n8n 2-way sync (Obsidian ↔ Morgen, post-2026-05-04 Notion drop).
 - `wiki` does not deploy anything, run migrations, or modify `.env*`, `.claude/`, or `node_modules/`.
 - `wiki` does not delete files. Even in HEAL, deletion requires a human.
 - `wiki` does not call external paid services during AUDIT — AUDIT is pure regex + graph arithmetic.

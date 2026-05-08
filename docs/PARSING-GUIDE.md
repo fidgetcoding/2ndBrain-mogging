@@ -13,7 +13,7 @@ This doc tells Claude **where to put things** when you run `/import-claude`, `/i
 5. **Bidirectional links are mandatory.** If A links to B, B must link back to A. `/tether` will fix drift if you forget.
 6. **Never put wikilinks inside tables.** Use bullet lists instead — Obsidian's graph can't see links inside table cells.
 7. **Never auto-mutate `owner: human` files.** If a collision forces a write, use a `-<timestamp>` suffix and flag it.
-8. **Never touch `05-Projects/<project>/<project>.md` directly.** Project index files are human-curated. Let `/tether` propose backlinks; the human accepts.
+8. **Never touch `01-Projects/<project>/<project>.md` directly.** Project index files are human-curated. Let `/tether` propose backlinks; the human accepts.
 
 ---
 
@@ -21,17 +21,17 @@ This doc tells Claude **where to put things** when you run `/import-claude`, `/i
 
 This is the post-mogging vault layout. The folders below are the only writable targets — the skills will refuse to write anywhere else without explicit user confirmation.
 
-### `01-Conversations/` — full-fidelity chat captures
+### `01-Projects/<PROJECT>/conversations/` (post-2026-05-08; `01-Projects/<PROJECT>/conversations/` was retired) — full-fidelity chat captures
 
 - Output of `/save` and `/import-claude`.
-- Subfolder-mirrors the structure of `05-Projects/` (so `<ORG-C>/` conversations land under `01-Conversations/<ORG-C>/`).
+- Subfolder-mirrors the structure of `01-Projects/` (so `<ORG-C>/` conversations land under `01-Projects/<ORG-C>/conversations/`).
 - Filename: `YYYY-MM-DD-<slug>.md`.
 - Frontmatter: `type: conversation`, `owner: human` — blocks future auto-mutation.
 - A `VAULT/` subtree holds vault-about-vault captures (conversations *about* the system itself).
 
 ### `02-Sources/` — external inputs, factual-only
 
-- Articles, videos, book notes, podcasts, PDFs, conversation mirrors from `01-Conversations/`.
+- Articles, videos, book notes, podcasts, PDFs, conversation mirrors from `01-Projects/<PROJECT>/conversations/` (post-2026-05-08; `01-Projects/<PROJECT>/conversations/` was retired).
 - Naming: `SRC-<YYYY-MM-DD>-<slug>.md` for external sources, `LIT-<slug>.md` for conversation mirrors (grandfathered).
 - Must include the source URL or reference.
 - **Factual-only.** Interpretation lives in `03-Concepts/`. If you catch yourself writing "I think X means Y," that sentence belongs in a concept note, not here.
@@ -52,16 +52,16 @@ This is the post-mogging vault layout. The folders below are the only writable t
 - Also lives here: `audit-YYYY-MM-DD.md` output from `/wiki audit`, and `Map.canvas` if you build one.
 - No content lives in `04-Index/` beyond structure + wikilinks — don't dump prose here.
 
-### `05-Projects/` — active work
+### `01-Projects/` — active work
 
 - One folder per active project. The folder name matches the index filename exactly (`FOO/FOO.md`, never `FOO/FOO-Index.md`).
 - Subfolders for `content/`, `misc-building/`, `GITHUB/`, etc. are up to each project — use whatever makes sense, as long as the project's top-level index links them.
 - `INCUBATOR/` is the staging lane for ideas not yet formal project folders.
 - **Never auto-rewrite a project index file.** Add backlinks via `/tether` proposals; let the human merge.
 
-### `06-Tasks/` — Obsidian Tasks plugin area
+### `05-Tasks/` — Obsidian Tasks plugin area
 
-- One `TASKS-<AREA>.md` per project area (mirrors `05-Projects/`).
+- One `TASKS-<AREA>.md` per project area (mirrors `01-Projects/`).
 - Tasks use the Obsidian Tasks plugin syntax + a stable `🆔 <uuid>` per task.
 - If `task-maxxing` is running, this folder is a git submodule with its own live 2-way sync to Morgen. (Notion was dropped from the sync stack on 2026-05-04.)
 - **Never auto-write task lines.** Tasks need the Obsidian Tasks UUID format, and `/import-notes` refuses to generate them. Point the user at their Tasks panel.
@@ -78,13 +78,13 @@ This is the post-mogging vault layout. The folders below are the only writable t
 
 | If the incoming note is… | Send it to… | Frontmatter hints |
 |---|---|---|
-| A full chat transcript (Claude / ChatGPT / voice memo) | `01-Conversations/<project-mirror>/YYYY-MM-DD-<slug>.md` | `type: conversation`, `owner: human` |
+| A full chat transcript (Claude / ChatGPT / voice memo) | `01-Projects/<PROJECT>/conversations/<sub>/YYYY-MM-DD-<slug>.md` | `type: conversation`, `owner: human` |
 | A summary of that chat (factual) | `02-Sources/LIT-conversation-<slug>-<date>.md` | `type: source`, `owner: human` |
 | A summary of an article, video, podcast, or paper | `02-Sources/SRC-<YYYY-MM-DD>-<slug>.md` | `type: source`, `source: <url>` |
 | A refined atomic idea in the user's voice | `03-Concepts/<slug>.md` | `type: concept`, `owner: wiki` (new) or `human` (user-written) |
-| Notes tied to a specific active project | `05-Projects/<project>/<subfolder>/<slug>.md` | `type: source` or `concept`, `related: [[<project>]]` |
+| Notes tied to a specific active project | `01-Projects/<project>/<subfolder>/<slug>.md` | `type: source` or `concept`, `related: [[<project>]]` |
 | A new topic grouping that clusters 3+ concepts | `04-Index/<Topic>-Index.md` | `type: index` |
-| A task / todo | **Not auto-written.** User writes it in `06-Tasks/` with Tasks-plugin syntax + UUID. | — |
+| A task / todo | **Not auto-written.** User writes it in `05-Tasks/` with Tasks-plugin syntax + UUID. | — |
 | Raw unclear dumps | `02-Sources/` with `tags: [raw, triage]` | flag for human review |
 
 ---

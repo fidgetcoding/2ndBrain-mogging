@@ -5,17 +5,17 @@ schedule: "0 8 * * * America/New_York"
 plist: scheduled/launchd/io.<ORG-A>.mogging.morning.plist
 allowed-tools: Read, Write, Edit, Glob, Bash
 writes:
-  - 01-Conversations/VAULT/reports/daily-YYYY-MM-DD.md
+  - 01-Projects/VAULT/conversations/reports/daily-YYYY-MM-DD.md
   - Claude-Memory/hot.md
 reads:
-  - 06-Tasks/**/*.md
+  - 05-Tasks/**/*.md
   - Claude-Memory/aliases.yaml
   - Morgen MCP (list_events, list_tasks)
 ---
 
 # morning — daily 8am ET briefing
 
-Triggered by `scheduled/launchd/io.<ORG-A>.mogging.morning.plist` at 08:00 America/New_York. The agent has exactly two write targets and no others. Per `references/wiki-schema.md` §1, all reports live under `01-Conversations/VAULT/reports/`.
+Triggered by `scheduled/launchd/io.<ORG-A>.mogging.morning.plist` at 08:00 America/New_York. The agent has exactly two write targets and no others. Per `references/wiki-schema.md` §1, all reports live under `01-Projects/VAULT/conversations/reports/`.
 
 ## 1. Pull today's Morgen state
 
@@ -28,7 +28,7 @@ If the Morgen API returns HTTP 429 (rate limit), back off 30s and retry once. Se
 
 ## 2. Overdue surface
 
-Cross-reference the overdue list with `06-Tasks/**/*.md` via `Grep` for `🆔 <uuid>`. For each overdue item:
+Cross-reference the overdue list with `05-Tasks/**/*.md` via `Grep` for `🆔 <uuid>`. For each overdue item:
 
 - Source file path + line number.
 - Task text, priority glyph, original due date, days overdue.
@@ -38,7 +38,7 @@ If the count exceeds 15, collapse the mid/low-priority section into a summary li
 
 ## 3. Write the daily report
 
-Target: `01-Conversations/VAULT/reports/daily-YYYY-MM-DD.md`. Overwrite allowed (the report regenerates daily). Frontmatter:
+Target: `01-Projects/VAULT/conversations/reports/daily-YYYY-MM-DD.md`. Overwrite allowed (the report regenerates daily). Frontmatter:
 
 ```yaml
 ---
@@ -62,7 +62,7 @@ Body sections in this order:
 
 - Top 5 overdue tasks (one line each, with UUID).
 - Top 3 today events (title + start time).
-- One-line "open threads" derived from the last 3 entries in `01-Conversations/VAULT/reports/daily-*.md`.
+- One-line "open threads" derived from the last 3 entries in `01-Projects/VAULT/conversations/reports/daily-*.md`.
 
 Keep `hot.md` under 2KB. Older entries roll off.
 
