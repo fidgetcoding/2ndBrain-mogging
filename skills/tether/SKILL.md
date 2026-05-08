@@ -1,6 +1,6 @@
 ---
 name: tether
-description: Audit and repair the tethering rules in `05-Projects/` — filename-equals-folder, bidirectional links to Projects-Index, org-hub tethering (<ORG-A>, GITHUB), sub-project back-links, and unlinked-mention detection. Dry-run by default; atomic per-project transactions on execute. Respects `tether: none` frontmatter opt-outs and never touches cloned repos under any `05-Projects/<parent>/GITHUB/` subtree.
+description: Audit and repair the tethering rules in `01-Projects/` — filename-equals-folder, bidirectional links to Projects-Index, org-hub tethering (<ORG-A>, GITHUB), sub-project back-links, and unlinked-mention detection. Dry-run by default; atomic per-project transactions on execute. Respects `tether: none` frontmatter opt-outs and never touches cloned repos under any `01-Projects/<parent>/GITHUB/` subtree.
 allowed-tools: Read, Write, Edit, Glob, Grep
 ---
 
@@ -13,7 +13,7 @@ Project folders drift. Index files get renamed with stray `-Index` suffixes. New
 | Flag | Purpose |
 |------|---------|
 | `--scope <project>` | Audit exactly one project folder (e.g. `--scope <ORG-B>`). Sub-project paths also accepted (`--scope <ORG-B>/<PROJECT-A>`). |
-| `--all` | Audit every project in `05-Projects/`. |
+| `--all` | Audit every project in `01-Projects/`. |
 | `--dry-run` | **Default.** Report violations; do not write. |
 | `--execute` | Apply fixes. Atomic per-project — if any step fails for a project, roll that project back. Other projects continue. |
 
@@ -25,12 +25,12 @@ Project folders drift. Index files get renamed with stray `-Index` suffixes. New
 
 Every project folder has an index note whose filename matches the folder exactly, **with no `-Index` suffix**.
 
-- Correct: `05-Projects/<ORG-B>/<ORG-B>.md`, `05-Projects/<parent>/GITHUB/GITHUB.md`, `05-Projects/MMA/MMA.md`.
+- Correct: `01-Projects/<ORG-B>/<ORG-B>.md`, `01-Projects/<parent>/GITHUB/GITHUB.md`, `01-Projects/MMA/MMA.md`.
 - Wrong: `<ORG-B>-Index.md`, `GITHUB-Index.md`, `MMA-Index.md`.
 
 Wrong filenames break `[[PROJECT]]` wikilink resolution — the wikilink goes stale and the project drifts off the main graph.
 
-Sub-projects follow the same rule: `05-Projects/<ORG-B>/<PROJECT-A>/<PROJECT-A>.md`, `05-Projects/MMA/<PROJECT-B>/<PROJECT-B>.md`.
+Sub-projects follow the same rule: `01-Projects/<ORG-B>/<PROJECT-A>/<PROJECT-A>.md`, `01-Projects/MMA/<PROJECT-B>/<PROJECT-B>.md`.
 
 ### Rule 2 — Bidirectional links
 
@@ -43,7 +43,7 @@ And every sub-project index must link back UP to its parent project. One-way lin
 
 ### Rule 3 — Projects-Index membership
 
-`Projects-Index.md` lists every direct child of `05-Projects/`. A new project folder that isn't in Projects-Index is orphaned from the main graph even if its index file is well-formed.
+`Projects-Index.md` lists every direct child of `01-Projects/`. A new project folder that isn't in Projects-Index is orphaned from the main graph even if its index file is well-formed.
 
 ### Rule 4 — Client work tethered to org hub
 
@@ -53,14 +53,14 @@ Example: `<ORG-B>/<PROJECT-A>` links to `[[<ORG-B>]]` (its parent) AND `[[<ORG-A
 
 ### Rule 5 — Code projects tethered to GITHUB hub
 
-If a project has a cloned repo under any `05-Projects/<parent>/GITHUB/` hub (the canonical pattern — e.g. a <ORG-C>-owned repo lives under `05-Projects/<ORG-C>/GITHUB/`), the project's main note links `[[GITHUB]]` in its Related section, and the matching `05-Projects/<parent>/GITHUB/GITHUB.md` hub lists the project under its **## Owned By** section.
+If a project has a cloned repo under any `01-Projects/<parent>/GITHUB/` hub (the canonical pattern — e.g. a <ORG-C>-owned repo lives under `01-Projects/<ORG-C>/GITHUB/`), the project's main note links `[[GITHUB]]` in its Related section, and the matching `01-Projects/<parent>/GITHUB/GITHUB.md` hub lists the project under its **## Owned By** section.
 
 ## Violation categories
 
 The audit classifies problems into four buckets so the run summary is actionable:
 
 1. **Filename mismatches.** An index file is named `FOO-Index.md` instead of `FOO.md`. Also includes wholly missing index files.
-2. **Missing Projects-Index entries.** A folder exists under `05-Projects/` but has no entry in `Projects-Index.md`.
+2. **Missing Projects-Index entries.** A folder exists under `01-Projects/` but has no entry in `Projects-Index.md`.
 3. **Broken bidirectional links.** A project links UP but the target doesn't list it, or a sub-project exists but the parent's DOWN section omits it, or org-hub tethering only goes one way.
 4. **Unlinked mentions.** A project name appears as plain text elsewhere in the vault but isn't a `[[wikilink]]`. Each unlinked mention is a free edge left on the table. Surfaced as candidates, not auto-converted (risk of false positives).
 
@@ -103,7 +103,7 @@ Use sparingly. A `tether: none` project drops off the main graph by design.
 
 ## GITHUB subfolder exclusion
 
-Any `05-Projects/<parent>/GITHUB/` hub contains cloned third-party and owned repos. **Never touch anything inside a cloned repo's own subtree** (e.g. `05-Projects/<parent>/GITHUB/<ORG-REPOS>/<repo>/*`). These are cloned git repos — their `.md` files are upstream content, not vault notes. The tether skill only looks at the hub note itself (`05-Projects/<parent>/GITHUB/GITHUB.md`) and the intermediate `05-Projects/<parent>/GITHUB/<ORG-REPOS>/*.md` index notes if they exist. Repo internals are out of scope.
+Any `01-Projects/<parent>/GITHUB/` hub contains cloned third-party and owned repos. **Never touch anything inside a cloned repo's own subtree** (e.g. `01-Projects/<parent>/GITHUB/<ORG-REPOS>/<repo>/*`). These are cloned git repos — their `.md` files are upstream content, not vault notes. The tether skill only looks at the hub note itself (`01-Projects/<parent>/GITHUB/GITHUB.md`) and the intermediate `01-Projects/<parent>/GITHUB/<ORG-REPOS>/*.md` index notes if they exist. Repo internals are out of scope.
 
 ## --dry-run report format
 
@@ -113,7 +113,7 @@ Dry-run output is a grouped violation list:
 ## tether audit — 2026-04-16
 
 ### Filename mismatches (1)
-- 05-Projects/FOO/FOO-Index.md → should be FOO.md
+- 01-Projects/FOO/FOO-Index.md → should be FOO.md
   → 3 wikilinks reference [[FOO-Index]] and need rewrite
 
 ### Missing Projects-Index entries (2)
@@ -126,7 +126,7 @@ Dry-run output is a grouped violation list:
 - ...
 
 ### Unlinked mention candidates (12)
-- 01-Conversations/2026-04-13-misc.md:42 — "<project-a>" (not linked to [[<ORG-B>/<PROJECT-A>]])
+- 01-Projects/<PROJECT>/conversations/2026-04-13-misc.md:42 — "<project-a>" (not linked to [[<ORG-B>/<PROJECT-A>]])
 - ...
 
 ## Summary
@@ -137,7 +137,7 @@ Dry-run output is a grouped violation list:
 ## Invariants
 
 - Never delete notes.
-- Never touch `05-Projects/<parent>/GITHUB/<owner-repos>/<repo>/` contents.
+- Never touch `01-Projects/<parent>/GITHUB/<owner-repos>/<repo>/` contents.
 - Never auto-convert unlinked mentions (surface only).
 - Never bypass `tether: none`.
 - Every `--execute` run is atomic per-project.

@@ -32,12 +32,12 @@ Every write path in every skill resolves its target against this table. If a ski
 
 | Folder | Role | Primary writer | Notes |
 |---|---|---|---|
-| `01-Conversations/` | `/save` output + scheduled-agent reports; mirrors `05-Projects/` subfolders | `save` (branches 1–3) | Append-only per file. Scheduled agents write reports under `01-Conversations/VAULT/reports/` and nowhere else. Vault-about-vault notes live under `01-Conversations/VAULT/`. |
+| `01-Projects/<PROJECT>/conversations/` (post-2026-05-08; `01-Projects/<PROJECT>/conversations/` was retired) | `/save` output + scheduled-agent reports; mirrors `01-Projects/` subfolders | `save` (branches 1–3) | Append-only per file. Scheduled agents write reports under `01-Projects/VAULT/conversations/reports/` and nowhere else. Vault-about-vault notes live under `01-Projects/VAULT/conversations/`. |
 | `02-Sources/` | Source-of-truth notes for external content (articles, videos, transcripts, emails, PDFs, books) | `save` (branch 2 `--source`), `autoresearch`, `wiki add` | Each file carries `source_url` + `source_type` + `captured` in frontmatter. Body is summary; raw fetched text lives in a `> [!source]` callout or a fenced block. Replaces legacy `02-Literature/`. |
 | `03-Concepts/` | Refined atomic concept notes — one concept per file | `wiki` | Needs ≥1 inbound from a `02-Sources/` note and ≥1 outbound to `04-Index/`. First write sets `needs_review: true`; `wiki promote` flips it once the note has 3+ inbound links. Replaces legacy `03-Permanent/`. Existing notes grandfathered with `owner: human` are never silently rewritten. |
 | `04-Index/` | Maps of content (indexes), hub pages, topic guides | `wiki`, `tether` | Never freeform prose — only link lists + terse one-liners. Must list every concept in its topic cluster. Contains `Index.md`, `Home-Index`, `Projects-Index`, `Poetry-Index`, `Tech-Index`, and `Map.canvas`. Replaces legacy `04-MOC/`. |
-| `05-Projects/` | Project hubs mirroring Claude Projects; includes `INCUBATOR/` | `save` (branches 1–3), `tether` | Every project folder has an index note where filename = folder name (`FOO/FOO.md`, never `FOO-Index.md`). Bidirectional links up to `04-Index/Projects-Index.md` are mandatory. |
-| `06-Tasks/` | Obsidian Tasks plugin files + inline tasks | `save` (UUID-preserving edits only) | `/wiki` and `/autoresearch` are FORBIDDEN from writing here. `/save` is edit-safe only with strict UUID preservation. No agent writes here. Live n8n ↔ Morgen 2-way sync is wired through this folder (Notion was dropped 2026-05-04); the `06-Tasks/` git submodule is preserved. |
+| `01-Projects/` | Project hubs mirroring Claude Projects; includes `INCUBATOR/` | `save` (branches 1–3), `tether` | Every project folder has an index note where filename = folder name (`FOO/FOO.md`, never `FOO-Index.md`). Bidirectional links up to `04-Index/Projects-Index.md` are mandatory. |
+| `05-Tasks/` | Obsidian Tasks plugin files + inline tasks | `save` (UUID-preserving edits only) | `/wiki` and `/autoresearch` are FORBIDDEN from writing here. `/save` is edit-safe only with strict UUID preservation. No agent writes here. Live n8n ↔ Morgen 2-way sync is wired through this folder (Notion was dropped 2026-05-04); the `05-Tasks/` git submodule is preserved. |
 | `Claude-Memory/` | Plugin working state: aliases, ADRs, session manifests, hot context | `aliases`, `save` (ADR branch + backfill manifest), `emerge` (hot.md) | Symlink to `~/.claude/projects/<project-slug>/memory/`. Treat as config, not user-facing notes. `aliases.yaml` is the canonical alias source; `adr/` holds ADRs; `backfill-manifest.jsonl` is append-only. |
 
 **Killed folders** (pre-mogging layout, do not recreate): `00-Inbox/`, `01-Fleeting/`, `05-Templates/`, `06-Assets/`. If a skill sees one of these in a legacy vault, it treats the content as residue and routes it through `/save` migration — it does not reanimate the folder.
@@ -53,7 +53,7 @@ Closed set. A skill encountering an unknown `type` halts with a parse error rath
 | `source` | `02-Sources/` | External input (article, video, transcript, email, PDF, book). Must have `source_url`, `source_type`, `captured`. |
 | `concept` | `03-Concepts/` | Refined atomic concept. Needs `last_confirmed`, `needs_review`, `owner`. |
 | `index` | `04-Index/` | Map of content, hub, topic index. Body is a link list, not prose. |
-| `conversation` | `01-Conversations/` | `/save` output + scheduled-agent reports. No per-type additions beyond universal fields. |
+| `conversation` | `01-Projects/<PROJECT>/conversations/` (post-2026-05-08; `01-Projects/<PROJECT>/conversations/` was retired) | `/save` output + scheduled-agent reports. No per-type additions beyond universal fields. |
 | `adr` | `Claude-Memory/adr/` | Architectural decision record. Has `status`, `supersedes`, `superseded_by`. |
 | `synthesis` | `03-Concepts/` or `04-Index/` | Cross-concept rollup. Has `answers_question`, `sources`. |
 
@@ -64,7 +64,7 @@ Closed set. A skill encountering an unknown `type` halts with a parse error rath
 | `literature` | `source` | Folder moves from `02-Literature/` → `02-Sources/`. Body unchanged. |
 | `permanent` | `concept` | Folder moves from `03-Permanent/` → `03-Concepts/`. If `owner: human` is set, the note is locked — skills propose diffs instead of rewriting. |
 | `moc` | `index` | Folder moves from `04-MOC/` → `04-Index/`. Wikilinks of the shape `[[MOC-*]]` are rewritten to `[[*-Index]]` by `/wiki heal`. |
-| `fleeting` | `inbox-residue` | Body is preserved verbatim; the note is re-routed to its most likely project under `05-Projects/` (or surfaced for human decision if no alias hits). `01-Fleeting/` itself is killed and never recreated. |
+| `fleeting` | `inbox-residue` | Body is preserved verbatim; the note is re-routed to its most likely project under `01-Projects/` (or surfaced for human decision if no alias hits). `01-Fleeting/` itself is killed and never recreated. |
 
 ### Universal frontmatter
 
@@ -96,7 +96,7 @@ Per-type additions are documented in the plugin's `references/wiki-schema.md`.
 | `/aliases` | Manage `Claude-Memory/aliases.yaml` — add, rename, split entities. |
 | `/autoresearch` | Three-round web research loop — shallow sweep, follow-up, synthesis. |
 | `/canvas` | Generate an Obsidian Canvas pre-wired to a named set of notes. |
-| `/tether` | Audit `05-Projects/` bidirectional links, MOC membership, hub wiring; fix orphans. |
+| `/tether` | Audit `01-Projects/` bidirectional links, MOC membership, hub wiring; fix orphans. |
 | `/connect` | Propose `[[wikilinks]]` between notes that share concepts but don't link yet. |
 | `/import-claude` | One-shot import your Claude.ai or ChatGPT data export — full conversation history, alias-classified, spawns concept stubs where ideas repeat. |
 | `/import-notes` | One-shot import existing notes (Apple Notes, OneNote, Notion, Evernote, raw `.md` / `.docx` / `.pptx` / `.xlsx` / `.html`); pandoc under the hood, dry-run preview. |
@@ -107,10 +107,10 @@ Local installs use **hardlinks** (preferred) or symlinks — `install.sh --apply
 
 | Agent | When | Writes to | Purpose |
 |---|---|---|---|
-| `morning` | 08:00 local | `01-Conversations/VAULT/reports/MORNING-<date>.md` (opt-in) | Review yesterday's transcripts, flag unsaved content. |
-| `nightly` | 22:00 local | `01-Conversations/VAULT/reports/NIGHTLY-<date>.md` | `/tether` audit + `/connect` suggestions. |
-| `weekly` | Friday 18:00 | `01-Conversations/VAULT/reports/WEEKLY-<date>.md` | `/emerge` pass over `03-Concepts/`. |
-| `health` | Sunday 21:00 | `01-Conversations/VAULT/reports/HEALTH-<date>.md` | Broken wikilinks, orphan files, missing frontmatter. |
+| `morning` | 08:00 local | `01-Projects/VAULT/conversations/reports/MORNING-<date>.md` (opt-in) | Review yesterday's transcripts, flag unsaved content. |
+| `nightly` | 22:00 local | `01-Projects/VAULT/conversations/reports/NIGHTLY-<date>.md` | `/tether` audit + `/connect` suggestions. |
+| `weekly` | Friday 18:00 | `01-Projects/VAULT/conversations/reports/WEEKLY-<date>.md` | `/emerge` pass over `03-Concepts/`. |
+| `health` | Sunday 21:00 | `01-Projects/VAULT/conversations/reports/HEALTH-<date>.md` | Broken wikilinks, orphan files, missing frontmatter. |
 
 Scheduled agents are audit-only by default. Any write-capable scheduled agent requires explicit opt-in via its plist. Every scheduled write carries commit prefix `[bot:<agent>]` so the n8n 2-way sync's loop-prevention skips it. (Notion was dropped from the sync stack on 2026-05-04 — `task-maxxing` is now Obsidian ↔ Morgen only; the W3 worker is a no-op stub.)
 
@@ -120,7 +120,7 @@ These override every skill-local policy. A skill that skips one of these is brok
 
 1. **Backup before mutation.** Before any multi-file structural change, tarball the vault to `~/Desktop/2ndBrain-backup-*.tar.gz`. Before overwriting ANY single file that already exists, snapshot it to `Claude-Memory/backups/YYYY-MM-DD/HHMMSS--<relpath>.bak`. If the backup write fails (disk full, permissions), abort the primary write. No exceptions.
 2. **Stop-hook jq-merge discipline.** The `Stop` hook payload MUST be merged into `~/.claude/settings.json` using `jq --slurp 'add'` semantics — never naive concatenation, never overwrite. Raw string append corrupts settings and breaks `/save --backfill --resume`. If `jq` is unavailable on the system path, the hook prints a WARN and no-ops rather than writing partial state.
-3. **n8n path filters stay current.** Any skill that adds a new top-level vault folder or a new externally-synced `05-Projects/<ORG>/<repo>/` subtree MUST update the n8n W1 path filter so the new subtree is ingested. The W1/W2 filters have been migrated from legacy `08-Tasks/` to `06-Tasks/` as of the 2026-04-17 swarm; W2 phantom-write prefix is removed, defensive strippers are left as no-ops. (W3 was deprecated 2026-05-04 when Notion was dropped from the sync stack.) The canonical path-filter file lives in the private `obsidian-tasks-sync` config repo — if it is not mounted, the skill prints a TODO row in its report and continues rather than silently creating an untracked subtree.
+3. **n8n path filters stay current.** Any skill that adds a new top-level vault folder or a new externally-synced `01-Projects/<ORG>/<repo>/` subtree MUST update the n8n W1 path filter so the new subtree is ingested. The W1/W2 filters have been migrated from legacy `08-Tasks/` to `05-Tasks/` as of the 2026-04-17 swarm; W2 phantom-write prefix is removed, defensive strippers are left as no-ops. (W3 was deprecated 2026-05-04 when Notion was dropped from the sync stack.) The canonical path-filter file lives in the private `obsidian-tasks-sync` config repo — if it is not mounted, the skill prints a TODO row in its report and continues rather than silently creating an untracked subtree.
 
 ### Bot-prefix commits
 
@@ -144,15 +144,15 @@ Every prefix in this table MUST be listed in the n8n W1 filter.
 
 ### Hard rules
 
-- **Never auto-rewrite `05-Projects/*/<project>.md` index files.** Filename-equals-folder rule is preserved; violations break `[[PROJECT]]` wikilink resolution.
-- **Never edit `06-Tasks/` content directly.** Use `/save` with Obsidian Tasks plugin syntax and strict UUID preservation. Missing UUID on a legacy task is mint-and-log, not rewrite.
+- **Never auto-rewrite `01-Projects/*/<project>.md` index files.** Filename-equals-folder rule is preserved; violations break `[[PROJECT]]` wikilink resolution.
+- **Never edit `05-Tasks/` content directly.** Use `/save` with Obsidian Tasks plugin syntax and strict UUID preservation. Missing UUID on a legacy task is mint-and-log, not rewrite.
 - **Never use `[[MOC-*]]` wikilinks.** Legacy shape, dead after the `04-MOC/` → `04-Index/` rename. Use `[[*-Index]]`. `/wiki heal` rewrites existing `[[MOC-*]]` references automatically.
 - **Never remove a note or wikilink** without flagging it for human review. Dead wikilinks get struck through with an HTML comment (`~~[[orphaned]]~~ <!-- dead: YYYY-MM-DD -->`), never silently deleted.
 - **Always check `Claude-Memory/aliases.yaml`** before classifying entities. If `jq`/`yaml` can't parse it, the skill halts — partial classification is worse than no classification.
 - **Respect the `graph-clean` workspace filter.** Excludes `MISC-CLAUDE/`, `CART-BLANCHE-HQ/`, `node_modules/`, `.claude/`, `.agents/`, `READMEs`, and `SKILL.md` files from the graph view.
-- **`/wiki` and `/autoresearch` are forbidden from writing under `06-Tasks/**`.** Task management is human-sovereign plus `/save`-only.
+- **`/wiki` and `/autoresearch` are forbidden from writing under `05-Tasks/**`.** Task management is human-sovereign plus `/save`-only.
 - **No skill writes to `CLAUDE.md` wholesale.** The plugin-managed block between the `2ndbrain-mogging:*` markers is regenerated by the installer; everything above the start marker is user-owned.
-- **Bidirectional tethering on every project.** Every `05-Projects/<PROJECT>/<PROJECT>.md` links UP (to `Projects-Index` / parent hub) AND DOWN (to sub-projects, key notes). Client work tethers to its org hub; code projects tether to `[[GITHUB]]`.
+- **Bidirectional tethering on every project.** Every `01-Projects/<PROJECT>/<PROJECT>.md` links UP (to `Projects-Index` / parent hub) AND DOWN (to sub-projects, key notes). Client work tethers to its org hub; code projects tether to `[[GITHUB]]`.
 
 ### Obsidian Tasks syntax
 

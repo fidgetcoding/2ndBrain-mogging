@@ -5,10 +5,10 @@ schedule: "0 18 * * 5 America/New_York"
 plist: scheduled/launchd/io.<ORG-A>.mogging.weekly.plist
 allowed-tools: Read, Write, Glob, Grep, Bash
 writes:
-  - 01-Conversations/VAULT/reports/weekly-YYYY-WW.md
+  - 01-Projects/VAULT/conversations/reports/weekly-YYYY-WW.md
 reads:
-  - 01-Conversations/VAULT/reports/audit-*.md
-  - 01-Conversations/VAULT/reports/daily-*.md
+  - 01-Projects/VAULT/conversations/reports/audit-*.md
+  - 01-Projects/VAULT/conversations/reports/daily-*.md
   - 03-Concepts/**/*.md
   - 04-Index/**/*.md
   - Claude-Memory/lint-counter.json
@@ -22,8 +22,8 @@ Triggered by `scheduled/launchd/io.<ORG-A>.mogging.weekly.plist` at 18:00 Americ
 
 Collect the past 7 days of signal:
 
-1. `Glob` all `01-Conversations/VAULT/reports/daily-*.md` where date is within the last 7 days.
-2. `Glob` all `01-Conversations/VAULT/reports/audit-*.md` within the same window.
+1. `Glob` all `01-Projects/VAULT/conversations/reports/daily-*.md` where date is within the last 7 days.
+2. `Glob` all `01-Projects/VAULT/conversations/reports/audit-*.md` within the same window.
 3. `git log --since="7 days ago" --format="%h %s"` for a commit-level change list, filtered to commits starting with `[bot:wiki-add]`, `[bot:wiki-heal]`, `[bot:wiki-fix]`, `[bot:save]`, `[bot:morning]`, `[bot:nightly]`, `[bot:weekly]`, or `[bot:health]`.
 4. Read the current `Claude-Memory/lint-counter.json` + snapshot from 7 days ago (stored in `Claude-Memory/lint-counter-snapshots/YYYY-MM-DD.json` by the previous weekly run).
 
@@ -39,7 +39,7 @@ Invoke the `emerge` skill in audit-only mode (no writes to concept notes — wee
 
 ## 3. Report output
 
-Target: `01-Conversations/VAULT/reports/weekly-YYYY-WW.md`. Overwrite allowed — weekly runs own their file. Frontmatter:
+Target: `01-Projects/VAULT/conversations/reports/weekly-YYYY-WW.md`. Overwrite allowed — weekly runs own their file. Frontmatter:
 
 ```yaml
 ---

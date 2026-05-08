@@ -10,12 +10,12 @@ Your Obsidian vault is your knowledge base. Your GitHub repos are where the actu
 
 ## Lookup order
 
-1. **Obsidian vault first.** Search `05-Projects/`, `03-Concepts/`, `04-Index/`, etc.
+1. **Obsidian vault first.** Search `01-Projects/`, `03-Concepts/`, `04-Index/`, etc.
 2. **GitHub repos second.** If the vault doesn't have it, check the corresponding GitHub repo via `gh` CLI.
 
 ## Connecting projects to repos
 
-Each project folder in `05-Projects/` can map to one or more GitHub repos. Add this to the project's index note (the `05-Projects/<PROJECT>/<PROJECT>.md` file):
+Each project folder in `01-Projects/` can map to one or more GitHub repos. Add this to the project's index note (the `01-Projects/<PROJECT>/<PROJECT>.md` file):
 
 ```markdown
 ## GitHub Repos
@@ -48,7 +48,7 @@ gh repo view YOUR-ORG/REPO-NAME
 1. Install `gh` (via `brew install gh` on macOS, or the `cli-maxxing` installer if you're running that too).
 2. `gh auth login` (public + private repos both work after auth).
 3. Tell Claude your GitHub username or organization — Claude runs `gh repo list YOUR-ORG` to see all your repos.
-4. For each repo that has a matching project folder in `05-Projects/`, add a `## GitHub Repos` section to that project's index note.
+4. For each repo that has a matching project folder in `01-Projects/`, add a `## GitHub Repos` section to that project's index note.
 
 ## Day-to-day use
 
@@ -63,7 +63,7 @@ Claude uses `gh` to grab what it needs and routes the content through the normal
 ## Requirements
 
 - `gh` CLI installed and authed
-- Matching project folder in `05-Projects/` (one per repo, or one project for a cluster of related repos — your call)
+- Matching project folder in `01-Projects/` (one per repo, or one project for a cluster of related repos — your call)
 - `## GitHub Repos` section added to the project index
 
 That's it. The vault stays the source of truth; the repos stay the source of code; `gh` is the bridge.

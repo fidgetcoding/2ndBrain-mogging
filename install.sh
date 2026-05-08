@@ -83,10 +83,9 @@ Options:
   --skip-tests         Skip running tests/test_onboarding.sh
   --verbose            Verbose logging (does NOT echo settings.json contents)
   --merge-stop         Replace any existing Stop hook with ours instead of append
-  --no-seed-vault      Skip seeding the 7-folder vault layout from vault-template/.
-                       Default is to copy missing folders (01-Conversations/,
-                       02-Sources/, 03-Concepts/, 04-Index/, 05-Projects/,
-                       06-Tasks/, Claude-Memory/ placeholder, CLAUDE.md,
+  --no-seed-vault      Skip seeding the 6-folder vault layout from vault-template/.
+                       Default is to copy missing folders (02-Sources/, 03-Concepts/, 04-Index/, 01-Projects/,
+                       05-Tasks/, Claude-Memory/ placeholder, CLAUDE.md,
                        AGENTS.md) into --vault. Existing files are never
                        overwritten — the seed is strictly additive.
   --with-intelligence  Install the self-learning tier (helpers/ + 5 hook types
@@ -398,7 +397,7 @@ validate_vault() {
 }
 
 # ---- step 3.5: seed vault from vault-template/ ------------------------------
-# For a freshly-created Obsidian vault (empty folder), copy the 7-folder layout
+# For a freshly-created Obsidian vault (empty folder), copy the 6-folder layout
 # + CLAUDE.md + AGENTS.md + Projects-Index + example projects out of
 # vault-template/ into $VAULT. Strictly additive — existing files/folders are
 # never overwritten. Skipped entirely with --no-seed-vault or if $VAULT is unset
@@ -421,10 +420,10 @@ seed_vault_from_template() {
   fi
 
   local copied=0 skipped=0
-  # Top-level dirs (01-Conversations, 02-Sources, ...) — copy each if absent.
+  # Top-level dirs (02-Sources, 03-Concepts, 04-Index, 01-Projects, 05-Tasks) — copy each if absent.
   # `cp -R` preserves nested empty dirs and .gitkeep files from the template,
   # which matters because git-clone drops truly-empty dirs but we want the
-  # 7-folder layout to render even before any notes land in it.
+  # 6-folder layout to render even before any notes land in it.
   while IFS= read -r -d '' entry; do
     local rel="${entry#"$src"/}"
     # macOS litters vault-template with .DS_Store files during local editing;
@@ -1256,7 +1255,7 @@ run_doctor() {
 #   step 1    preflight                  claude + jq/git/bash + osascript + version gate
 #   step 1.5  ensure_obsidian_app        macOS: brew install --cask obsidian if missing; opt out w/ --no-obsidian-app
 #   step 2/3  validate_vault             --apply requires --vault; auto-creates the directory if missing
-#   step 3.5  seed_vault_from_template   additive copy of 7-folder layout + template files
+#   step 3.5  seed_vault_from_template   additive copy of 6-folder layout + template files
 #   step 4    backup_settings            timestamped ~/.claude/.backups/<ts>/settings.json
 #   step 5    merge_stop_hook            jq-merge Stop hook (append | replace | skip-if-present)
 #   step 6    symlink_dir "skills"       ~/.claude/skills/<name> -> repo/skills/<name>

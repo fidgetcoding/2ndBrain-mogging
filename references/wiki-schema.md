@@ -23,12 +23,12 @@ The vault follows the operator's stripped operator layout. The plugin treats eac
 
 | Folder | Role | Primary writer | Secondary writers | Constraints |
 |---|---|---|---|---|
-| `01-Conversations/` | Conversation captures, daily notes, scheduled-agent reports, interactive `/wiki audit` output | `save` (branches 1–3), `wiki` (`audit` branch) | `agents/morning`, `agents/nightly`, `agents/weekly`, `agents/health` | Append-only per file. All audit and daily reports — interactive or scheduled — live under `01-Conversations/VAULT/reports/` (`audit-YYYY-MM-DD.md`, `daily-YYYY-MM-DD.md`, `weekly-YYYY-WW.md`, `health-YYYY-MM-DD.md`). Scheduled agents write here and nowhere else. |
+| `01-Projects/<PROJECT>/conversations/` (post-2026-05-08; `01-Projects/<PROJECT>/conversations/` was retired) | Conversation captures, daily notes, scheduled-agent reports, interactive `/wiki audit` output | `save` (branches 1–3), `wiki` (`audit` branch) | `agents/morning`, `agents/nightly`, `agents/weekly`, `agents/health` | Append-only per file. All audit and daily reports — interactive or scheduled — live under `01-Projects/VAULT/conversations/reports/` (`audit-YYYY-MM-DD.md`, `daily-YYYY-MM-DD.md`, `weekly-YYYY-WW.md`, `health-YYYY-MM-DD.md`). Scheduled agents write here and nowhere else. |
 | `02-Sources/` | Source-of-truth notes for external content (articles, videos, transcripts, emails) | `save` (branch 2 `--source`), `autoresearch` | `wiki` (heal only) | Each file must carry `source_url` + `source_type` + `captured` in frontmatter. Body is summary; raw fetched text lives in a `> [!source]` callout or a fenced block. |
 | `03-Concepts/` | Refined atomic concept notes | `wiki` | `save` (branch 3, type `p`), `emerge` | One concept per file. Must have ≥1 inbound from a `02-Sources/` note and ≥1 outbound to `04-Index/`. `needs_review: true` on first write; promoted by `wiki` once it has 3+ inbound links. |
 | `04-Index/` | Maps of content (MOCs), hub pages, topic indexes | `wiki`, `tether` | `emerge` (weekly only) | Never append freeform text — only link lists + terse one-liners. Must list every concept in its topic cluster; `tether` fails the graph audit if an `03-Concepts/` note has no MOC entry. |
-| `05-Projects/` | Project hubs mirroring Claude Projects | `save` (branches 1–3), `tether` | `wiki` (heal only) | Each project folder has an index note where filename matches folder name (`FOO/FOO.md`, never `FOO-Index.md`). Bidirectional links up to `04-Index/Projects-Index.md` are mandatory. |
-| `06-Tasks/` | Obsidian Tasks plugin files + inline tasks | `save` (UUID-preserving edits only) | none | `/wiki` and `/autoresearch` are FORBIDDEN from writing here. `/save` is edit-safe only with strict UUID preservation (§5). No agent writes here. |
+| `01-Projects/` | Project hubs mirroring Claude Projects | `save` (branches 1–3), `tether` | `wiki` (heal only) | Each project folder has an index note where filename matches folder name (`FOO/FOO.md`, never `FOO-Index.md`). Bidirectional links up to `04-Index/Projects-Index.md` are mandatory. |
+| `05-Tasks/` | Obsidian Tasks plugin files + inline tasks | `save` (UUID-preserving edits only) | none | `/wiki` and `/autoresearch` are FORBIDDEN from writing here. `/save` is edit-safe only with strict UUID preservation (§5). No agent writes here. |
 | `Claude-Memory/` (vault root) | Plugin working state: aliases, ADRs, manifests, hot context | `aliases`, `save` (ADR branch + backfill manifest), `emerge` (hot.md) | `agents/morning` (hot.md prime) | Not user-facing notes — treat as config. `aliases.yaml` is the canonical alias source; `adr/` holds ADRs; `backfill-manifest.jsonl` is append-only. |
 | `.obsidian/` (root sidecar) | Obsidian app config | none (user-owned) | none | Forbidden path (§8). |
 | `CLAUDE.md` (vault root) | Vault instructions for Claude Code | user | `wiki` (append-only to "Updated rules" section) | Never rewritten wholesale. New rules are appended with a date heading. |
@@ -42,7 +42,7 @@ These override every skill-local policy. A skill that skips one of these must be
 
 2. **Stop-hook-jq-merge.** The `Stop` hook payload MUST be merged into existing session state using `jq --slurp 'add'` semantics, never naive concatenation. Raw string append corrupts `Claude-Memory/sessions/<id>.json` silently and breaks `/save --backfill --resume`. If `jq` is unavailable on the system path, the hook prints a WARN and no-ops rather than writing partial state.
 
-3. **n8n-path-filter-update.** Any skill that adds a new vault subtree (new top-level folder, new `05-Projects/<ORG>/<repo>/` with externally-synced tasks) MUST also update the n8n W1 path filter so the new subtree is ingested. The canonical path filter lives in `05-Projects/<ORG-A>/n8n-workflows/W1-paths.yaml` in the main vault. If that file is inaccessible (no symlink, no vault mounted), the skill prints a TODO row in its report and continues — it does not silently create untracked subtrees.
+3. **n8n-path-filter-update.** Any skill that adds a new vault subtree (new top-level folder, new `01-Projects/<ORG>/<repo>/` with externally-synced tasks) MUST also update the n8n W1 path filter so the new subtree is ingested. The canonical path filter lives in `01-Projects/<ORG-A>/n8n-workflows/W1-paths.yaml` in the main vault. If that file is inaccessible (no symlink, no vault mounted), the skill prints a TODO row in its report and continues — it does not silently create untracked subtrees.
 
 ## 3. Linking rules
 
@@ -108,7 +108,7 @@ supersedes: "[[ADR-007-old-name]]"           # optional
 superseded_by: "[[ADR-012-new-name]]"        # optional; filled when a later ADR overrides this
 ```
 
-**type: conversation** (goes to `01-Conversations/`): no per-type additions beyond universal. Rely on `source: "claude-cli session <id>"` in the body if needed.
+**type: conversation** (goes to `01-Projects/<PROJECT>/conversations/` (post-2026-05-08; `01-Projects/<PROJECT>/conversations/` was retired)): no per-type additions beyond universal. Rely on `source: "claude-cli session <id>"` in the body if needed.
 
 **type: moc** (goes to `04-Index/`): no additions beyond universal. The body is the MOC structure itself.
 
@@ -190,7 +190,7 @@ Date format is ISO (`YYYY-MM-DD`). Slugs are lowercase, hyphenated, ≤40 chars.
 | `[bot:wiki-heal]` | `wiki heal`, `nightly audit` fixups | Link repair, frontmatter backfill, orphan dressing. |
 | `[bot:backfill]` | `backfill` skill (non-save entry) | Historical content ingestion outside `save`. |
 
-All five prefixes MUST be listed in the n8n W1 filter or the bot will get stuck in a self-retrigger loop. The filter is kept in `05-Projects/<ORG-A>/obsidian-tasks-sync/config/bot-prefixes.yaml` in the live vault.
+All five prefixes MUST be listed in the n8n W1 filter or the bot will get stuck in a self-retrigger loop. The filter is kept in `01-Projects/<ORG-A>/obsidian-tasks-sync/config/bot-prefixes.yaml` in the live vault.
 
 ### Rules
 
@@ -217,8 +217,8 @@ node_modules/**
 
 Additional per-skill forbidden paths:
 
-- **`/wiki` and `/autoresearch`** are additionally forbidden from writing anywhere under `06-Tasks/**`. Task management is human-sovereign plus `/save`-only.
-- **`/save` is the sole exception** for `06-Tasks/` — and even then only edit-safe with strict UUID preservation (§5).
+- **`/wiki` and `/autoresearch`** are additionally forbidden from writing anywhere under `05-Tasks/**`. Task management is human-sovereign plus `/save`-only.
+- **`/save` is the sole exception** for `05-Tasks/` — and even then only edit-safe with strict UUID preservation (§5).
 - **No skill writes** to `CLAUDE.md` in the vault root wholesale — only append a dated block to the "Updated rules" section if one exists.
 
 Refusal output format (required):

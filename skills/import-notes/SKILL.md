@@ -1,6 +1,6 @@
 ---
 name: import-notes
-description: One-shot import of existing notes from Apple Notes, OneNote, Notion, Evernote, or raw files (docx/pptx/xlsx/html/rtf/md/txt) into the 2ndBrain-mogging vault. Converts non-markdown via pandoc + xlsx2csv, validates each file, classifies each note against the 7-folder layout, writes factual content to 02-Sources/, splits atomic ideas into 03-Concepts/, and tethers project-tied material into 05-Projects/. Alias-classified, dry-run-previewed.
+description: One-shot import of existing notes from Apple Notes, OneNote, Notion, Evernote, or raw files (docx/pptx/xlsx/html/rtf/md/txt) into the 2ndBrain-mogging vault. Converts non-markdown via pandoc + xlsx2csv, validates each file, classifies each note against the 7-folder layout, writes factual content to 02-Sources/, splits atomic ideas into 03-Concepts/, and tethers project-tied material into 01-Projects/. Alias-classified, dry-run-previewed.
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash
 ---
 
@@ -20,7 +20,7 @@ One-shot ingest of a folder full of exported notes. Designed to run once per exp
 
 ## Pre-requisites
 
-1. A mogged vault (has `02-Sources/`, `03-Concepts/`, `05-Projects/`, and `CLAUDE.md` at its root).
+1. A mogged vault (has `02-Sources/`, `03-Concepts/`, `01-Projects/`, and `CLAUDE.md` at its root).
 2. The notes already exported to a folder on disk.
 3. Helpers installed:
    - `pandoc` — converts `.docx` / `.pptx` / `.html` / `.rtf` / `.epub` → markdown
@@ -36,7 +36,7 @@ One-shot ingest of a folder full of exported notes. Designed to run once per exp
 | `--scan` | Inventory only: count files by type, estimate conversion cost. No writes. |
 | `--dry-run` | Full classification pass in memory. Show every file it would write. Default. |
 | `--apply` | Execute the writes. Requires explicit `yes` confirmation after the dry-run preview. |
-| `--project <name>` | Force every file under this folder to tether to one project in `05-Projects/`. |
+| `--project <name>` | Force every file under this folder to tether to one project in `01-Projects/`. |
 | `--resume` | Read `Claude-Memory/import-notes-state.json`, skip already-processed files, continue. |
 
 ## Pipeline
@@ -84,7 +84,7 @@ Each skip is logged with a reason.
 
 Apply the same alias lookup `/save` uses. Read `Claude-Memory/aliases.yaml`; for each note:
 
-- Title / body matches a known project alias → route to that project's folder in `05-Projects/<project>/<subfolder>/` or to `02-Sources/` with `related: [[<project>]]`.
+- Title / body matches a known project alias → route to that project's folder in `01-Projects/<project>/<subfolder>/` or to `02-Sources/` with `related: [[<project>]]`.
 - Title / body matches a known person alias → store in `02-Sources/` with `related: [[<person>]]`.
 - No match → `02-Sources/` with `tags: [imported, review]` flagged for human triage.
 
@@ -95,11 +95,11 @@ Apply the same alias lookup `/save` uses. Read `Claude-Memory/aliases.yaml`; for
 | A summary of an article, video, podcast, or external read | `02-Sources/SRC-<date>-<slug>.md` with `type: source` |
 | A summary of a conversation (including Claude / ChatGPT one-offs) | `02-Sources/LIT-conversation-<slug>-<date>.md` |
 | A refined, atomic idea in the user's voice | `03-Concepts/<slug>.md` with `owner: wiki` + `type: concept` |
-| Tied to a specific active project | `05-Projects/<project>/<subfolder>/<slug>.md` (NOT the project index file) |
+| Tied to a specific active project | `01-Projects/<project>/<subfolder>/<slug>.md` (NOT the project index file) |
 | Meeting notes, raw dumps, partially-formed | `02-Sources/SRC-<date>-<slug>.md` with `tags: [raw, triage]` |
-| A task / todo | **Refuse to auto-write** — point the user at `06-Tasks/` and the Tasks-plugin UUID format |
+| A task / todo | **Refuse to auto-write** — point the user at `05-Tasks/` and the Tasks-plugin UUID format |
 
-Never invent a folder that doesn't exist in `05-Projects/` without asking first.
+Never invent a folder that doesn't exist in `01-Projects/` without asking first.
 
 ### 6. Write the note
 
@@ -131,7 +131,7 @@ For each kept note, look for 1-3 atomic ideas that could promote to `03-Concepts
 
 - Any new project-mirror folder → update `04-Index/Projects-Index.md`
 - Any new concept → update the relevant topic index in `04-Index/`
-- Any project-tied note → update `05-Projects/<project>/<project>.md` only via `/tether` (don't touch it directly here)
+- Any project-tied note → update `01-Projects/<project>/<project>.md` only via `/tether` (don't touch it directly here)
 
 ### 9. State checkpoint
 
@@ -143,7 +143,7 @@ Emit:
 
 - `N source notes written to 02-Sources/`
 - `M concept stubs created in 03-Concepts/`
-- `K project-tied notes written to 05-Projects/<project>/`
+- `K project-tied notes written to 01-Projects/<project>/`
 - `S concept references appended`
 - `R notes flagged for review (under 02-Sources/ with tags:[imported, review])`
 - `F files skipped` (empty, unreadable, over-size) — with reasons
@@ -153,8 +153,8 @@ Tell the user to run `/tether` next so bidirectional project-note links settle, 
 ## Guardrails
 
 - **Never** overwrite an existing `owner: human` file.
-- **Never** write inside `05-Projects/<project>/<project>.md` directly.
-- **Never** auto-create task files — tasks belong in `06-Tasks/` with the Obsidian Tasks plugin UUID format (see CLAUDE.md).
+- **Never** write inside `01-Projects/<project>/<project>.md` directly.
+- **Never** auto-create task files — tasks belong in `05-Tasks/` with the Obsidian Tasks plugin UUID format (see CLAUDE.md).
 - **Always** dry-run first. Require explicit `yes` before `--apply`.
 - **Always** scrub secrets before writing.
 - Commits use the `[bot:import-notes]` prefix.
@@ -175,4 +175,4 @@ Tell the user to run `/tether` next so bidirectional project-note links settle, 
 - `/import-claude` — Claude.ai / ChatGPT conversation history
 - `/backfill` — Claude Code terminal session JSONLs
 - [PARSING-GUIDE.md](../../docs/PARSING-GUIDE.md) — the categorization rules that drive every routing decision
-- [claude-project-sync-guide.md](../../docs/claude-project-sync-guide.md) — how project-tied material maps to `05-Projects/<project>/` subfolder structure
+- [claude-project-sync-guide.md](../../docs/claude-project-sync-guide.md) — how project-tied material maps to `01-Projects/<project>/` subfolder structure

@@ -14,8 +14,8 @@ Post-mogging canonical layout:
 ├── 02-Sources/         # external inputs (renamed from 02-Literature)
 ├── 03-Concepts/        # atomic concepts (renamed from 03-Permanent)
 ├── 04-Index/           # MOCs (renamed from 04-MOC)
-├── 05-Projects/        # project folders (renamed from 07-Projects), + INCUBATOR/
-├── 06-Tasks/           # Obsidian Tasks hub (renamed from 08-Tasks), submodule preserved
+├── 01-Projects/        # project folders (renamed from 07-Projects), + INCUBATOR/
+├── 05-Tasks/           # Obsidian Tasks hub (renamed from 08-Tasks), submodule preserved
 ├── Claude-Memory/      # symlink to ~/.claude/projects/.../memory/
 ├── AGENTS.md           # sidecar
 ├── CLAUDE.md           # sidecar (append-only patched)
@@ -47,16 +47,16 @@ The tag is your full-rollback anchor. The tarball is your oh-shit anchor if git 
 Nothing gets deleted without a paper trail. Concatenate survivors into two legacy bundles, then remove the source folders.
 
 ```bash
-mkdir -p 01-Conversations/VAULT/legacy
+mkdir -p 01-Projects/VAULT/conversations/legacy
 { printf '# Legacy Inbox (drained %s)\n\n' "$(date +%Y-%m-%d)"; \
   for f in 00-Inbox/*.md; do [ -f "$f" ] && printf '\n\n---\n\n## %s\n\n' "$(basename "$f")" && cat "$f"; done; \
-} > 01-Conversations/VAULT/legacy/inbox-drain.md
+} > 01-Projects/VAULT/conversations/legacy/inbox-drain.md
 
 { printf '# Legacy Fleeting (drained %s)\n\n' "$(date +%Y-%m-%d)"; \
   for f in 01-Fleeting/*.md; do [ -f "$f" ] && printf '\n\n---\n\n## %s\n\n' "$(basename "$f")" && cat "$f"; done; \
-} > 01-Conversations/VAULT/legacy/fleeting-drain.md
+} > 01-Projects/VAULT/conversations/legacy/fleeting-drain.md
 
-git add 01-Conversations/VAULT/legacy/
+git add 01-Projects/VAULT/conversations/legacy/
 git commit -m "phase-A-1: drain 00-Inbox + 01-Fleeting into legacy reports"
 ```
 
@@ -96,14 +96,14 @@ git mv 04-MOC 04-Index
 git commit -m "phase-B-3: rename 04-MOC → 04-Index"
 ```
 
-### B4. `07-Projects/` → `05-Projects/`
+### B4. `07-Projects/` → `01-Projects/`
 
 ```bash
 git mv 07-Projects 05-Projects
 git commit -m "phase-B-4: rename 07-Projects → 05-Projects"
 ```
 
-### B5. `08-Tasks/` → `06-Tasks/` (submodule preserved)
+### B5. `08-Tasks/` → `05-Tasks/` (submodule preserved)
 
 ```bash
 git mv 08-Tasks 06-Tasks
@@ -119,11 +119,11 @@ If `git submodule status` still prints `08-Tasks`, run `git submodule sync` then
 
 ## Phase C — Rewrite internal references
 
-### C1. Obsidian Tasks plugin queries: `path includes 08-Tasks` → `path includes 06-Tasks`
+### C1. Obsidian Tasks plugin queries: `path includes 08-Tasks` → `path includes 05-Tasks`
 
 ```bash
 grep -rln 'path includes 08-Tasks' . \
-  | xargs sed -i '' 's|path includes 08-Tasks|path includes 06-Tasks|g'
+  | xargs sed -i '' 's|path includes 08-Tasks|path includes 05-Tasks|g'
 
 grep -rln 'path includes 07-Projects' . \
   | xargs sed -i '' 's|path includes 07-Projects|path includes 05-Projects|g'
@@ -219,7 +219,7 @@ n8n workflows reference the vault by **GitHub API path**, not local filesystem. 
 
 1. Export each workflow JSON.
 2. Search for `08-Tasks` and `07-Projects` in the JSON.
-3. Replace with `06-Tasks` and `05-Projects`.
+3. Replace with `05-Tasks` and `01-Projects`.
 4. Re-import and activate.
 
 ```bash
@@ -241,11 +241,11 @@ Run all of these. Every one should be green before declaring migration complete.
 ```bash
 # 1. Folder list matches the contract
 ls -d */ | sort
-# expected: 01-Conversations/ 02-Sources/ 03-Concepts/ 04-Index/ 05-Projects/ 06-Tasks/
+# expected: 01-Conversations/ 02-Sources/ 03-Concepts/ 04-Index/ 01-Projects/ 05-Tasks/
 
 # 2. Zero references to killed or renamed folder names
-grep -rn 'path includes 08-Tasks' 06-Tasks/ && echo FAIL || echo OK
-grep -rn 'path includes 07-Projects' 06-Tasks/ && echo FAIL || echo OK
+grep -rn 'path includes 08-Tasks' 05-Tasks/ && echo FAIL || echo OK
+grep -rn 'path includes 07-Projects' 05-Tasks/ && echo FAIL || echo OK
 grep -rn '\[\[00-Inbox\]\]\|\[\[01-Fleeting\]\]' . && echo FAIL || echo OK
 
 # 3. Submodule intact

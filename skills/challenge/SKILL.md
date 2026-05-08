@@ -32,7 +32,7 @@ If invoked with no argument, prompt the user once: `What idea should I stress-te
 
 | Flag | Behavior |
 |---|---|
-| `--scope <project>` | Restrict evidence search to a single project folder under `05-Projects/` (e.g. `--scope <ORG-E>`). Defaults to whole vault. |
+| `--scope <project>` | Restrict evidence search to a single project folder under `01-Projects/` (e.g. `--scope <ORG-E>`). Defaults to whole vault. |
 | `--days N` | Only weigh evidence newer than N days. Default: no time filter, but recency always boosts ranking. |
 | `--save` | Write the full report to `03-Concepts/challenges/YYYY-MM-DD-<slug>.md` and link it into `MOC-Challenges.md` if it exists. Without this flag, output is terminal-only. |
 | `--source` | Verbose citation mode — every claim gets file path + line number + quoted excerpt, not just the filename. |
@@ -49,7 +49,7 @@ If `--scope` given, restrict to that folder. Otherwise search the full vault. Al
 - `~/.claude/projects/-2ndBrain/memory/MEMORY.md` (Claude-Memory auto-memory)
 - `~/.claude/projects/-2ndBrain/memory/` individual `feedback_*.md` and `project_*.md` files
 - `03-Concepts/` (refined positions; pre-mogging `03-Permanent/` was collapsed into this folder on 2026-04-16)
-- `05-Projects/<scoped>/` (project-local decisions)
+- `01-Projects/<scoped>/` (project-local decisions)
 
 ### 3. Gather evidence
 

@@ -23,7 +23,7 @@ Link notes that belong to this project here as `[[wikilinks]]` (never backticks 
 
 ## Conversations
 
-List `01-Conversations/example-project-1/YYYY-MM-DD-<slug>.md` captures that belong to this project:
+List `01-Projects/example-project-1/conversations/YYYY-MM-DD-<slug>.md` captures that belong to this project:
 
 - _none yet_
 

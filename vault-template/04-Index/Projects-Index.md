@@ -7,7 +7,7 @@ tags: [index, projects]
 
 # Projects-Index
 
-The map of active projects in this vault. Every project folder in `05-Projects/` should be listed here — if it's not in this index, it's orphaned from the main graph.
+The map of active projects in this vault. Every project folder in `01-Projects/` should be listed here — if it's not in this index, it's orphaned from the main graph.
 
 ## Active projects
 
@@ -21,7 +21,7 @@ The map of active projects in this vault. Every project folder in `05-Projects/`
 
 ## How to add a new project
 
-1. Make a new folder under `05-Projects/` whose name is the project's canonical handle (e.g. `my-new-project/`).
+1. Make a new folder under `01-Projects/` whose name is the project's canonical handle (e.g. `my-new-project/`).
 2. Inside that folder, create `my-new-project.md` — filename MUST match the folder name exactly (so `[[my-new-project]]` resolves from anywhere in the vault).
 3. Add a line under **Active projects** above: `- [[my-new-project]] — one-sentence description`.
 4. Link back from the project's `Related:` section to this index (`[[Projects-Index]]`).
