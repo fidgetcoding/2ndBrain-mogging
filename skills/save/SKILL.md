@@ -120,7 +120,7 @@ Behavior:
    - **Cross-cutting** (no single project owner — multi-project strategy threads, generic dictation, vault-spanning topics): write to `02-Sources/LIT-conversation-<slug>-<date>.md`. LIT is reserved for cross-cutting captures only.
    - **Vault-meta** (vault architecture sessions, graph repairs, mogging-pack-dev work, scheduled-agent reports): write to `01-Projects/VAULT/conversations/[<sub>/]<YYYY-MM-DD>-<slug>.md`. Subfolders: `architecture-sessions/`, `graph-repairs/`, `mogging-pack-dev/`, `reports/`.
    - **Meeting-style captures** (Granola transcripts, multi-stakeholder calls): optionally route under `<PROJECT>/conversations/meetings/` for tighter organization.
-   - The pre-2026-05-08 dual-write pattern (full transcript in LIT + pointer stub in `01-Projects/<PROJECT>/conversations/` (post-2026-05-08; `01-Projects/<PROJECT>/conversations/` was retired)) is retired. `01-Projects/<PROJECT>/conversations/` (post-2026-05-08; `01-Projects/<PROJECT>/conversations/` was retired) no longer exists.
+   - The pre-2026-05-08 dual-write pattern (full transcript in LIT + pointer stub in `01-Conversations/`) is retired. `01-Conversations/` no longer exists.
 
 **Q&A tree (only on `/save 1 --ask`):**
 
@@ -167,7 +167,7 @@ ADRs are the one branch with a rigid template. Ask:
 
 Write to `Claude-Memory/adr/ADR-<nnn>-<slug>.md`. Auto-link in `Claude-Memory/adr/INDEX.md`. If `superseded`, also link the new ADR from the old one (bidirectional tether per vault rules).
 
-## 8. Obsidian Tasks plugin syntax (06-Tasks writes)
+## 8. Obsidian Tasks plugin syntax (05-Tasks writes)
 
 Anything the skill emits into `05-Tasks/` (any branch, any path under that prefix) MUST obey the plugin grammar — the operator's entire task pipeline is downstream of this file's exact shape.
 
