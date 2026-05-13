@@ -53,7 +53,7 @@ Graph density is the product. Each rule below exists to prevent an orphan.
 - **50/50 ambiguity.** If alias classification scores the top two candidates within 10% of each other, the content is ambiguous. Primary file is written to the higher-confidence target with full content. Stub file is written at the secondary target with `stub_of: "[[primary]]"` in frontmatter and a one-line body: `> See [[primary-basename]] — classification was 50/50. Resolved to primary on {{date}}.` Both files carry tag `#ambiguous-routing` so they can be reviewed via query. See §9 for the full rule.
 - **Dead-link handling.** When `/wiki heal` or any audit detects a wikilink target that does not resolve (file removed, renamed without update), the link is rewritten to `~~[[orphaned-target]]~~ <!-- dead: YYYY-MM-DD -->` — strike-through in Obsidian rendering plus an HTML comment carrying the detection date. The comment lets us diff history. Never remove the link itself without flagging it for human review — removal is a human-only action.
 - **Rename propagation.** If a skill renames a note, it MUST grep the vault for all `[[old-name]]` references and update them in the same commit. An unupdated reference is a bug, not a "nice to have".
-- **Never link to a folder.** `[[05-Projects]]` is not a link; `[[Projects-Index]]` is. Folders do not have notes; MOCs/Indexes do.
+- **Never link to a folder.** `[[01-Projects]]` is not a link; `[[Projects-Index]]` is. Folders do not have notes; MOCs/Indexes do.
 
 ## 4. Frontmatter contract
 

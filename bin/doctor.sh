@@ -196,7 +196,7 @@ check_project_filename_equals_folder() {
     info "no vault path discovered (marker $MOGGING_VAULT_MARKER missing); skipping"
     return 0
   fi
-  local projects_dir="$VAULT_PATH/05-Projects"
+  local projects_dir="$VAULT_PATH/01-Projects"
   if [[ ! -d "$projects_dir" ]]; then
     info "$projects_dir not found; skipping (vault may not be a mogged vault yet)"
     return 0
@@ -248,7 +248,7 @@ check_projects_index_stale_wikilinks() {
     info "$index_file not found; skipping"
     return 0
   fi
-  local projects_dir="$VAULT_PATH/05-Projects"
+  local projects_dir="$VAULT_PATH/01-Projects"
   if [[ ! -d "$projects_dir" ]]; then
     info "$projects_dir not found; skipping"
     return 0
