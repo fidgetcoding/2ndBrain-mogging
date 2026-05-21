@@ -139,6 +139,7 @@ Automated commits MUST use one of the `[bot:*]` prefixes so n8n W1 skips re-inge
 | `[bot:reconcile]` | Post-import reconciliation pass (alias re-classification, orphan backlinking) |
 | `[bot:mogging-*]` | Mogging-repo maintenance (e.g., `[bot:mogging-fix]`) |
 | `[bot:morning]` / `[bot:nightly]` / `[bot:weekly]` / `[bot:health]` | Scheduled agents |
+| `[bot:daemon]` | obsidian-tasks-sync local daemon — auto-commits 05-Tasks edits made in Obsidian between n8n cycles |
 
 Every prefix in this table MUST be listed in the n8n W1 filter.
 
