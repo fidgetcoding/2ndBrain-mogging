@@ -73,7 +73,7 @@ Options:
   --no-obsidian-mcp    Skip obsidian-mcp registration (claude mcp add obsidian)
   --no-statusline-brain Skip writing ~/.claude/.mogging-vault (the vault-path
                        marker cli-maxxing's ⚡ fidgetflo statusline reads to
-                       light up the 🧠 2ndBrain indicator)
+                       light up the 🧠 Brain² indicator)
   --no-obsidian-app    Skip auto-installing the Obsidian.app desktop client
                        (macOS only; default behavior is to run
                        `brew install --cask obsidian` if the app is missing)
@@ -1054,7 +1054,7 @@ install_obsidian_mcp() {
 #
 # Writes $HOME/.claude/.mogging-vault containing the absolute vault path.
 # cli-maxxing's ⚡ fidgetflo statusline reads this file to decide when to
-# light up the 🧠 2ndBrain indicator: if $CWD == marker-contents or $CWD
+# light up the 🧠 Brain² indicator: if $CWD == marker-contents or $CWD
 # starts with marker-contents + "/", the indicator shows.
 #
 # This is the ENTIRE mogging contribution to the statusline — mogging does
