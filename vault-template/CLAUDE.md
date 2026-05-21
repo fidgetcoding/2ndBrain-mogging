@@ -62,7 +62,7 @@ The vault operates under four regimes that describe how content moves:
 3. **Curate** — maintain `04-Index/` and project indexes in `01-Projects/`. Keep bidirectional links tight. Orphaned notes are the enemy.
 4. **Complete** — drive tasks through `05-Tasks/` and project indexes. Archive completed projects rather than deleting them.
 
-## Skills (12 total)
+## Skills (13 total)
 
 Slash commands shipped with the mogging pack. Descriptions match each skill's own `SKILL.md`; read the skill file before changing behavior.
 
@@ -78,6 +78,7 @@ Slash commands shipped with the mogging pack. Descriptions match each skill's ow
 10. `/canvas` — generates and maintains Obsidian Canvas files from vault queries. Central `04-Index/Map.canvas` uses a Fibonacci-spiral layout. Deterministic node IDs, JSON Canvas 1.0 validation, never mutates source notes.
 11. `/import-claude` — one-shot import of a Claude.ai or ChatGPT data-export zip. Unzip → inspect → bucket conversations → write full-fidelity captures to `01-Projects/<PROJECT>/conversations/` (post-2026-05-08; `01-Projects/<PROJECT>/conversations/` was retired), factual `LIT-*` mirrors to `02-Sources/`, and linked stubs to `03-Concepts/`. Alias-classified, dry-run-previewed, append-only.
 12. `/import-notes` — one-shot import of an existing notes pile from Apple Notes / OneNote / Notion / Evernote / raw files (docx/pptx/xlsx/html/rtf/md/txt). Pandoc + xlsx2csv conversion, per-file validation, seven-folder classification, dry-run-previewed.
+13. `/vault-coach` — onboarding + maintenance coach. Auto-loads right after install and whenever you add a folder or project. Drafts the missing index note (filename = folder name), registers it in `04-Index/Projects-Index.md`, enforces bidirectional tethering, runs orphan hygiene, and asks one question at a time. The live counterpart to `docs/MAINTAINING-YOUR-BRAIN.md`.
 
 ## Scheduled agents (4 total)
 

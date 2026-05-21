@@ -82,9 +82,9 @@ aliases: ["Alt Name 1", "Alt Name 2"]       # list, used by Obsidian link autoco
 
 Per-type additions are documented in the plugin's `references/wiki-schema.md`.
 
-### 12 skills (plugin `2ndbrain-mogging`, auto-namespaced)
+### 13 skills (plugin `2ndbrain-mogging`, auto-namespaced)
 
-`/save` `/wiki` `/challenge` `/emerge` `/backfill` `/aliases` `/autoresearch` `/canvas` `/tether` `/connect` `/import-claude` `/import-notes`
+`/save` `/wiki` `/challenge` `/emerge` `/backfill` `/aliases` `/autoresearch` `/canvas` `/tether` `/connect` `/import-claude` `/import-notes` `/vault-coach`
 
 | Skill | Purpose |
 |---|---|
@@ -100,6 +100,7 @@ Per-type additions are documented in the plugin's `references/wiki-schema.md`.
 | `/connect` | Propose `[[wikilinks]]` between notes that share concepts but don't link yet. |
 | `/import-claude` | One-shot import your Claude.ai or ChatGPT data export — full conversation history, alias-classified, spawns concept stubs where ideas repeat. |
 | `/import-notes` | One-shot import existing notes (Apple Notes, OneNote, Notion, Evernote, raw `.md` / `.docx` / `.pptx` / `.xlsx` / `.html`); pandoc under the hood, dry-run preview. |
+| `/vault-coach` | Coach the user through setting up + maintaining the vault. Auto-loads post-install and on new-folder/new-project; enforces index-note-per-folder, Projects-Index registration, bidirectional tethering, one-question-at-a-time. Live counterpart to `docs/MAINTAINING-YOUR-BRAIN.md`. |
 
 Local installs use **hardlinks** (preferred) or symlinks — `install.sh --apply` hardlinks by default. Editing either side edits both. If a skill file ever drifts, the mogging repo is the source of truth.
 
