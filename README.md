@@ -133,14 +133,14 @@ cd 2ndBrain-mogging
 | `--apply` | off | Execute the changes on disk and in `~/.claude/settings.json`. |
 | `--no-launchd` | off | Skip the 4 scheduled-agent launchd jobs (morning / nightly / weekly / health). |
 | `--no-obsidian-mcp` | off | Skip registering the `obsidian-mcp` server with Claude Code (`claude mcp add obsidian … $VAULT`). |
-| `--no-statusline-brain` | off | Skip writing `~/.claude/.mogging-vault` — the vault-path marker [cli-maxxing](https://github.com/lorecraft-io/cli-maxxing)'s ⚡ fidgetflo statusline reads to light up the 🧠 2ndBrain indicator. |
+| `--no-statusline-brain` | off | Skip writing `~/.claude/.mogging-vault` — the vault-path marker [cli-maxxing](https://github.com/lorecraft-io/cli-maxxing)'s ⚡ fidgetflo statusline reads to light up the 🧠 Brain² indicator. |
 | `--skip-tests` | off | Skip the onboarding test suite at the end. |
 | `--merge-stop` | off | Replace the existing Stop hook instead of jq-merging onto it. |
 | `--no-seed-vault` | off | Skip seeding the 6-folder vault layout from `vault-template/`. By default the installer copies in any of `01-Projects/<PROJECT>/conversations/`, `02-Sources/`, `03-Concepts/`, `04-Index/Projects-Index.md`, `01-Projects/{example-project-1, example-project-2, example-project-3, INCUBATOR}/`, `05-Tasks/`, `Claude-Memory/`, `CLAUDE.md`, `AGENTS.md` that are missing. Existing files are never overwritten. |
 | `--with-intelligence` | off | Install the self-learning tier. See [Self-learning tier](#self-learning-tier-opt-in) below. |
 | `--symlink` | off | With `--with-intelligence`: symlink helpers instead of hardlinking. |
 
-On `--apply`, the installer, in order: validates the vault path, **seeds the 6-folder vault layout from `vault-template/` (any folder/file already in your vault is left untouched)**, backs up `~/.claude/settings.json`, jq-merges the Stop hook (never overwrites), symlinks skills + commands + agents into `~/.claude/`, symlinks `$VAULT/Claude-Memory/` to Claude Code's per-project memory dir, patches the canonical post-mogging contract block into your vault's `CLAUDE.md` (backs up the old one to `$VAULT/Claude-Memory/backups/<timestamp>/` first — idempotent marker block, never duplicates), installs the launchd plists (unless `--no-launchd`), installs the self-learning tier if `--with-intelligence` was passed, **registers the `obsidian-mcp` server with Claude Code pointed at your vault** (unless `--no-obsidian-mcp`), **writes `~/.claude/.mogging-vault` so cli-maxxing's statusline can light up the 🧠 2ndBrain indicator** (unless `--no-statusline-brain`), runs the onboarding tests (unless `--skip-tests`), and finally runs `bin/doctor.sh` to sanity-check the install.
+On `--apply`, the installer, in order: validates the vault path, **seeds the 6-folder vault layout from `vault-template/` (any folder/file already in your vault is left untouched)**, backs up `~/.claude/settings.json`, jq-merges the Stop hook (never overwrites), symlinks skills + commands + agents into `~/.claude/`, symlinks `$VAULT/Claude-Memory/` to Claude Code's per-project memory dir, patches the canonical post-mogging contract block into your vault's `CLAUDE.md` (backs up the old one to `$VAULT/Claude-Memory/backups/<timestamp>/` first — idempotent marker block, never duplicates), installs the launchd plists (unless `--no-launchd`), installs the self-learning tier if `--with-intelligence` was passed, **registers the `obsidian-mcp` server with Claude Code pointed at your vault** (unless `--no-obsidian-mcp`), **writes `~/.claude/.mogging-vault` so cli-maxxing's statusline can light up the 🧠 Brain² indicator** (unless `--no-statusline-brain`), runs the onboarding tests (unless `--skip-tests`), and finally runs `bin/doctor.sh` to sanity-check the install.
 
 ### Obsidian MCP
 
@@ -148,7 +148,7 @@ The installer runs `claude mcp add --scope user obsidian -- npx -y obsidian-mcp 
 
 ### Statusline (redirect to cli-maxxing)
 
-Mogging does **not** ship a statusline of its own. If you want the live `⚡ fidgetflo` status line — model name, context %, duration, swarm/hive/mini activity, plus a 🧠 2ndBrain indicator that lights up when you're working inside the vault — install [`cli-maxxing`](https://github.com/lorecraft-io/cli-maxxing). Cli-maxxing writes `~/.claude/statusline.sh` and wires it into `~/.claude/settings.json`.
+Mogging does **not** ship a statusline of its own. If you want the live `⚡ fidgetflo` status line — model name, context %, duration, swarm/hive/mini activity, plus a 🧠 Brain² indicator that lights up when you're working inside the vault — install [`cli-maxxing`](https://github.com/lorecraft-io/cli-maxxing). Cli-maxxing writes `~/.claude/statusline.sh` and wires it into `~/.claude/settings.json`.
 
 The *only* thing mogging contributes is a one-line marker file: `~/.claude/.mogging-vault` contains your vault's absolute path. Cli-maxxing's statusline reads that file and lights up 🧠 when `$CWD` matches. No cli-maxxing installed? The marker is a harmless ~100-byte no-op. No mogging installed? Cli-maxxing's statusline still works — the 🧠 indicator just never shows.
 
