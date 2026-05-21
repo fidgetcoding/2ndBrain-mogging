@@ -1,0 +1,51 @@
+# Claude-Memory/aliases.yaml — entity → project disambiguation map.
+#
+# Seeded by 2ndBrain-mogging install.sh from aliases.example.yaml. SAFE TO EDIT.
+# This file is the canonical source /save, /backfill, and /tether read to route
+# mentions to the right project folder. Without it, /save HARD-BLOCKS every
+# write — so install seeds this minimal-but-valid starter so you can capture on
+# day one.
+#
+# Managed by the `/aliases` skill: run `/aliases --bootstrap` to scan your vault
+# and propose richer entries, `/aliases --validate` to check for conflicts, and
+# `/aliases --edit` to add people/concepts/orgs by hand. The schema below mirrors
+# the one in skills/aliases/SKILL.md — keep the top-level keys
+# (projects / people / concepts / orgs / aliases) intact.
+
+version: 1
+updated: 2026-01-01
+
+# One entry per 01-Projects/ folder. `path` is vault-relative; `aliases` are the
+# natural-language signals that route to it. Replace these starter entries with
+# your real projects (or run `/aliases --bootstrap` to auto-discover them).
+projects:
+  example-project-1:
+    path: 01-Projects/example-project-1
+    aliases: ["example project 1", "example-project-1", "project one"]
+  example-project-2:
+    path: 01-Projects/example-project-2
+    aliases: ["example project 2", "example-project-2", "project two"]
+  example-project-3:
+    path: 01-Projects/example-project-3
+    aliases: ["example project 3", "example-project-3", "project three"]
+  INCUBATOR:
+    path: 01-Projects/INCUBATOR
+    aliases: ["incubator", "staging", "idea bucket"]
+  # Catch-all: content that matches no other project routes here. Keep one
+  # catch-all entry so /save always has a valid fallback destination.
+  MISC-CLAUDE:
+    path: 01-Projects/MISC-CLAUDE
+    aliases: ["misc", "miscellaneous", "uncategorized", "catch-all"]
+
+# People → canonical name + home project. Populate with `/aliases --edit`.
+people: {}
+
+# Concepts → canonical name + home project. Populate with `/aliases --edit`.
+concepts: {}
+
+# Organizations → canonical hub. Populate with `/aliases --edit`.
+orgs: {}
+
+# Flat alternate-spelling map for autocorrect/transcription drift that needs
+# normalizing before matching. Maps a raw spelling to a canonical key above.
+aliases: {}
