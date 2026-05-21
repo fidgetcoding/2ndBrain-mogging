@@ -70,10 +70,11 @@ The pack installs the Obsidian *configuration* on top of the Obsidian app. If th
 1. Go to **[obsidian.md](https://obsidian.md/download)** and download the installer for your OS.
 2. Run the installer. It takes about 30 seconds.
 3. Open Obsidian. It'll ask where your vault should live.
-4. **Strong recommendation:** put it at `~/Desktop/BRAIN/`. That's `/Users/<you>/Desktop/BRAIN/` on macOS. Reasons:
+4. **Strong recommendation:** put it at `~/BRAIN2/`. That's `/Users/<you>/BRAIN2/` on macOS — directly in your home folder, **not** under `~/Desktop`. Reasons:
+   - **Do NOT use `~/Desktop`, `~/Documents`, or `~/Downloads`.** On modern macOS those directories are permission-protected (TCC / Full Disk Access). The terminal gets "Operation not permitted" there, and git + the installer fail. Keep the vault in your home dir (`~/BRAIN2`, or `~/<vault-name>`).
    - Short path — easier to type in scripts and your shell.
    - You'll have a lot of subfolders. A shallow root path keeps them navigable.
-   - The import + sync scripts auto-detect vaults at `~/Desktop/BRAIN/` or `~/Desktop/BRAIN2/` without needing a `VAULT_PATH=…` prefix.
+   - The import + sync scripts auto-detect vaults at `~/BRAIN/` or `~/BRAIN2/` without needing a `VAULT_PATH=…` prefix.
 5. Accept the "Create new vault" prompt. Obsidian makes the folder.
 6. **Done — close Obsidian.** The next step runs from the terminal and wants the vault folder empty-ish.
 
@@ -111,17 +112,19 @@ Already have it? Run `jq --version` to confirm.
 
 ## Install the mogging pack
 
-Once Obsidian is installed and you have a vault folder (e.g. `~/Desktop/BRAIN/`), the pack's installer takes over.
+Once Obsidian is installed and you have a vault folder (e.g. `~/BRAIN2/`), the pack's installer takes over.
+
+> **Vault location matters.** Keep your vault in your home dir (`~/BRAIN2`, `~/<vault-name>`). Do **not** put it under `~/Desktop`, `~/Documents`, or `~/Downloads` — modern macOS permission-protects those folders, so the terminal gets "Operation not permitted" and git + the installer fail.
 
 ```bash
 git clone https://github.com/<ORG-A>/2ndBrain-mogging.git
 cd 2ndBrain-mogging
 
 # Dry-run first (default) — shows every change without touching disk
-./install.sh --vault ~/Desktop/BRAIN
+./install.sh --vault ~/BRAIN2
 
 # Then apply for real
-./install.sh --vault ~/Desktop/BRAIN --apply
+./install.sh --vault ~/BRAIN2 --apply
 ```
 
 **The useful flags:**
@@ -162,7 +165,7 @@ Opt out with `--no-statusline-brain` and the marker won't be written.
 
 ---
 
-## The 12 skills
+## The 13 skills
 
 Every skill is a Claude Code slash command. You type `/<name>` inside Claude Code and the skill runs.
 
@@ -180,8 +183,9 @@ Every skill is a Claude Code slash command. You type `/<name>` inside Claude Cod
 | `/canvas` | Drop an Obsidian Canvas scratchpad pre-wired to whatever set of notes you name. |
 | `/import-claude` | One-shot import your entire Claude.ai or ChatGPT data export into the vault. Full conversation history, alias-classified, spawns concept stubs where ideas repeat. **New.** |
 | `/import-notes` | One-shot import your existing notes from Apple Notes, OneNote, Notion, Evernote, or any raw `.md` / `.docx` / `.pptx` / `.xlsx` / `.html` pile. Pandoc under the hood, full dry-run preview. **New.** |
+| `/vault-coach` | Coach you through setting up and maintaining your vault — auto-loads after install and whenever you add a folder or project. Forces an index note on every new folder, registers it in Projects-Index, keeps the graph healthy. Pairs with `docs/MAINTAINING-YOUR-BRAIN.md`. **New.** |
 
-All twelve are auto-namespaced under the `2ndbrain-mogging` plugin. Both `/save` and `/2ndbrain-mogging:save` resolve to the same skill — use whichever form you like inside Claude Code.
+All thirteen are auto-namespaced under the `2ndbrain-mogging` plugin. Both `/save` and `/2ndbrain-mogging:save` resolve to the same skill — use whichever form you like inside Claude Code.
 
 ---
 

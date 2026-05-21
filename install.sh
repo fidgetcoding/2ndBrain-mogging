@@ -149,9 +149,13 @@ mode_banner() {
     echo "│                                                              │"
     echo "│  This run only SHOWS what would happen. To actually install: │"
     echo "│                                                              │"
-    echo "│    ./install.sh --vault ~/Desktop/BRAIN --apply              │"
+    echo "│    ./install.sh --vault ~/BRAIN2 --apply                    │"
     echo "│                                                              │"
-    echo "│  Replace ~/Desktop/BRAIN with your actual Obsidian vault path│"
+    echo "│  Replace ~/BRAIN2 with your actual Obsidian vault path.     │"
+    echo "│  Keep the vault in your home dir (~/BRAIN2, ~/<vault-name>).│"
+    echo "│  Do NOT put it under ~/Desktop, ~/Documents, or ~/Downloads │"
+    echo "│  — on modern macOS those dirs are permission-protected and  │"
+    echo "│  break terminal/git access to the vault.                    │"
     echo "└──────────────────────────────────────────────────────────────┘"
     echo ""
   fi
@@ -340,14 +344,16 @@ validate_vault() {
   log "step 2/3: validate vault"
   if [[ "$APPLY" -eq 1 && -z "$VAULT" ]]; then
     err "--apply requires --vault PATH  (the path to your Obsidian vault folder)"
-    err "Example: ./install.sh --vault ~/Desktop/BRAIN --apply"
+    err "Example: ./install.sh --vault ~/BRAIN2 --apply"
+    err "Keep the vault in your home dir (e.g. ~/BRAIN2). Do NOT use ~/Desktop,"
+    err "~/Documents, or ~/Downloads — modern macOS permission-protects those and breaks terminal access."
     err "Not sure where your vault is? Open Obsidian → Settings → Files and Links → Vault path."
     exit 20
   fi
 
   # Directory-traversal guard. Reject any path containing a `..` component.
   # `..` anywhere in the chain lets a caller escape the intended vault root
-  # (e.g. --vault ~/Desktop/BRAIN/../../.ssh) and we refuse to install there.
+  # (e.g. --vault ~/BRAIN2/../../.ssh) and we refuse to install there.
   # Pure-prefix matches like "..safe/foo" are NOT rejected — we only match a
   # `..` that stands alone between separators or at the ends of the path.
   if [[ -n "$VAULT" ]]; then
@@ -363,8 +369,8 @@ validate_vault() {
   if [[ -n "$VAULT" && ! -d "$VAULT" ]]; then
     # <ORG-D> install-call (2026-04-22): teammates were getting bounced here when
     # they'd just installed Obsidian and the vault folder didn't exist yet
-    # (e.g. Obsidian created `~/Desktop/BRAIN` but they passed
-    # `--vault ~/Desktop/BRAIN/`-with-typo, OR they hadn't opened Obsidian
+    # (e.g. Obsidian created `~/BRAIN2` but they passed
+    # `--vault ~/BRAIN2/`-with-typo, OR they hadn't opened Obsidian
     # at all). Auto-create the directory in --apply mode and let the
     # vault-template seed step (3.5) populate it.
     #
@@ -680,6 +686,52 @@ link_claude_memory() {
     run rm -rf "$dest"
   fi
   run ln -s "$CLAUDE_MEMORY_SRC" "$dest"
+}
+
+# ---- step 9.2: seed Claude-Memory/aliases.yaml ------------------------------
+#
+# On a fresh install, $VAULT/Claude-Memory/aliases.yaml does not exist. The
+# /save skill HARD-BLOCKS every write when it's missing ("aliases.yaml missing
+# … writes are blocked until it exists"), so a brand-new user cannot capture
+# anything. Seed a minimal-but-valid starter from
+# vault-template/Claude-Memory/aliases.example.yaml so /save classification
+# works on day one. Strictly additive — never overwrites an existing
+# aliases.yaml.
+#
+# Because Claude-Memory is the symlink established in step 9, writing
+# $VAULT/Claude-Memory/aliases.yaml writes through to
+# ~/.claude/projects/<enc>/memory/aliases.yaml — which is exactly where the
+# skills expect it. Must run AFTER link_claude_memory.
+
+seed_aliases_yaml() {
+  log "step 9.2: seed Claude-Memory/aliases.yaml"
+  if [[ -z "$VAULT" ]]; then
+    vlog "vault not set — skipping aliases seed"
+    return 0
+  fi
+
+  local src="$REPO_ROOT/vault-template/Claude-Memory/aliases.example.yaml"
+  local dest="$VAULT/Claude-Memory/aliases.yaml"
+
+  if [[ ! -f "$src" ]]; then
+    warn "aliases example missing at $src — skipping seed (/save will block until aliases.yaml exists)"
+    return 0
+  fi
+
+  # Idempotent: never overwrite an existing aliases.yaml. Resolve through the
+  # Claude-Memory symlink, so -e here also catches a pre-existing file in the
+  # underlying memory dir.
+  if [[ -e "$dest" ]]; then
+    log "aliases.yaml already present — leaving it untouched: $dest"
+    return 0
+  fi
+
+  if [[ "$APPLY" -eq 1 ]]; then
+    run cp "$src" "$dest"
+    log "seeded aliases.yaml: $dest"
+  else
+    log "would seed aliases.yaml: $src -> $dest"
+  fi
 }
 
 # ---- step 9.5: apply CLAUDE.md patch to vault -------------------------------
@@ -1136,7 +1188,7 @@ if [ ! -f "$MARKER" ]; then
   echo "cbrain: 2ndBrain vault marker not found ($MARKER)"
   echo ""
   echo "Install 2ndBrain-mogging first:"
-  echo "  bash <(curl -fsSL https://raw.githubusercontent.com/<ORG-A>/2ndBrain-mogging/main/install.sh) --vault ~/Desktop/BRAIN --apply"
+  echo "  bash <(curl -fsSL https://raw.githubusercontent.com/<ORG-A>/2ndBrain-mogging/main/install.sh) --vault ~/BRAIN2 --apply"
   echo ""
   echo "Or use 'cskip' for skip-permissions without the vault."
   echo ""
@@ -1262,6 +1314,7 @@ run_doctor() {
 #   step 7    symlink_dir "commands"     ~/.claude/commands/<name> -> repo/commands/<name>
 #   step 8    symlink_dir "agents"       ~/.claude/agents/<name> -> repo/agents/<name>
 #   step 9    link_claude_memory         $VAULT/Claude-Memory -> ~/.claude/projects/<enc>/memory
+#   step 9.2  seed_aliases_yaml          seed Claude-Memory/aliases.yaml from vault-template (additive)
 #   step 9.5  apply_claude_md_patch      idempotent CLAUDE.md patch (content-diff; no-op if same)
 #   step 10   install_launchd            scheduled/launchd/*.plist -> ~/Library/LaunchAgents
 #   step 10.5 install_intelligence       (opt-in --with-intelligence) helpers + hooks + pattern store
@@ -1288,6 +1341,7 @@ main() {
   symlink_dir "commands"
   symlink_dir "agents"
   link_claude_memory
+  seed_aliases_yaml
   apply_claude_md_patch
   install_launchd
   install_intelligence
