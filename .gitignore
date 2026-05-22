@@ -23,3 +23,13 @@ config/nathan.pii.local
 # Operator-private skills — not part of the public pack (hardcoded personal paths)
 skills/maketasks/
 skills/backup-brain2/
+
+# Keys / certs — never commit (safetycheck C6 hardening)
+*.pem
+*.key
+*.cert
+*.p12
+*.pfx
+*.keystore
+.vscode/
+.idea/
