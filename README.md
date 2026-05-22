@@ -24,7 +24,7 @@
 | [What you get](#what-you-get) | Overview | TL;DR of the kit | ~1 min |
 | [Install Obsidian (auto)](#install-obsidian-first) | Setup | Auto-installed by the installer; manual download is the fallback | ~1 min |
 | [Install the mogging pack](#install-the-mogging-pack) | Setup | Clone, dry-run, apply | ~2 min |
-| [The 12 skills](#the-12-skills) | Reference | Every slash command in plain English | ~3 min |
+| [The 13 skills](#the-13-skills) | Reference | Every slash command in plain English | ~3 min |
 | [Vault structure](#vault-structure) | Reference | The 6-folder layout, with example projects | ~2 min |
 | [Self-learning tier](#self-learning-tier-opt-in) | Optional | Turns the pack into a pattern-graph that gets smarter as you go | ~1 min |
 | [Bring your existing stuff in](#bring-your-existing-stuff-in-optional) | Optional | Import Claude / ChatGPT conversations + Apple Notes / OneNote / Notion / Evernote | ~3 min |
@@ -43,7 +43,7 @@ I tried **Karpathy's** Wiki-style LLM-powered second brain. I tried **AgriciDani
 
 So I merged them. I took what earned its keep from each of the five, threw out what didn't, and killed `00-Inbox/` (it's where good notes went to die). I killed `01-Fleeting/` (fleeting notes are just concepts you haven't written yet). I killed `05-Templates/` (templates belong in the plugin layer, not in your graph). I killed `06-Assets/` (Obsidian already handles attachments in place).
 
-What was left was seven folders, twelve skills, and a vault that doesn't require a taxonomy degree to use. Built for a layman. No complicated language. No complicated anything.
+What was left was seven folders, thirteen skills, and a vault that doesn't require a taxonomy degree to use. Built for a layman. No complicated language. No complicated anything.
 
 The last piece — a **self-learning tier**. A couple of the originals had one, but bootstrapping them was heavy. This pack's is opt-in (`--with-intelligence`), ships clean, and fills itself in as you use the vault. Ignore it forever and the pack still works; turn it on and it stops feeling like a filing cabinet and starts feeling like… well, a second brain.
 
@@ -54,7 +54,7 @@ So: we went from maxxing to absolutely **mogging** everybody.
 ## What you get
 
 - **The 6-folder vault-mogging layout** — the contract you install against, pre-wired to the skills below.
-- **12 Claude Code skills** (10 core + 2 optional importers) that read + write against that layout with a shared alias dictionary + dry-run previews.
+- **13 Claude Code skills** (11 core + 2 optional importers) that read + write against that layout with a shared alias dictionary + dry-run previews.
 - **Four scheduled agents** (morning / nightly / weekly / health) that audit the vault in the background so you don't have to.
 - **An opt-in self-learning tier** from **[FidgetFlo](https://github.com/fidgetcoding/fidgetflo)** (my MIT-licensed fork of [ruvnet's `ruflo@v3.5.80`](https://github.com/ruvnet/ruflo/tree/v3.5.80), made better) — a pattern-graph that makes routing smarter the longer you use the vault.
 - **Import tools** for bringing in every Claude.ai / ChatGPT conversation you've ever had, plus Apple Notes / OneNote / Notion / Evernote / raw docs — so you don't start from empty.
