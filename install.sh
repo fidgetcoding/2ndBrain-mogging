@@ -346,6 +346,7 @@ validate_vault() {
     err "--apply requires --vault PATH  (the path to your Obsidian vault folder)"
     err "Example: ./install.sh --vault ~/BRAIN2 --apply"
     err "Keep the vault in your home dir (e.g. ~/BRAIN2). Do NOT use ~/Desktop,"
+    # shellcheck disable=SC2088  # literal help text; tilde intentionally not expanded
     err "~/Documents, or ~/Downloads — modern macOS permission-protects those and breaks terminal access."
     err "Not sure where your vault is? Open Obsidian → Settings → Files and Links → Vault path."
     exit 20
