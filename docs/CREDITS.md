@@ -24,7 +24,7 @@
   - The minimal-MVP discipline (only ship what is structurally necessary)
   - The self-heal-on-missing-schema pattern (now universal across this pack's skills)
   - The discuss-before-write etiquette (seed of the mandatory dry-run preview)
-  - The two-skill architecture (`/save` + `/wiki`) as the irreducible core — my ten skills are strictly additions on top of these two
+  - The two-skill architecture (`/save` + `/wiki`) as the irreducible core — my other eleven skills are strictly additions on top of these two
   - The `wiki-schema.md` single-source-of-truth pattern
 
 ### eugeniughelbur — obsidian-second-brain

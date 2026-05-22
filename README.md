@@ -43,7 +43,7 @@ I tried **Karpathy's** Wiki-style LLM-powered second brain. I tried **AgriciDani
 
 So I merged them. I took what earned its keep from each of the five, threw out what didn't, and killed `00-Inbox/` (it's where good notes went to die). I killed `01-Fleeting/` (fleeting notes are just concepts you haven't written yet). I killed `05-Templates/` (templates belong in the plugin layer, not in your graph). I killed `06-Assets/` (Obsidian already handles attachments in place).
 
-What was left was seven folders, thirteen skills, and a vault that doesn't require a taxonomy degree to use. Built for a layman. No complicated language. No complicated anything.
+What was left was six folders, thirteen skills, and a vault that doesn't require a taxonomy degree to use. Built for a layman. No complicated language. No complicated anything.
 
 The last piece — a **self-learning tier**. A couple of the originals had one, but bootstrapping them was heavy. This pack's is opt-in (`--with-intelligence`), ships clean, and fills itself in as you use the vault. Ignore it forever and the pack still works; turn it on and it stops feeling like a filing cabinet and starts feeling like… well, a second brain.
 
