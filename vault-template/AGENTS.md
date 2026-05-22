@@ -68,7 +68,7 @@ The 2026-04-16 mogging collapsed an older layout into the 7 folders above. These
 3. **Curate** — maintain `04-Index/` and project indexes in `01-Projects/`. Bidirectional links mandatory.
 4. **Complete** — drive tasks through `05-Tasks/` and project indexes. Archive completed projects.
 
-## Skills (12 total)
+## Skills (13 total)
 
 | Command | Purpose |
 |---|---|
@@ -84,6 +84,7 @@ The 2026-04-16 mogging collapsed an older layout into the 7 folders above. These
 | `/canvas` | Generates and maintains Obsidian Canvas files. Central `Map.canvas` uses a Fibonacci-spiral layout. |
 | `/import-claude` | One-shot import of a Claude.ai or ChatGPT data-export zip into the vault. |
 | `/import-notes` | One-shot import of exported notes from Apple Notes, OneNote, Notion, Evernote, or raw files. |
+| `/vault-coach` | Onboarding + maintenance coach. Auto-loads after install and on new-folder/new-project. Drafts the missing index note (filename = folder name), registers it in `04-Index/Projects-Index.md`, enforces bidirectional tethering, runs orphan hygiene, asks one question at a time. Live counterpart to `docs/MAINTAINING-YOUR-BRAIN.md`. |
 
 Each skill's full contract lives in `skills/<name>/SKILL.md`. Read it before calling the skill.
 

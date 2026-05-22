@@ -106,9 +106,9 @@ git commit -m "phase-B-4: rename 07-Projects → 05-Projects"
 ### B5. `08-Tasks/` → `05-Tasks/` (submodule preserved)
 
 ```bash
-git mv 08-Tasks 06-Tasks
+git mv 08-Tasks 05-Tasks
 git submodule status  # confirm path updated
-git commit -m "phase-B-5: rename 08-Tasks → 06-Tasks (submodule preserved)"
+git commit -m "phase-B-5: rename 08-Tasks → 05-Tasks (submodule preserved)"
 ```
 
 If `git submodule status` still prints `08-Tasks`, run `git submodule sync` then re-commit `.gitmodules`.
@@ -128,7 +128,7 @@ grep -rln 'path includes 08-Tasks' . \
 grep -rln 'path includes 07-Projects' . \
   | xargs sed -i '' 's|path includes 07-Projects|path includes 05-Projects|g'
 
-git commit -am "phase-C-1: rewrite Tasks plugin path filters (08→06, 07→05)"
+git commit -am "phase-C-1: rewrite Tasks plugin path filters (08→05, 07→01)"
 ```
 
 Linux users: drop the `''` after `-i`.
@@ -150,7 +150,7 @@ grep -rln '\[\[02-Literature' . | xargs sed -i '' 's|\[\[02-Literature|[[02-Sour
 grep -rln '\[\[03-Permanent'  . | xargs sed -i '' 's|\[\[03-Permanent|[[03-Concepts|g'
 grep -rln '\[\[04-MOC'        . | xargs sed -i '' 's|\[\[04-MOC|[[04-Index|g'
 grep -rln '\[\[07-Projects'   . | xargs sed -i '' 's|\[\[07-Projects|[[05-Projects|g'
-grep -rln '\[\[08-Tasks'      . | xargs sed -i '' 's|\[\[08-Tasks|[[06-Tasks|g'
+grep -rln '\[\[08-Tasks'      . | xargs sed -i '' 's|\[\[08-Tasks|[[05-Tasks|g'
 git commit -am "phase-C-3: rewrite wikilinks for renamed folders"
 ```
 
@@ -249,7 +249,7 @@ grep -rn 'path includes 07-Projects' 05-Tasks/ && echo FAIL || echo OK
 grep -rn '\[\[00-Inbox\]\]\|\[\[01-Fleeting\]\]' . && echo FAIL || echo OK
 
 # 3. Submodule intact
-git submodule status | grep 06-Tasks
+git submodule status | grep 05-Tasks
 
 # 4. Symlink present and resolves
 readlink Claude-Memory && test -d Claude-Memory/ && echo OK
