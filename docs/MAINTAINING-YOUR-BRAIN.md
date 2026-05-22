@@ -119,6 +119,26 @@ If your folders and index files are set up so projects "understand each other," 
 
 ---
 
+## Keeping Claude-Memory lean
+
+One file in `Claude-Memory/` is worth maintaining: **`MEMORY.md`** — a symlink to `~/.claude/projects/<your-vault>/memory/MEMORY.md`. This is **not** a normal note. It's the index Claude **auto-loads at the start of every session**, and each line is a one-line pointer to a deeper topic file in that same `memory/` folder. (Don't confuse it with anything in `02-Sources/` or `03-Concepts/` — this is Claude's own memory index.)
+
+**Keep it under ~18 KB.** The hard ceiling is ~24 KB; 18 is the target so you have headroom.
+
+**Why it matters:** every line is injected into context on *every* session. Bloat means slower, costlier loads — and the facts you actually need drown in detail that belongs in the linked topic files.
+
+**Why it creeps up:** a Stop hook makes Claude save to memory at the end of every session. Left unchecked, each save tacks on a fat multi-clause line and the file balloons. (A clean ~18 KB index can climb back to 30 KB in a few weeks of normal use.)
+
+**How to keep it lean:**
+
+- **One line per entry.** Emoji + linked title + date + a single clause. All the detail lives in the linked topic `.md`, never inline in `MEMORY.md`. The Stop hook is set to enforce this on every save and to warn you at session end if the file passes ~23 KB.
+- **Archive the cold stuff.** "Installed-it, don't-re-suggest" tool/MCP notes and resolved or dormant projects don't need to load every session. Move them to `MEMORY-archive.md` in the same folder — still on disk, still searchable, just not auto-loaded. A 30 KB index trims to ~15 KB this way with nothing lost.
+- **When it creeps up, trim + archive.** Tell your terminal Claude: *"trim MEMORY.md to one-line entries and archive the cold ones."* It's a pure relocation — reversible, no facts lost. Back it up first.
+
+Same spirit as cleaning up orphans: a periodic tidy that keeps the brain fast.
+
+---
+
 ## Weekly flow: `/wiki`
 
 About once a week, run:
@@ -185,6 +205,7 @@ When you ask your terminal Claude something, **don't merge two questions into on
 | New project | Folder → index `.md` → add to `Projects-Index` → link up + down |
 | New subfolder | Folder → its `.md` → update parent `.md` |
 | Notes pile up | Ask "what orphans do I have?" → ask it to backlink |
+| `MEMORY.md` over ~18 KB | Trim to one-line entries, archive cold ones to `MEMORY-archive.md` |
 | Once a week | Run `/wiki` for the self-audit |
 | Repeatable function | Make a skill `.md`, 80–200 lines, lean to 80 |
 | Asking Claude anything | One question at a time |
