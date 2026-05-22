@@ -56,7 +56,7 @@ if [[ -z "$SAVE_CMD" ]]; then
   # capture — there is no shell entrypoint at skills/save/run.sh today.
   # UUID preservation is enforced inside the skill's instruction block to
   # the model. When a runnable save CLI lands (or a dedicated
-  # 06-Tasks-rewriter shim), this test will exercise byte-preservation of
+  # 05-Tasks-rewriter shim), this test will exercise byte-preservation of
   # the three planted 🆔 tokens.
   printf "%sSKIP%s test_uuid_preservation (no save CLI entrypoint — skill is SKILL.md-only)\n" \
     "${_C_YELLOW:-}" "${_C_RESET:-}"

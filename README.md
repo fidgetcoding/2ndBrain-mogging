@@ -54,7 +54,7 @@ So: we went from maxxing to absolutely **mogging** everybody.
 ## What you get
 
 - **The 6-folder vault-mogging layout** — the contract you install against, pre-wired to the skills below.
-- **13 Claude Code skills** (11 core + 2 optional importers) that read + write against that layout with a shared alias dictionary + dry-run previews.
+- **13 Claude Code skills** (10 core + 2 optional importers + a `/vault-coach` onboarding guide) that read + write against that layout with a shared alias dictionary + dry-run previews.
 - **Four scheduled agents** (morning / nightly / weekly / health) that audit the vault in the background so you don't have to.
 - **An opt-in self-learning tier** from **[FidgetFlo](https://github.com/fidgetcoding/fidgetflo)** (my MIT-licensed fork of [ruvnet's `ruflo@v3.5.80`](https://github.com/ruvnet/ruflo/tree/v3.5.80), made better) — a pattern-graph that makes routing smarter the longer you use the vault.
 - **Import tools** for bringing in every Claude.ai / ChatGPT conversation you've ever had, plus Apple Notes / OneNote / Notion / Evernote / raw docs — so you don't start from empty.
