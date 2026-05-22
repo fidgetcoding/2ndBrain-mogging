@@ -189,7 +189,7 @@ preflight() {
 
   command -v claude    >/dev/null 2>&1 || {
     err "Claude Code is not installed."
-    err "Fix: bash <(curl -fsSL https://raw.githubusercontent.com/<ORG-A>/cli-maxxing/main/step-1/step-1-install.sh)"
+    err "Fix: bash <(curl -fsSL https://raw.githubusercontent.com/fidgetcoding/cli-maxxing/main/step-1/step-1-install.sh)"
     err "Then open a new terminal and re-run this installer."
     exit 10
   }
@@ -1061,6 +1061,123 @@ install_intelligence() {
   seed_pattern_store
 }
 
+# ---- step 10.6: repair stale hook paths -------------------------------------
+#
+# Some users have a ~/.claude/settings.json whose hook commands point at
+# `$HOME/.claude/helpers/hook-handler.cjs` (or `auto-memory-hook.mjs`) — a
+# path that does NOT exist. The helpers actually live at
+# `$VAULT/.claude/helpers/` and the correct overlay (hooks/intelligence-hooks.json)
+# references them via `${CLAUDE_PROJECT_DIR:-.}/.claude/helpers/...`. The stale
+# wiring fires a MODULE_NOT_FOUND error (node:internal/modules/cjs/loader:1424)
+# on every prompt/tool/session event, spamming the user's terminal.
+#
+# This runs REGARDLESS of --with-intelligence — the breakage exists in any
+# settings.json that has the stale paths, opt-in or not. It is surgical: it
+# rewrites ONLY the broken `.command` strings via jq string-replace, leaving
+# every other setting/hook (the Stop hook, intelligence overlay, user hooks)
+# untouched. Idempotent — a second run finds nothing to fix.
+#
+# Honors non-negotiable #2 (jq-merge discipline — never naive overwrite) and
+# #1 (backup-before-mutation — snapshots settings.json to the same backup dir
+# the step-4 backup uses before writing). Validates the result with `jq empty`
+# before committing.
+
+repair_stale_hooks() {
+  log "step 10.6: repair stale hook paths in settings.json"
+
+  if [[ ! -f "$SETTINGS_PATH" ]]; then
+    vlog "no settings.json at $SETTINGS_PATH — nothing to repair"
+    return 0
+  fi
+  if ! command -v jq >/dev/null 2>&1; then
+    vlog "jq unavailable — skipping stale-hook repair"
+    return 0
+  fi
+
+  # The two broken path prefixes we know about. Both the literal "$HOME" form
+  # and the expanded "$CLAUDE_HOME" form occur in the wild, pointing at the
+  # two known helper scripts. We count any `.command` string that contains a
+  # ".claude/helpers/<script>" segment rooted at $HOME / $CLAUDE_HOME rather
+  # than at ${CLAUDE_PROJECT_DIR}.
+  local home_prefix="\$HOME/.claude/helpers/"
+  local expanded_prefix="$CLAUDE_HOME/.claude/helpers/"
+
+  # Count stale command strings across every hook array. NEVER print contents —
+  # we only emit the integer count. A command is stale if it references one of
+  # the two helper scripts via a $HOME / $CLAUDE_HOME-rooted .claude/helpers
+  # path (i.e. NOT via ${CLAUDE_PROJECT_DIR}).
+  local stale_count=0
+  stale_count="$(jq --arg hp "$home_prefix" --arg ep "$expanded_prefix" '
+      [ .hooks // {} | .[]? | .[]? | .hooks // [] | .[]? | .command // "" ]
+      | map(select(
+          (contains($hp) or contains($ep))
+          and (contains("hook-handler.cjs") or contains("auto-memory-hook.mjs"))
+        ))
+      | length
+    ' "$SETTINGS_PATH" 2>/dev/null || echo 0)"
+
+  if ! [[ "$stale_count" =~ ^[0-9]+$ ]]; then
+    vlog "could not parse settings.json for stale hooks — skipping repair"
+    return 0
+  fi
+
+  if (( stale_count == 0 )); then
+    vlog "no stale hook command paths found — nothing to repair"
+    return 0
+  fi
+
+  if [[ "$APPLY" -ne 1 ]]; then
+    log "would repair $stale_count stale hook command(s) ($home_prefix / $expanded_prefix → \${CLAUDE_PROJECT_DIR:-.}/.claude/helpers/...)"
+    return 0
+  fi
+
+  # Backup before mutation (non-negotiable #1), reusing the step-4 backup dir.
+  local ts dest
+  ts="$(date +%Y-%m-%d-%H%M%S)"
+  dest="$BACKUP_DIR_ROOT/$ts"
+  mkdir -p "$dest"
+  chmod 0700 "$dest"
+  cp -p "$SETTINGS_PATH" "$dest/settings.json"
+  chmod 0600 "$dest/settings.json"
+  vlog "backed up settings.json before stale-hook repair: $dest/settings.json (0600)"
+
+  # Rewrite the broken .command strings to the canonical
+  # ${CLAUDE_PROJECT_DIR:-.}/.claude/helpers/... form. We walk the hook tree
+  # with jq's `walk` and gsub the two broken prefixes on any object that has a
+  # `.command` referencing one of the helper scripts. Everything else is
+  # preserved byte-for-byte — this is NOT a whole-file overwrite.
+  local correct_prefix='${CLAUDE_PROJECT_DIR:-.}/.claude/helpers/'
+  local merged
+  merged="$(mktemp -t mogging-stale-fix.XXXXXX)"
+  if ! jq --arg hp "$home_prefix" --arg ep "$expanded_prefix" --arg cp "$correct_prefix" '
+      walk(
+        if type == "object" and (.command? | type == "string")
+           and ((.command | contains($hp)) or (.command | contains($ep)))
+           and ((.command | contains("hook-handler.cjs")) or (.command | contains("auto-memory-hook.mjs")))
+        then .command = (.command | gsub($hp; $cp) | gsub($ep; $cp))
+        else .
+        end
+      )
+    ' "$SETTINGS_PATH" > "$merged" 2>/dev/null; then
+    err "jq stale-hook repair failed"
+    rm -f "$merged"
+    exit 40
+  fi
+
+  if ! jq empty "$merged" >/dev/null 2>&1; then
+    err "settings.json invalid after stale-hook repair — aborting (backup preserved at $dest)"
+    rm -f "$merged"
+    exit 40
+  fi
+
+  # Atomic write; NEVER cat contents to stdout.
+  cp "$merged" "$SETTINGS_PATH.tmp.$$"
+  chmod 0600 "$SETTINGS_PATH.tmp.$$"
+  mv "$SETTINGS_PATH.tmp.$$" "$SETTINGS_PATH"
+  rm -f "$merged"
+  log "repaired $stale_count stale hook command(s) (0600); backup at $dest/settings.json"
+}
+
 # ---- step 10.7: obsidian-mcp registration -----------------------------------
 #
 # Registers the `obsidian-mcp` server with Claude Code, pointed at $VAULT.
@@ -1188,7 +1305,7 @@ if [ ! -f "$MARKER" ]; then
   echo "cbrain: 2ndBrain vault marker not found ($MARKER)"
   echo ""
   echo "Install 2ndBrain-mogging first:"
-  echo "  bash <(curl -fsSL https://raw.githubusercontent.com/<ORG-A>/2ndBrain-mogging/main/install.sh) --vault ~/BRAIN2 --apply"
+  echo "  bash <(curl -fsSL https://raw.githubusercontent.com/fidgetcoding/2ndBrain-mogging/main/install.sh) --vault ~/BRAIN2 --apply"
   echo ""
   echo "Or use 'cskip' for skip-permissions without the vault."
   echo ""
@@ -1318,6 +1435,8 @@ run_doctor() {
 #   step 9.5  apply_claude_md_patch      idempotent CLAUDE.md patch (content-diff; no-op if same)
 #   step 10   install_launchd            scheduled/launchd/*.plist -> ~/Library/LaunchAgents
 #   step 10.5 install_intelligence       (opt-in --with-intelligence) helpers + hooks + pattern store
+#   step 10.6 repair_stale_hooks         rewrite stale $HOME/.claude/helpers hook paths → ${CLAUDE_PROJECT_DIR}
+#                                        (runs always — fixes MODULE_NOT_FOUND spam independent of opt-in)
 #   step 10.7 install_obsidian_mcp       claude mcp add obsidian → vault; opt out w/ --no-obsidian-mcp
 #   step 10.8 install_statusline_marker  write $HOME/.claude/.mogging-vault (vault path marker for
 #                                        cli-maxxing's 🧠 indicator); opt out w/ --no-statusline-brain
@@ -1345,6 +1464,7 @@ main() {
   apply_claude_md_patch
   install_launchd
   install_intelligence
+  repair_stale_hooks
   install_obsidian_mcp
   install_statusline_marker
   install_shell_shortcuts
@@ -1399,6 +1519,19 @@ print_install_summary() {
       warn "If even that hits a substitution issue, the fully literal form:"
       warn "    sudo chown -R $(whoami):staff ~/.npm"
     fi
+  fi
+
+  # Next steps — only after a real install. In dry-run nothing landed, so the
+  # pointers below would be misleading. Keep this LAST so it's the final thing
+  # in the user's scrollback.
+  if [[ "$APPLY" -eq 1 ]]; then
+    log ""
+    log "Next steps:"
+    log "  1. Read the setup + maintenance guide:"
+    log "       $REPO_ROOT/docs/MAINTAINING-YOUR-BRAIN.md"
+    log "  2. Open Claude Code in your vault (e.g. run 'cbrain') and run:"
+    log "       /vault-coach"
+    log "     — it walks you through setup and helps you maintain the vault."
   fi
 }
 

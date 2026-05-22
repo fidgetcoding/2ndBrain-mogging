@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![2ndBrain-mogging](https://raw.githubusercontent.com/<ORG-A>/2ndBrain-mogging/main/2ndbrainmogging.png)
+![2ndBrain-mogging](https://raw.githubusercontent.com/fidgetcoding/2ndBrain-mogging/main/2ndbrainmogging.png)
 
 # 2ndBrain-mogging
 
@@ -56,7 +56,7 @@ So: we went from maxxing to absolutely **mogging** everybody.
 - **The 6-folder vault-mogging layout** — the contract you install against, pre-wired to the skills below.
 - **12 Claude Code skills** (10 core + 2 optional importers) that read + write against that layout with a shared alias dictionary + dry-run previews.
 - **Four scheduled agents** (morning / nightly / weekly / health) that audit the vault in the background so you don't have to.
-- **An opt-in self-learning tier** from **[FidgetFlo](https://github.com/<ORG-A>/fidgetflo)** (my MIT-licensed fork of [ruvnet's `ruflo@v3.5.80`](https://github.com/ruvnet/ruflo/tree/v3.5.80), made better) — a pattern-graph that makes routing smarter the longer you use the vault.
+- **An opt-in self-learning tier** from **[FidgetFlo](https://github.com/fidgetcoding/fidgetflo)** (my MIT-licensed fork of [ruvnet's `ruflo@v3.5.80`](https://github.com/ruvnet/ruflo/tree/v3.5.80), made better) — a pattern-graph that makes routing smarter the longer you use the vault.
 - **Import tools** for bringing in every Claude.ai / ChatGPT conversation you've ever had, plus Apple Notes / OneNote / Notion / Evernote / raw docs — so you don't start from empty.
 
 ---
@@ -90,7 +90,7 @@ Before running the installer you need two things on your machine. Takes about 5 
 
 ```bash
 # Fastest way — this one-liner handles everything (Homebrew, Node, claude, aliases)
-bash <(curl -fsSL https://raw.githubusercontent.com/<ORG-A>/cli-maxxing/main/step-1/step-1-install.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/fidgetcoding/cli-maxxing/main/step-1/step-1-install.sh)
 ```
 
 Already have it? Run `claude --version` to confirm. If that prints a version number, you're good.
@@ -117,7 +117,7 @@ Once Obsidian is installed and you have a vault folder (e.g. `~/BRAIN2/`), the p
 > **Vault location matters.** Keep your vault in your home dir (`~/BRAIN2`, `~/<vault-name>`). Do **not** put it under `~/Desktop`, `~/Documents`, or `~/Downloads` — modern macOS permission-protects those folders, so the terminal gets "Operation not permitted" and git + the installer fail.
 
 ```bash
-git clone https://github.com/<ORG-A>/2ndBrain-mogging.git
+git clone https://github.com/fidgetcoding/2ndBrain-mogging.git
 cd 2ndBrain-mogging
 
 # Dry-run first (default) — shows every change without touching disk
@@ -136,7 +136,7 @@ cd 2ndBrain-mogging
 | `--apply` | off | Execute the changes on disk and in `~/.claude/settings.json`. |
 | `--no-launchd` | off | Skip the 4 scheduled-agent launchd jobs (morning / nightly / weekly / health). |
 | `--no-obsidian-mcp` | off | Skip registering the `obsidian-mcp` server with Claude Code (`claude mcp add obsidian … $VAULT`). |
-| `--no-statusline-brain` | off | Skip writing `~/.claude/.mogging-vault` — the vault-path marker [cli-maxxing](https://github.com/<ORG-A>/cli-maxxing)'s ⚡ fidgetflo statusline reads to light up the 🧠 Brain² indicator. |
+| `--no-statusline-brain` | off | Skip writing `~/.claude/.mogging-vault` — the vault-path marker [cli-maxxing](https://github.com/fidgetcoding/cli-maxxing)'s ⚡ fidgetflo statusline reads to light up the 🧠 Brain² indicator. |
 | `--skip-tests` | off | Skip the onboarding test suite at the end. |
 | `--merge-stop` | off | Replace the existing Stop hook instead of jq-merging onto it. |
 | `--no-seed-vault` | off | Skip seeding the 6-folder vault layout from `vault-template/`. By default the installer copies in any of `01-Projects/<PROJECT>/conversations/`, `02-Sources/`, `03-Concepts/`, `04-Index/Projects-Index.md`, `01-Projects/{example-project-1, example-project-2, example-project-3, INCUBATOR}/`, `05-Tasks/`, `Claude-Memory/`, `CLAUDE.md`, `AGENTS.md` that are missing. Existing files are never overwritten. |
@@ -151,7 +151,7 @@ The installer runs `claude mcp add --scope user obsidian -- npx -y obsidian-mcp 
 
 ### Statusline (redirect to cli-maxxing)
 
-Mogging does **not** ship a statusline of its own. If you want the live `⚡ fidgetflo` status line — model name, context %, duration, swarm/hive/mini activity, plus a 🧠 Brain² indicator that lights up when you're working inside the vault — install [`cli-maxxing`](https://github.com/<ORG-A>/cli-maxxing). Cli-maxxing writes `~/.claude/statusline.sh` and wires it into `~/.claude/settings.json`.
+Mogging does **not** ship a statusline of its own. If you want the live `⚡ fidgetflo` status line — model name, context %, duration, swarm/hive/mini activity, plus a 🧠 Brain² indicator that lights up when you're working inside the vault — install [`cli-maxxing`](https://github.com/fidgetcoding/cli-maxxing). Cli-maxxing writes `~/.claude/statusline.sh` and wires it into `~/.claude/settings.json`.
 
 The *only* thing mogging contributes is a one-line marker file: `~/.claude/.mogging-vault` contains your vault's absolute path. Cli-maxxing's statusline reads that file and lights up 🧠 when `$CWD` matches. No cli-maxxing installed? The marker is a harmless ~100-byte no-op. No mogging installed? Cli-maxxing's statusline still works — the 🧠 indicator just never shows.
 
@@ -162,6 +162,14 @@ echo "/absolute/path/to/new/vault" > ~/.claude/.mogging-vault
 ```
 
 Opt out with `--no-statusline-brain` and the marker won't be written.
+
+---
+
+## After install: setup + maintenance
+
+[`docs/MAINTAINING-YOUR-BRAIN.md`](docs/MAINTAINING-YOUR-BRAIN.md) is the post-install setup and maintenance guide — what to do first, how to add a folder or project without orphaning it, and how to keep the graph healthy over time. Read it once after you install.
+
+You don't have to read it cold, though. The `/vault-coach` skill carries the same guidance and walks you through it interactively. It auto-loads on your first session in a freshly installed vault, and again whenever you add a folder or a new project — it forces an index note on the new folder, registers it in `Projects-Index`, and wires the bidirectional links so nothing ends up orphaned. The doc is the human reference; `/vault-coach` is the hands-on version.
 
 ---
 
@@ -242,7 +250,7 @@ Deep rationale for each skill is in [`PHILOSOPHY.md`](PHILOSOPHY.md).
 
 ## Self-learning tier (opt-in)
 
-Pass `--with-intelligence` to the installer and the pack wires in a pattern-graph from **[FidgetFlo](https://github.com/<ORG-A>/fidgetflo)** that plugs into `/save` and `/wiki` so routing gets progressively smarter as the vault grows, without rewriting a single one of your notes. 11 helper scripts get hardlinked into `$VAULT/.claude/helpers/` and 5 additional hook types (PreToolUse / PostToolUse / UserPromptSubmit / SessionStart / SessionEnd) get jq-merged into `~/.claude/settings.json` — your existing hooks are preserved. (FidgetFlo is my MIT-licensed fork of [ruvnet's `ruflo@v3.5.80`](https://github.com/ruvnet/ruflo/tree/v3.5.80); upstream copyright is preserved in FidgetFlo's `LICENSE`.)
+Pass `--with-intelligence` to the installer and the pack wires in a pattern-graph from **[FidgetFlo](https://github.com/fidgetcoding/fidgetflo)** that plugs into `/save` and `/wiki` so routing gets progressively smarter as the vault grows, without rewriting a single one of your notes. 11 helper scripts get hardlinked into `$VAULT/.claude/helpers/` and 5 additional hook types (PreToolUse / PostToolUse / UserPromptSubmit / SessionStart / SessionEnd) get jq-merged into `~/.claude/settings.json` — your existing hooks are preserved. (FidgetFlo is my MIT-licensed fork of [ruvnet's `ruflo@v3.5.80`](https://github.com/ruvnet/ruflo/tree/v3.5.80); upstream copyright is preserved in FidgetFlo's `LICENSE`.)
 
 Off by default so the advertised pack works for people who just want the folders and the skills. Turn it on when you want the vault to start learning from your session history.
 

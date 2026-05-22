@@ -41,7 +41,7 @@ This pack is additive, not replacing. You keep:
 
 1. **Back up the vault.** Either `git commit -am "pre-mogging"` or `cp -R 2ndBrain 2ndBrain.bak`. Both are cheap. Do both.
 
-2. **Install the plugin.** `/plugin marketplace add <ORG-A>/2ndBrain-mogging` then `/plugin install 2ndbrain-mogging@<ORG-A>`. Restart Claude Code.
+2. **Install the plugin.** `/plugin marketplace add fidgetcoding/2ndBrain-mogging` then `/plugin install 2ndbrain-mogging@fidgetcoding`. Restart Claude Code.
 
 3. **Run `/aliases init`.** This walks your `01-Projects/` tree and proposes an `aliases.yaml` seed with one entry per project. Review and edit before `y`. This file becomes the classifier dictionary for every future `/save`.
 

@@ -26,7 +26,7 @@ When the user just installed, or says "set up my brain" / "help me get started":
 
 Trigger: "I added a folder", "I made a new project", "I'm starting X". **Do NOT let a folder exist without an index MD.** Walk the user through it, asking ONE QUESTION AT A TIME, then auto-draft:
 
-1. **Create the index file with filename = folder name.** `WARP/WARP.md` — NEVER `WARP-Index.md`. The `-Index` suffix breaks `[[WARP]]` wikilink resolution and silently drifts the project off the graph.
+1. **Create the index file with filename = folder name.** `Project-A/Project-A.md` — NEVER `Project-A-Index.md`. The `-Index` suffix breaks `[[Project-A]]` wikilink resolution and silently drifts the project off the graph.
 2. **The index MD must explain** what the folder is, how it functions, what goes in it, and its subfolders — then link **UP** (to `04-Index/Projects-Index.md` and any parent/org hub) AND **DOWN** (to subfolders and key notes). One-way links make islands.
 3. **Register it:** add `[[PROJECT]]` to `04-Index/Projects-Index.md` under the right section (Active / Incubating / Archived). A project not in Projects-Index is orphaned even if its index is perfect.
 4. **If it's a subfolder:** open the PARENT folder's index MD and add the sub-project to its DOWN section, with a back-link from the child UP to the parent.
@@ -35,7 +35,7 @@ Trigger: "I added a folder", "I made a new project", "I'm starting X". **Do NOT 
 Questions to fill the MD (ask in this order, one at a time):
 - "What is this project — one line?"
 - "Will it have subfolders? If so, name them."
-- "What should it link to — an org hub like <ORG-A>, a GitHub repo, or another project?"
+- "What should it link to — an org/parent hub, a GitHub repo, or a related project?"
 
 Draft the index, show it, confirm before writing. Use the `[bot:wiki-add]` commit prefix on the write so the n8n sync doesn't re-fire.
 
@@ -50,7 +50,7 @@ Trigger: "what orphans do I have", "is anything disconnected".
 
 ## D. Knowledge note vs skill
 
-Trigger: "should this be a skill or a knowledge note", or the user describes a repeatable function (a CAC/LTV calculator, a recurring report, a formatted output they keep redoing).
+Trigger: "should this be a skill or a knowledge note", or the user describes a repeatable function (a calculation they redo, a formatting routine, a checklist, a recurring report).
 
 - If it's a **repeatable function** Claude should run on demand, recommend making it a **SKILL.md** (auto-triggered by its `description`) over a plain knowledge note. A knowledge note is read passively; a skill acts.
 - Restate the cap: a SKILL.md must be **80–200 lines, leaning toward 80**. Progressive disclosure — push detail into a reference doc, keep the skill tight.

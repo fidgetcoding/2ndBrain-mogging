@@ -14,7 +14,7 @@ Before this repo was made public, every real personal name and every private cli
 
 1. **Stable.** The same real name always maps to the same placeholder across every file in the repo and across every commit in the history. If you see `<PERSON-D>` in `skills/save/SKILL.md` and `<PERSON-D>` in `tests/fixtures/sample-vault/Claude-Memory/aliases.yaml`, they are the same real person.
 2. **One-way.** The mapping from real name to placeholder is **private** and is not included in this repository. It lives in the operator's local `Claude-Memory/aliases.yaml`, which is git-ignored in their personal vault. It is not recoverable from any file in this repo, including this one.
-3. **Scrubbed from history.** `git log` has been rewritten with `git-filter-repo` so the real names are not recoverable from prior commits either. If you see a real-looking name in history, please [open an issue](https://github.com/<ORG-A>/2ndBrain-mogging/issues) — it is a bug.
+3. **Scrubbed from history.** `git log` has been rewritten with `git-filter-repo` so the real names are not recoverable from prior commits either. If you see a real-looking name in history, please [open an issue](https://github.com/fidgetcoding/2ndBrain-mogging/issues) — it is a bug.
 4. **Present in the operator's private fork.** On the operator's own machine, the same skills resolve the placeholders back to real names at runtime via the private `aliases.yaml`. This is how the pack stays useful without exposing the substrate.
 
 ## Why the placeholders read like fiction
@@ -36,7 +36,7 @@ The current public release uses the following placeholder families. New placehol
 - `<PERSON-A>` through `<PERSON-I>` — 9 individuals
 - `<PROJECT-A>` through `<PROJECT-C>` — 3 client projects
 
-If you see a placeholder that's not on this list, either the pack has been updated and this file is stale (please [open an issue](https://github.com/<ORG-A>/2ndBrain-mogging/issues)) or you're looking at a downstream fork.
+If you see a placeholder that's not on this list, either the pack has been updated and this file is stale (please [open an issue](https://github.com/fidgetcoding/2ndBrain-mogging/issues)) or you're looking at a downstream fork.
 
 ## See also
 
