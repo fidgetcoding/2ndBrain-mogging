@@ -1,7 +1,7 @@
 2ndBrain-mogging
 ================
 
-Copyright (c) 2026 Nate Davidovich / Lorecraft LLC
+Copyright (c) 2026 Nate Davidovich / Lorecraft LLC / fidgetcoding
 Licensed under the MIT License. See LICENSE for the full text.
 
 This pack incorporates vendored third-party code under `helpers/`. The files
@@ -13,7 +13,7 @@ distributed under the MIT License:
     Anchor tag:       v3.5.80
 
 The vendored files were imported via the Lorecraft-owned intermediate fork
-`lorecraft-io/fidgetflo`, which was squash-imported from ruflo@v3.5.80 and
+`fidgetcoding/fidgetflo`, which was squash-imported from ruflo@v3.5.80 and
 then extended with additional pattern-graph / intelligence-loop logic by
 Lorecraft (Nate Davidovich). As a result, several files in `helpers/` differ
 in content and length from the corresponding files in the public ruflo
@@ -24,7 +24,7 @@ tag at all.
 The dual copyright on these files is therefore:
 
     Copyright (c) 2024-2026 ruvnet (original ruflo work carried forward)
-    Copyright (c) 2026 Lorecraft LLC / Nate Davidovich (FidgetFlo extensions
+    Copyright (c) 2026 Lorecraft LLC / Nate Davidovich / fidgetcoding (FidgetFlo extensions
                                                         and 2ndBrain-mogging
                                                         integration)
 

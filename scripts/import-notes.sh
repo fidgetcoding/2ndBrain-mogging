@@ -95,7 +95,7 @@ EXIT CODES:
 EXAMPLES:
     # Full pre-flight on an Apple Notes export:
     bash scripts/import-notes.sh \
-        --vault ~/Desktop/BRAIN2 \
+        --vault ~/BRAIN2 \
         --source ~/Desktop/apple-notes-export \
         --kind apple --dry-run
 
