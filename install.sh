@@ -1154,7 +1154,7 @@ repair_stale_hooks() {
         if type == "object" and (.command? | type == "string")
            and ((.command | contains($hp)) or (.command | contains($ep)))
            and ((.command | contains("hook-handler.cjs")) or (.command | contains("auto-memory-hook.mjs")))
-        then .command = (.command | gsub($hp; $cp) | gsub($ep; $cp))
+        then .command = (.command | split($hp) | join($cp) | split($ep) | join($cp))
         else .
         end
       )
