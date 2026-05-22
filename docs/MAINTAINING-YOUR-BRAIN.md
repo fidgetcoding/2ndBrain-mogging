@@ -40,7 +40,7 @@ The more you save, the more it understands where things go — *as long as the i
 ~/BRAIN2/
 ├── 01-Projects/    # one folder per project you actually work on
 ├── 02-Sources/     # literature — things NOT tied to a project
-├── 03-Concepts/    # pure concepts the brain needs to understand
+├── 03-Concepts/    # your own ideas, in your words, distilled from sources
 ├── 04-Index/       # navigation — teaches the brain how to operate itself
 ├── 05-Tasks/       # tasks (optional)
 └── Claude-Memory/  # aliases + memory (leave it alone)
@@ -65,11 +65,9 @@ Things that are worth remembering but **not tied to a project**. A cool fact. So
 
 Example: there's no project for "a friend you talked to." But if someone tells you something interesting about coding, that's a source — it goes in `02-Sources/`.
 
-### `03-Concepts/` — pure concepts
+### `03-Concepts/` — your ideas
 
-Ideas and things the brain needs to *understand* — one clear concept per note, densely linked.
-
-(Possible future simplification: Concepts may eventually get merged into Sources. Not something to act on now — just know it could happen.)
+One idea per note, in your own words, linked to related notes. This is where a source turns into your own understanding: you read something in `02-Sources/`, then write the idea that matters as a concept note.
 
 ### `04-Index/` — navigation
 
@@ -142,7 +140,7 @@ The split to remember:
 
 You don't have to start empty. Two paths, depending on your account.
 
-### Path A — you have a company / enterprise account
+### Path A — regular account (data export available)
 
 1. Do a proper data export — **download all your data** from Claude.ai.
 2. Hand the export to your terminal Claude.
