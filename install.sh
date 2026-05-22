@@ -1095,12 +1095,18 @@ repair_stale_hooks() {
   fi
 
   # The two broken path prefixes we know about. Both the literal "$HOME" form
-  # and the expanded "$CLAUDE_HOME" form occur in the wild, pointing at the
-  # two known helper scripts. We count any `.command` string that contains a
+  # and the shell-expanded form occur in the wild, pointing at the two known
+  # helper scripts. We count any `.command` string that contains a
   # ".claude/helpers/<script>" segment rooted at $HOME / $CLAUDE_HOME rather
   # than at ${CLAUDE_PROJECT_DIR}.
+  #
+  # NOTE: the helpers live at $HOME/.claude/helpers/, i.e. $CLAUDE_HOME/helpers/
+  # (CLAUDE_HOME is $HOME/.claude). The expanded prefix is therefore
+  # "$CLAUDE_HOME/helpers/" — NOT "$CLAUDE_HOME/.claude/helpers/", which would
+  # be a doubled ".claude/.claude/" path that never appears on disk and would
+  # silently fail to match any real expanded hook command.
   local home_prefix="\$HOME/.claude/helpers/"
-  local expanded_prefix="$CLAUDE_HOME/.claude/helpers/"
+  local expanded_prefix="$CLAUDE_HOME/helpers/"
 
   # Count stale command strings across every hook array. NEVER print contents —
   # we only emit the integer count. A command is stale if it references one of
@@ -1143,9 +1149,11 @@ repair_stale_hooks() {
 
   # Rewrite the broken .command strings to the canonical
   # ${CLAUDE_PROJECT_DIR:-.}/.claude/helpers/... form. We walk the hook tree
-  # with jq's `walk` and gsub the two broken prefixes on any object that has a
-  # `.command` referencing one of the helper scripts. Everything else is
-  # preserved byte-for-byte — this is NOT a whole-file overwrite.
+  # with jq's `walk` and do a LITERAL replace of the two broken prefixes
+  # (split($prefix)|join($cp)) on any object that has a `.command` referencing
+  # one of the helper scripts — NOT a regex gsub, which would treat `$` / `.`
+  # in the path as metacharacters. Everything else is preserved byte-for-byte
+  # — this is NOT a whole-file overwrite.
   local correct_prefix='${CLAUDE_PROJECT_DIR:-.}/.claude/helpers/'
   local merged
   merged="$(mktemp -t mogging-stale-fix.XXXXXX)"

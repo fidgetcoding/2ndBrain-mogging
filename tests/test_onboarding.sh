@@ -134,7 +134,7 @@ assert_contains "$PLUGIN_JSON" "2ndbrain-mogging" \
   "plugin.json references the plugin name"
 
 # ---------------------------------------------------------------------------
-# Skills — ship surface is 12 skills total: 10 core + 2 optional importers.
+# Skills — ship surface is 13 skills total: 11 core + 2 optional importers.
 # Symlinked into ~/.claude/skills WITHOUT any namespace prefix. install.sh's
 # symlink_dir "skills" iterates every entry under repo/skills/, so all 12
 # directories should land even if plugin.json's .skills[] array only advertises
@@ -154,7 +154,7 @@ assert_dir "$SKILLS_DIR" "\$HOME/.claude/skills exists after install"
 EXPECTED_SKILLS=(
   save wiki challenge emerge backfill
   aliases autoresearch canvas tether connect
-  import-claude import-notes
+  import-claude import-notes vault-coach
 )
 for s in "${EXPECTED_SKILLS[@]}"; do
   link="$SKILLS_DIR/$s"

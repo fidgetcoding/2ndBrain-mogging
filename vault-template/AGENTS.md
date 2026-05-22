@@ -63,7 +63,7 @@ The 2026-04-16 mogging collapsed an older layout into the 7 folders above. These
 
 ## Four regimes
 
-1. **Capture** — raw inbound content lands in `01-Projects/<PROJECT>/conversations/` (post-2026-05-08; `01-Projects/<PROJECT>/conversations/` was retired) or `02-Sources/`. Minimal processing.
+1. **Capture** — raw inbound content lands in `01-Projects/<PROJECT>/conversations/` (post-2026-05-08; the old top-level `01-Conversations/` was retired) or `02-Sources/`. Minimal processing.
 2. **Connect** — promote captures into `03-Concepts/` as atomic notes. Link to concepts and to at least one MOC.
 3. **Curate** — maintain `04-Index/` and project indexes in `01-Projects/`. Bidirectional links mandatory.
 4. **Complete** — drive tasks through `05-Tasks/` and project indexes. Archive completed projects.

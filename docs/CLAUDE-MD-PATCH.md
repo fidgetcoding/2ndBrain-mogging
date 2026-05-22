@@ -32,7 +32,7 @@ Every write path in every skill resolves its target against this table. If a ski
 
 | Folder | Role | Primary writer | Notes |
 |---|---|---|---|
-| `01-Projects/<PROJECT>/conversations/` (post-2026-05-08; `01-Projects/<PROJECT>/conversations/` was retired) | `/save` output + scheduled-agent reports; mirrors `01-Projects/` subfolders | `save` (branches 1–3) | Append-only per file. Scheduled agents write reports under `01-Projects/VAULT/conversations/reports/` and nowhere else. Vault-about-vault notes live under `01-Projects/VAULT/conversations/`. |
+| `01-Projects/<PROJECT>/conversations/` (post-2026-05-08; the old top-level `01-Conversations/` was retired) | `/save` output + scheduled-agent reports; mirrors `01-Projects/` subfolders | `save` (branches 1–3) | Append-only per file. Scheduled agents write reports under `01-Projects/VAULT/conversations/reports/` and nowhere else. Vault-about-vault notes live under `01-Projects/VAULT/conversations/`. |
 | `02-Sources/` | Source-of-truth notes for external content (articles, videos, transcripts, emails, PDFs, books) | `save` (branch 2 `--source`), `autoresearch`, `wiki add` | Each file carries `source_url` + `source_type` + `captured` in frontmatter. Body is summary; raw fetched text lives in a `> [!source]` callout or a fenced block. Replaces legacy `02-Literature/`. |
 | `03-Concepts/` | Refined atomic concept notes — one concept per file | `wiki` | Needs ≥1 inbound from a `02-Sources/` note and ≥1 outbound to `04-Index/`. First write sets `needs_review: true`; `wiki promote` flips it once the note has 3+ inbound links. Replaces legacy `03-Permanent/`. Existing notes grandfathered with `owner: human` are never silently rewritten. |
 | `04-Index/` | Maps of content (indexes), hub pages, topic guides | `wiki`, `tether` | Never freeform prose — only link lists + terse one-liners. Must list every concept in its topic cluster. Contains `Index.md`, `Home-Index`, `Projects-Index`, `Poetry-Index`, `Tech-Index`, and `Map.canvas`. Replaces legacy `04-MOC/`. |
@@ -53,7 +53,7 @@ Closed set. A skill encountering an unknown `type` halts with a parse error rath
 | `source` | `02-Sources/` | External input (article, video, transcript, email, PDF, book). Must have `source_url`, `source_type`, `captured`. |
 | `concept` | `03-Concepts/` | Refined atomic concept. Needs `last_confirmed`, `needs_review`, `owner`. |
 | `index` | `04-Index/` | Map of content, hub, topic index. Body is a link list, not prose. |
-| `conversation` | `01-Projects/<PROJECT>/conversations/` (post-2026-05-08; `01-Projects/<PROJECT>/conversations/` was retired) | `/save` output + scheduled-agent reports. No per-type additions beyond universal fields. |
+| `conversation` | `01-Projects/<PROJECT>/conversations/` (post-2026-05-08; the old top-level `01-Conversations/` was retired) | `/save` output + scheduled-agent reports. No per-type additions beyond universal fields. |
 | `adr` | `Claude-Memory/adr/` | Architectural decision record. Has `status`, `supersedes`, `superseded_by`. |
 | `synthesis` | `03-Concepts/` or `04-Index/` | Cross-concept rollup. Has `answers_question`, `sources`. |
 

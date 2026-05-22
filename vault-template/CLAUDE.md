@@ -65,7 +65,7 @@ If a skill or config still points at any of them, it's stale — treat it as a b
 
 The vault operates under four regimes that describe how content moves:
 
-1. **Capture** — raw inbound thoughts, URLs, and conversations land in `01-Projects/<PROJECT>/conversations/` (post-2026-05-08; `01-Projects/<PROJECT>/conversations/` was retired) or `02-Sources/`. Minimal processing.
+1. **Capture** — raw inbound thoughts, URLs, and conversations land in `01-Projects/<PROJECT>/conversations/` (post-2026-05-08; the old top-level `01-Conversations/` was retired) or `02-Sources/`. Minimal processing.
 2. **Connect** — promote captures into `03-Concepts/` as atomic notes. Link to other concepts and to at least one MOC in `04-Index/`.
 3. **Curate** — maintain `04-Index/` and project indexes in `01-Projects/`. Keep bidirectional links tight. Orphaned notes are the enemy.
 4. **Complete** — drive tasks through `05-Tasks/` and project indexes. Archive completed projects rather than deleting them.
@@ -84,7 +84,7 @@ Slash commands shipped with the mogging pack. Descriptions match each skill's ow
 8. `/aliases` — bootstraps and maintains `Claude-Memory/aliases.yaml`, the canonical entity→project disambiguation file used by `/save`, `/backfill`, `/tether`, and `/wiki`. Never overwrites the canonical file without review; emits to `aliases-pending.md` for merge.
 9. `/autoresearch` — three-round web research loop. Decomposes a topic, gathers sources, gap-fills contradictions, and emits vault-ready literature + concept notes with confidence labels. Factual-only for literature notes.
 10. `/canvas` — generates and maintains Obsidian Canvas files from vault queries. Central `04-Index/Map.canvas` uses a Fibonacci-spiral layout. Deterministic node IDs, JSON Canvas 1.0 validation, never mutates source notes.
-11. `/import-claude` — one-shot import of a Claude.ai or ChatGPT data-export zip. Unzip → inspect → bucket conversations → write full-fidelity captures to `01-Projects/<PROJECT>/conversations/` (post-2026-05-08; `01-Projects/<PROJECT>/conversations/` was retired), factual `LIT-*` mirrors to `02-Sources/`, and linked stubs to `03-Concepts/`. Alias-classified, dry-run-previewed, append-only.
+11. `/import-claude` — one-shot import of a Claude.ai or ChatGPT data-export zip. Unzip → inspect → bucket conversations → write full-fidelity captures to `01-Projects/<PROJECT>/conversations/` (post-2026-05-08; the old top-level `01-Conversations/` was retired), factual `LIT-*` mirrors to `02-Sources/`, and linked stubs to `03-Concepts/`. Alias-classified, dry-run-previewed, append-only.
 12. `/import-notes` — one-shot import of an existing notes pile from Apple Notes / OneNote / Notion / Evernote / raw files (docx/pptx/xlsx/html/rtf/md/txt). Pandoc + xlsx2csv conversion, per-file validation, seven-folder classification, dry-run-previewed.
 13. `/vault-coach` — onboarding + maintenance coach. Auto-loads right after install and whenever you add a folder or project. Drafts the missing index note (filename = folder name), registers it in `04-Index/Projects-Index.md`, enforces bidirectional tethering, runs orphan hygiene, and asks one question at a time. The live counterpart to `docs/MAINTAINING-YOUR-BRAIN.md`.
 

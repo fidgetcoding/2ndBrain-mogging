@@ -31,7 +31,7 @@ If you stay on a pure Karpathy / Jens / eugeniughelbur setup:
 
 This pack is additive, not replacing. You keep:
 
-- Your folder structure. The pack uses the post-mogging 7-folder numbering (`01-Projects/<PROJECT>/conversations/` (post-2026-05-08; `01-Projects/<PROJECT>/conversations/` was retired), `02-Sources/`, `03-Concepts/`, `04-Index/`, `01-Projects/`, `05-Tasks/`, `Claude-Memory/`) but `aliases.yaml` lets you remap if yours differs. If you're migrating from a pre-mogging 9-folder layout, see [`docs/MIGRATION.md`](docs/MIGRATION.md) for the rename + drain commands.
+- Your folder structure. The pack uses the post-mogging 7-folder numbering (`01-Projects/<PROJECT>/conversations/` (post-2026-05-08; the old top-level `01-Conversations/` was retired), `02-Sources/`, `03-Concepts/`, `04-Index/`, `01-Projects/`, `05-Tasks/`, `Claude-Memory/`) but `aliases.yaml` lets you remap if yours differs. If you're migrating from a pre-mogging 9-folder layout, see [`docs/MIGRATION.md`](docs/MIGRATION.md) for the rename + drain commands.
 - Your frontmatter conventions. We read and emit the same YAML keys you already use.
 - Your existing skills. If you've installed another second-brain pack, you can run them side-by-side — just pin the slash-command names in `plugin.json` if there's a collision.
 - Your sync pipelines. n8n workflows, Morgen task mirroring, calendar pins — the pack reads them, respects them, and commit-prefixes everything `[bot:*]` so your filters keep working.

@@ -96,7 +96,7 @@ git mv 04-MOC 04-Index
 git commit -m "phase-B-3: rename 04-MOC → 04-Index"
 ```
 
-### B4. `07-Projects/` → `01-Projects/`
+### B4. `07-Projects/` → `05-Projects/`
 
 ```bash
 git mv 07-Projects 05-Projects

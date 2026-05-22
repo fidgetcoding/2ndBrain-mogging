@@ -52,7 +52,7 @@ FLOW:
     1. Resolve the vault:
          a. --vault PATH          (explicit)
          b. VAULT_PATH env var    (explicit)
-         c. Auto-discover common locations (~/Desktop/BRAIN2, ~/Desktop/2ndBrain, …)
+         c. Auto-discover common locations (~/BRAIN2, ~/Desktop/2ndBrain, …)
             and confirm which one was picked if more than one candidate matched.
     2. Resolve the export zip:
          a. --export-zip PATH
@@ -79,7 +79,7 @@ EXAMPLES:
     # Specific zip + specific vault:
     bash scripts/import-claude.sh \
         --export-zip ~/Downloads/data-abc-batch-1.zip \
-        --vault ~/Desktop/BRAIN2 --yes
+        --vault ~/BRAIN2 --yes
 USAGE
 }
 
