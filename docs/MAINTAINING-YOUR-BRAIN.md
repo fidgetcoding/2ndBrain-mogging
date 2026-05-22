@@ -12,9 +12,9 @@ A note on where the vault lives: the default is `~/BRAIN2`. Don't put it on your
 
 Every folder needs an index `.md` file, and **its filename must equal the folder name**.
 
-- `WARP/` gets `WARP/WARP.md`
-- `sales/` gets `sales/sales.md`
-- **Never** `WARP-Index.md`. The `-Index` suffix breaks `[[WARP]]` link resolution from everywhere else in the vault.
+- `Project-A/` gets `Project-A/Project-A.md`
+- `research/` gets `research/research.md`
+- **Never** `Project-A-Index.md`. The `-Index` suffix breaks `[[Project-A]]` link resolution from everywhere else in the vault.
 
 That index file is not a formality. It's how your second brain knows what the folder is. A good index `.md` explains:
 
@@ -52,18 +52,18 @@ One folder per project. Each project folder contains a `conversations/` subfolde
 
 ```
 01-Projects/
-└── WARP/
-    ├── WARP.md            ← index note (filename = folder name)
-    ├── conversations/     ← every /save'd chat about WARP
-    └── sales/             ← a subfolder you added
-        └── sales.md       ← its own index note
+└── Project-A/
+    ├── Project-A.md       ← index note (filename = folder name)
+    ├── conversations/     ← every /save'd chat about Project-A
+    └── research/          ← a subfolder you added
+        └── research.md    ← its own index note
 ```
 
 ### `02-Sources/` — literature
 
-Things that are worth remembering but **not tied to a project**. A cool fact. Something someone told you. A sales process worth keeping.
+Things that are worth remembering but **not tied to a project**. A cool fact. Something someone told you. A useful process worth keeping.
 
-Example: there's no project called "Uri." But if Uri tells you something interesting about coding, that's a source — it goes in `02-Sources/`.
+Example: there's no project for "a friend you talked to." But if someone tells you something interesting about coding, that's a source — it goes in `02-Sources/`.
 
 ### `03-Concepts/` — pure concepts
 
@@ -77,7 +77,7 @@ This is the layer that **teaches your second brain how to operate itself.** Maps
 
 ### `05-Tasks/` — tasks (optional)
 
-Only useful if you sync your Obsidian tasks to a calendar through an API. (Nate does this. New users often don't need it — skip it until you do.)
+Only useful if you sync your Obsidian tasks to a calendar through an API. Most new users don't need it — skip it until you do.
 
 ---
 
@@ -97,15 +97,15 @@ The catch: `/save` only routes correctly if your folder index files are set up r
 
 ## Adding a new project (or subfolder), step by step
 
-Say you're starting a project called **WARP**, and inside it you want a **sales** subfolder. Here's the exact order:
+Say you're starting a project called **Project-A**, and inside it you want a **research** subfolder. Here's the exact order:
 
-1. **Create the folder.** `01-Projects/WARP/`
-2. **Create its index `.md`.** `01-Projects/WARP/WARP.md` — filename equals folder name. Describe what WARP is, what goes in it, and how it relates to other folders.
-3. **Register it in the index.** Add `[[WARP]]` to `04-Index/Projects-Index.md`.
-4. **If it's a subfolder, update the parent.** Create `01-Projects/WARP/sales/sales.md`, then edit `WARP.md` to mention the `sales/` subfolder.
-5. **Link up and down.** `WARP.md` links **up** (to `Projects-Index` / its parent) and **down** (to its subfolders and key notes). `sales.md` links back up to `WARP`.
+1. **Create the folder.** `01-Projects/Project-A/`
+2. **Create its index `.md`.** `01-Projects/Project-A/Project-A.md` — filename equals folder name. Describe what Project-A is, what goes in it, and how it relates to other folders.
+3. **Register it in the index.** Add `[[Project-A]]` to `04-Index/Projects-Index.md`.
+4. **If it's a subfolder, update the parent.** Create `01-Projects/Project-A/research/research.md`, then edit `Project-A.md` to mention the `research/` subfolder.
+5. **Link up and down.** `Project-A.md` links **up** (to `Projects-Index` / its parent) and **down** (to its subfolders and key notes). `research.md` links back up to `Project-A`.
 
-Only after all of this will `/save` route into `WARP/` and `WARP/sales/` cleanly.
+Only after all of this will `/save` route into `Project-A/` and `Project-A/research/` cleanly.
 
 ---
 
@@ -150,10 +150,10 @@ You don't have to start empty. Two paths, depending on your account.
 
 ### Path B — no export available
 
-1. Go into your Claude.ai projects and any artifacts you built (a calculator, for example).
+1. Go into your Claude.ai projects and any artifacts you built (a small tool or document, for example).
 2. In each chat, ask it to produce a **detailed markdown (`.md`) file** summarizing exactly what was built or discussed.
 3. Copy that markdown into your terminal.
-4. Say: **"Here's a summary of what I did at WARP. Organize it into the brain."**
+4. Say: **"Here's a summary of what I did on Project-A. Organize it into the brain."**
 
 Either way: conversations go to `conversations/`, and reusable knowledge or assets route to wherever they belong.
 
@@ -167,7 +167,7 @@ Markdown is trivially easy for an AI to read — it's just headers and body text
 
 Not everything is a note. If something is a **repeatable function** you'll trigger often, make it a **skill**, not a knowledge note.
 
-Example: a CAC / LTV-to-CAC partner-economics calculator. You'll reach for that math again and again. Make it a skill `.md` file. Then Claude auto-calls it when it sees a trigger — say "I need an LTV calc" and it jumps straight to the skill.
+Example: anything you do the same way over and over — a calculation, a formatting routine, a checklist you run each time. Make it a skill `.md` file. Then Claude auto-calls it when it sees a trigger — say the phrase that names it and it jumps straight to the skill.
 
 **Rule:** a skill `.md` should be **80–200 lines max**, and lean toward 80. Short skills get called reliably; bloated ones don't.
 

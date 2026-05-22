@@ -13,7 +13,7 @@ Please **do not** open a public GitHub issue for suspected security
 vulnerabilities.
 
 - Preferred: open a private advisory via GitHub Security Advisories —
-  <https://github.com/lorecraft-io/2ndBrain-mogging/security/advisories/new>
+  <https://github.com/fidgetcoding/2ndBrain-mogging/security/advisories/new>
 - Backup channel: email `nate@lorecraft.io` with `[security]` in the
   subject line.
 - Expected first response: within **72 hours** on weekdays
@@ -56,9 +56,9 @@ Replace `vX.Y.Z` with the tag you're verifying (e.g. `v0.1.4`).
 
 ```bash
 # 1. Download
-curl -sSfL -o install.sh          https://github.com/lorecraft-io/2ndBrain-mogging/releases/download/vX.Y.Z/install.sh
-curl -sSfL -o install.sh.minisig  https://github.com/lorecraft-io/2ndBrain-mogging/releases/download/vX.Y.Z/install.sh.minisig
-curl -sSfL -o install.sh.sha256   https://github.com/lorecraft-io/2ndBrain-mogging/releases/download/vX.Y.Z/install.sh.sha256
+curl -sSfL -o install.sh          https://github.com/fidgetcoding/2ndBrain-mogging/releases/download/vX.Y.Z/install.sh
+curl -sSfL -o install.sh.minisig  https://github.com/fidgetcoding/2ndBrain-mogging/releases/download/vX.Y.Z/install.sh.minisig
+curl -sSfL -o install.sh.sha256   https://github.com/fidgetcoding/2ndBrain-mogging/releases/download/vX.Y.Z/install.sh.sha256
 
 # 2. Verify signature (public key pinned in README)
 minisign -V -p minisign.pub -m install.sh

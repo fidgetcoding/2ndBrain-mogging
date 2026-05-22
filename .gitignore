@@ -19,3 +19,7 @@ install.sh.sig
 .gitleaks.private.toml
 config/nathan.pii
 config/nathan.pii.local
+
+# Operator-private skills — not part of the public pack (hardcoded personal paths)
+skills/maketasks/
+skills/backup-brain2/
