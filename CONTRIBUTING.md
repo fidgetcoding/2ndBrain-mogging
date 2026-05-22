@@ -16,7 +16,7 @@ Thanks for considering a contribution. This repo is small, opinionated, and inte
 
 **Every PR runs the full test harness.** From the repo root: `bash tests/run_all.sh`. The harness creates a known-state vault fixture in a temp directory, runs every skill against it, and diffs the output against expected-state files in `tests/expected/`. If your change modifies output, update the expected files in the same PR.
 
-**Direct push to `main` is the maintainer default, not the contributor default.** This repo lives under `<ORG-A>` where maintainers push directly to `main` by policy. Contributor PRs are still required to target `main` through review. The direct-push policy does not mean "anyone can push" — it means "once merged, the change is live, no staging branch."
+**Direct push to `main` is the maintainer default, not the contributor default.** This repo lives under `fidgetcoding` where maintainers push directly to `main` by policy. Contributor PRs are still required to target `main` through review. The direct-push policy does not mean "anyone can push" — it means "once merged, the change is live, no staging branch."
 
 ## How to add a new `/c*` skill
 

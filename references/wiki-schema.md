@@ -196,7 +196,7 @@ All five prefixes MUST be listed in the n8n W1 filter or the bot will get stuck 
 
 - **No force-push.** Ever. If a branch is broken, create a new one.
 - **No interactive rebase via skill.** `git rebase -i` requires a human at the keyboard.
-- **Direct-to-main is allowed** on the vault repo per the operator's <ORG-A> convention — skills SHOULD still push to a short-lived branch and fast-forward merge so the branch name carries the session context, but they MUST NOT fail if the remote configuration blocks branching (degraded mode: commit to main directly).
+- **Direct-to-main is allowed** on the vault repo per the operator's fidgetcoding convention — skills SHOULD still push to a short-lived branch and fast-forward merge so the branch name carries the session context, but they MUST NOT fail if the remote configuration blocks branching (degraded mode: commit to main directly).
 - **Never `git commit --no-verify`** or `--no-gpg-sign`. Hooks exist to protect the repo; bypassing them erases their value.
 
 ## 8. Forbidden paths (all skills)

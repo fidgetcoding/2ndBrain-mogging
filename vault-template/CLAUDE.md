@@ -13,6 +13,14 @@ This file tells Claude Code (and any agent running against this vault) how to re
 
 Personal knowledge management system (PKM) — a Second Brain built on Zettelkasten principles. It holds conversations, sources (articles, videos, PDFs, exports), atomic concepts, maps of content, project indexes, and tasks. The goal is graph density: every note connects to at least one other note so retrieval works by association, not search.
 
+## First session / onboarding (do this)
+
+On a **fresh vault** (just installed, few or no notes yet) or any time the operator is **setting things up** — adding a folder, creating a new project, importing notes — invoke `/vault-coach`. That skill carries the full setup-and-maintenance playbook: it forces an index note on every new folder, registers it in `04-Index/Projects-Index.md`, and wires the bidirectional links so nothing ends up orphaned.
+
+Concretely: if this is the first session in a new vault, **offer to run `/vault-coach`** before doing anything else. If the operator asks to add a folder or project, **run `/vault-coach`** rather than hand-creating the index note. The durable rule is: on first session or any setup task, the answer is `/vault-coach`.
+
+The deeper human reference is `docs/MAINTAINING-YOUR-BRAIN.md` in the `2ndBrain-mogging` repo. (It ships with the repo, not necessarily inside an installed vault — so point the operator to `/vault-coach`, which carries the same guidance, and cite the repo doc as further reading.)
+
 ## Folder structure (7 folders)
 
 ```

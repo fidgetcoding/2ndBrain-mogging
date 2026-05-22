@@ -4,15 +4,15 @@
   "version": "0.1.4",
   "description": "Obsidian vault automation for Claude Code. Save conversations, compile sources into a living wiki, audit the graph, challenge your own thinking. Amalgamation of Karpathy's LLM Wiki + Jens + eugeniu + AgriciDaniel + NicholasSpisak, hardened for operator vaults with live sync.",
   "author": {
-    "name": "<ORG-A>",
+    "name": "fidgetcoding",
     "email": "operator@example.com",
-    "url": "https://github.com/<ORG-A>"
+    "url": "https://github.com/fidgetcoding"
   },
   "license": "MIT",
-  "homepage": "https://github.com/<ORG-A>/2ndBrain-mogging",
+  "homepage": "https://github.com/fidgetcoding/2ndBrain-mogging",
   "repository": {
     "type": "git",
-    "url": "https://github.com/<ORG-A>/2ndBrain-mogging.git"
+    "url": "https://github.com/fidgetcoding/2ndBrain-mogging.git"
   },
   "engines": {
     "claude-code": ">=1.4.0"

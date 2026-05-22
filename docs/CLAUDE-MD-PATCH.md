@@ -24,7 +24,7 @@ Copy EVERYTHING between (and including) the two `<!-- 2ndbrain-mogging:... -->` 
 
 > This section is managed by the `2ndBrain-mogging` Claude Code plugin (post-mogging contract, 2026-04-16 onward). It is regenerated on plugin upgrade. Do not hand-edit between the markers — edit `docs/CLAUDE-MD-PATCH.md` in the plugin repo and re-run the installer, OR edit `Claude-Memory/aliases.yaml` directly for entity changes.
 >
-> Canonical source: https://github.com/<ORG-A>/2ndBrain-mogging
+> Canonical source: https://github.com/fidgetcoding/2ndBrain-mogging
 
 ### Post-mogging folder contract (7 folders)
 

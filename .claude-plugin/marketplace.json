@@ -6,7 +6,7 @@
       "name": "2ndbrain-mogging",
       "source": {
         "source": "github",
-        "repo": "<ORG-A>/2ndBrain-mogging",
+        "repo": "fidgetcoding/2ndBrain-mogging",
         "ref": "main"
       },
       "path": "."
