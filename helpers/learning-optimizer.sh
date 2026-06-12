@@ -1,5 +1,5 @@
 #!/bin/bash
-# Vendored from FidgetFlo (lorecraft-io/fidgetflo) — a FidgetFlo-internal build
+# Vendored from FidgetFlo (fidgetcoding/fidgetflo) — a FidgetFlo-internal build
 # descended from ruvnet/ruflo@v3.5.80 with additional pattern-graph logic
 # extended by Lorecraft. Upstream: https://github.com/ruvnet/ruflo/tree/v3.5.80
 # License:   MIT (c) 2024-2026 ruvnet, (c) 2026 Lorecraft LLC / Nate Davidovich

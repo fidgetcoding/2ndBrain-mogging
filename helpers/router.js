@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* Vendored from FidgetFlo (lorecraft-io/fidgetflo) — a FidgetFlo-internal build
+/* Vendored from FidgetFlo (fidgetcoding/fidgetflo) — a FidgetFlo-internal build
  * descended from ruvnet/ruflo@v3.5.80 with additional pattern-graph logic
  * extended by Lorecraft. This file is FidgetFlo-era (not present in the ruflo
  * v3.5.80 public tag). Upstream root: https://github.com/ruvnet/ruflo/tree/v3.5.80
