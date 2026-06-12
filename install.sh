@@ -531,9 +531,14 @@ JSON
   local ours_already_present=0
   if [[ -f "$SETTINGS_PATH" ]]; then
     existing_stop_count="$(jq '(.hooks.Stop // []) | length' "$SETTINGS_PATH" 2>/dev/null || echo 0)"
-    # Idempotency guard: detect if our own hook is already present by path fingerprint.
-    if jq -e --arg p "2ndBrain-mogging/hooks/stop-" '
-          (.hooks.Stop // []) | map(.hooks // []) | add | map(.command // "") | any(contains($p))
+    # Idempotency guard: detect if our own hook is already present by path
+    # fingerprint. Match on the script name only, case-insensitively — the
+    # checkout dir is user-chosen (often lowercase `2ndbrain-mogging`), so
+    # fingerprinting on the repo dir name misses real installs and re-runs
+    # append duplicate hooks.
+    if jq -e --arg p "hooks/stop-save.sh" '
+          (.hooks.Stop // []) | map(.hooks // []) | add | map(.command // "")
+          | any(ascii_downcase | contains($p))
         ' "$SETTINGS_PATH" >/dev/null 2>&1; then
       ours_already_present=1
     fi
