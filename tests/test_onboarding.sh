@@ -67,6 +67,7 @@ run_install() {
   # would attempt a real `brew install --cask obsidian` (slow + flaky in CI).
   # The other --no-* flags isolate the install to the temp HOME.
   HOME="$FAKE_HOME" \
+  CLAUDE_HOME="$FAKE_HOME/.claude" \
   VAULT_DIR="$FAKE_VAULT" \
     bash "$INSTALL_SH" --vault "$FAKE_VAULT" --apply \
       --no-launchd --no-obsidian-app --no-obsidian-mcp \
@@ -168,13 +169,15 @@ SETTINGS="$FAKE_HOME/.claude/settings.json"
 assert_file "$SETTINGS" "settings.json still present"
 assert_json_valid "$SETTINGS" "settings.json still valid JSON after merge"
 
-# Count Stop hooks that reference '2ndbrain'.
+# Count Stop hooks that wrap our hooks/stop-save.sh. Fingerprint on the script
+# name, not the repo dir name — checkouts are often lowercase, and a user's
+# unrelated pre-existing hooks may mention "2ndbrain".
 COUNT_2B_STOP=0
 if command -v jq >/dev/null 2>&1; then
   COUNT_2B_STOP=$(jq '
     [ .hooks.Stop[]?
       | .hooks[]?
-      | select(.command | test("2ndbrain"; "i"))
+      | select(.command | test("hooks/stop-save\\.sh"; "i"))
     ] | length
   ' "$SETTINGS" 2>/dev/null || echo 0)
 fi
@@ -221,7 +224,7 @@ if command -v jq >/dev/null 2>&1; then
   COUNT_2B_STOP2=$(jq '
     [ .hooks.Stop[]?
       | .hooks[]?
-      | select(.command | test("2ndbrain"; "i"))
+      | select(.command | test("hooks/stop-save\\.sh"; "i"))
     ] | length
   ' "$SETTINGS" 2>/dev/null || echo 0)
 fi
