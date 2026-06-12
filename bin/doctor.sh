@@ -90,6 +90,10 @@ check_symlinks_for_kind() {
 
 check_launchd() {
   info "checking launchd jobs"
+  if [[ "$(uname -s)" != "Darwin" ]]; then
+    info "launchd is macOS-only; skipping on $(uname -s) (scheduled agents need cron/systemd timers here)"
+    return 0
+  fi
   local src_dir="$REPO_ROOT/scheduled/launchd"
   [[ -d "$src_dir" ]] || { info "no launchd sources; skipping"; return 0; }
   shopt -s nullglob
@@ -121,8 +125,19 @@ check_launchd() {
 check_plugin_registered() {
   info "checking plugin registration (forward-looking)"
   if ! command -v claude >/dev/null 2>&1; then
-    fail "claude CLI not on PATH"
-    return
+    # Non-interactive shells (ssh, cron) skip the nvm bootstrap in .bashrc —
+    # probe the usual install homes before declaring claude missing.
+    local alt_claude
+    alt_claude="$(ls -1 "$HOME"/.nvm/versions/node/*/bin/claude 2>/dev/null | tail -1)"
+    if [[ -z "$alt_claude" && -x "$HOME/.local/bin/claude" ]]; then
+      alt_claude="$HOME/.local/bin/claude"
+    fi
+    if [[ -n "$alt_claude" ]]; then
+      PATH="$(dirname "$alt_claude"):$PATH"
+    else
+      fail "claude CLI not on PATH"
+      return
+    fi
   fi
   # read plugin name from .claude-plugin/plugin.json if present
   local plugin_name=""
