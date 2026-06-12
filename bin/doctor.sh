@@ -273,7 +273,14 @@ check_projects_index_stale_wikilinks() {
       fail "  flag for human review (do NOT auto-delete; CLAUDE.md hard rule)"
       stale_count=$((stale_count + 1))
     fi
-  done < <(grep -oE '\[\[[^]|]+' "$index_file" | sed 's/^\[\[//')
+  done < <(
+    # Drop fenced code blocks and inline `code` spans first — wikilinks in
+    # example/template snippets are documentation, not graph edges, and
+    # false-fail the check (e.g. the "How to add a new project" how-to).
+    awk '/^[[:space:]]*```/{inblock=!inblock; next} !inblock' "$index_file" \
+      | sed 's/`[^`]*`//g' \
+      | grep -oE '\[\[[^]|]+' | sed 's/^\[\[//'
+  )
   if [[ "$stale_count" -eq 0 ]]; then
     pass "Projects-Index.md wikilinks all resolve to existing project folders"
   fi
