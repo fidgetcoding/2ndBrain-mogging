@@ -2,9 +2,9 @@
 
 This note covers three smaller projects that extend the Karpathy primitive in different directions. None of them is the primary influence on this pack, but each contributes a specific pattern worth naming. Sources:
 
-- rohitg00/LLM-Wiki-v2 — https://github.com/rohitg00/LLM-Wiki-v2
+- rohitg00/LLM-Wiki-v2 — repo since deleted from GitHub (link dead as of 2026-06-12)
 - NicholasSpisak/second-brain — https://github.com/NicholasSpisak/second-brain
-- huytieu/COG — https://github.com/huytieu/COG
+- huytieu/COG — https://github.com/huytieu/COG-second-brain (original `huytieu/COG` URL is dead)
 
 ## rohitg00/LLM-Wiki-v2
 

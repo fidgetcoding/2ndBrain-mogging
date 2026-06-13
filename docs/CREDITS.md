@@ -6,7 +6,7 @@
 
 ### Andrej Karpathy — LLM Wiki gist
 
-- **Source:** https://gist.github.com/karpathy/3d3797cfe72b4fd78dab7a5c35caf0f9
+- **Source:** https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f
 - **License:** not formally stated; public gist, treated as reference / fair use. I do not copy verbatim code from the gist into this pack.
 - **What I took:**
   - The compilation-over-retrieval thesis (core rationale in `PHILOSOPHY.md`)
@@ -74,13 +74,13 @@
 
 ### rohitg00 — LLM-Wiki-v2
 
-- **Source:** https://github.com/rohitg00/LLM-Wiki-v2
+- **Source:** `rohitg00/LLM-Wiki-v2` on GitHub (repo since deleted — link dead as of 2026-06-12; attribution preserved).
 - **License:** check repository.
 - **What I took:** the template-per-output-type idea, applied narrowly to source notes in `02-Sources/` (the pack's equivalent of the upstream `02-Literature/` folder). The broader template catalog was not adopted.
 
 ### huytieu — COG (Chain-of-Going)
 
-- **Source:** https://github.com/huytieu/COG
+- **Source:** https://github.com/huytieu/COG-second-brain (the original `huytieu/COG` URL is dead; the project now expands COG as "Cognition + Obsidian + Git")
 - **License:** check repository.
 - **What I took:** the visible-trajectory pattern — the LLM commits to its next steps explicitly before executing them. Used in `/autoresearch` round transitions. The open-ended chain format was not adopted; my research loop is bounded to three rounds.
 

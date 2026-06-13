@@ -1,6 +1,6 @@
 # Why not Karpathy's gist directly
 
-Andrej Karpathy's [LLM Wiki gist](https://gist.github.com/karpathy/3d3797cfe72b4fd78dab7a5c35caf0f9) is the seed idea for every project in this space, including this one. If you only need what it provides, use it — it is shorter, simpler, and does one thing cleanly. You do not need this pack.
+Andrej Karpathy's [LLM Wiki gist](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) is the seed idea for every project in this space, including this one. If you only need what it provides, use it — it is shorter, simpler, and does one thing cleanly. You do not need this pack.
 
 ## What Karpathy's gist provides
 

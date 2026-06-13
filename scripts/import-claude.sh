@@ -170,7 +170,13 @@ fi
 
 if [ -z "$VAULT_PATH" ]; then
     VAULT_CANDIDATES=()
+    # Home-dir candidates first — they're the documented recommendation
+    # (~/BRAIN2; Desktop/Documents are TCC-protected on modern macOS).
     for candidate in \
+        "$HOME/BRAIN2" \
+        "$HOME/BRAIN" \
+        "$HOME/2ndBrain" \
+        "$HOME/Second-Brain" \
         "$HOME/Desktop/BRAIN" \
         "$HOME/Desktop/BRAIN2" \
         "$HOME/Desktop/2ndBrain" \

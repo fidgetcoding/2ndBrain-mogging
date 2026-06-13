@@ -6,7 +6,7 @@ allowed-tools: Read, Write, Edit, Glob, Grep, Bash
 
 # save — conversation capture into 2ndBrain
 
-Shared schema: see `../references/wiki-schema.md` (source of truth for frontmatter keys, folder roles, and linking grammar used by both `save` and `wiki`).
+Shared schema: see `./references/wiki-schema.md` (source of truth for frontmatter keys, folder roles, and linking grammar used by both `save` and `wiki`).
 
 `save` is the single canonical entry point for "commit this conversation (or this slice of it, or this thing I just dictated) to the vault." It replaces every ad-hoc "just append to Inbox" habit. It is classification-first, preview-before-write, and append-only toward existing notes — never overwrite an existing file without showing the diff and getting explicit approval.
 
@@ -35,7 +35,7 @@ If the user types a number not in `1..5`, re-prompt. If they describe the conten
 
 ## 2. Aliases as classification source
 
-Before routing any content, load `Claude-Memory/aliases.yaml` from the vault root via `Read`. The aliases file maps natural-language signals to canonical vault destinations. Schema recap (full definition in `../references/wiki-schema.md`):
+Before routing any content, load `Claude-Memory/aliases.yaml` from the vault root via `Read`. The aliases file maps natural-language signals to canonical vault destinations. Schema recap (full definition in `./references/wiki-schema.md`):
 
 ```yaml
 aliases:
@@ -286,4 +286,4 @@ Backfill commits use `[bot:save --backfill]` as the prefix so they're still W1-t
 - `save` does not run audits, heals, or contradiction detection — that is also `wiki`.
 - `save` does not touch `.env*`, `.claude/settings.json`, or anything outside the vault tree.
 
-Reference: `../references/wiki-schema.md` is the binding definition for every frontmatter key, folder role, and linking grammar token referenced above.
+Reference: `./references/wiki-schema.md` is the binding definition for every frontmatter key, folder role, and linking grammar token referenced above.
