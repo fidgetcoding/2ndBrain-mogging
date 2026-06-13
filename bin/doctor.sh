@@ -128,7 +128,10 @@ check_plugin_registered() {
     # Non-interactive shells (ssh, cron) skip the nvm bootstrap in .bashrc —
     # probe the usual install homes before declaring claude missing.
     local alt_claude
-    alt_claude="$(ls -1 "$HOME"/.nvm/versions/node/*/bin/claude 2>/dev/null | tail -1)"
+    # `|| true` is load-bearing: with no nvm installs the glob passes through
+    # unexpanded, ls exits non-zero, and `set -euo pipefail` would kill the
+    # whole doctor run silently (exit 1, no FAIL output) without it.
+    alt_claude="$(ls -1 "$HOME"/.nvm/versions/node/*/bin/claude 2>/dev/null | tail -1 || true)"
     if [[ -z "$alt_claude" && -x "$HOME/.local/bin/claude" ]]; then
       alt_claude="$HOME/.local/bin/claude"
     fi

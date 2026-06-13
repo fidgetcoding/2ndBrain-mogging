@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Vendored from FidgetFlo (fidgetcoding/fidgetflo) — a FidgetFlo-internal build
 # descended from ruvnet/ruflo@v3.5.80 with additional pattern-graph logic
 # extended by Lorecraft. Upstream: https://github.com/ruvnet/ruflo/tree/v3.5.80
@@ -292,19 +292,23 @@ get_stats() {
 # =============================================================================
 case "${1:-help}" in
   "session-start"|"start")
-    session_start "$2"
+    # ${N:-} defaults are load-bearing: this file runs under `set -u`, so a
+    # bare "$2" crashes with "unbound variable" on every documented
+    # optional-arg invocation (e.g. `learning-hooks.sh session-start`,
+    # `store "strategy"`). The functions own the real defaults.
+    session_start "${2:-}"
     ;;
   "session-end"|"end")
     session_end
     ;;
   "store")
-    store_pattern "$2" "$3" "$4"
+    store_pattern "${2:-}" "${3:-}" "${4:-}"
     ;;
   "search")
-    search_patterns "$2" "$3"
+    search_patterns "${2:-}" "${3:-}"
     ;;
   "record-usage"|"usage")
-    record_usage "$2" "$3"
+    record_usage "${2:-}" "${3:-}"
     ;;
   "benchmark")
     run_benchmark

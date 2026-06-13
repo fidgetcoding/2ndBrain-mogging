@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Vendored from FidgetFlo (fidgetcoding/fidgetflo) — a FidgetFlo-internal build
 # descended from ruvnet/ruflo@v3.5.80 with additional pattern-graph logic
 # extended by Lorecraft. Upstream: https://github.com/ruvnet/ruflo/tree/v3.5.80
@@ -75,6 +75,11 @@ optimize_patterns() {
   short_count=$(sqlite3 "$PATTERNS_DB" "SELECT COUNT(*) FROM short_term_patterns" 2>/dev/null || echo "0")
   long_count=$(sqlite3 "$PATTERNS_DB" "SELECT COUNT(*) FROM long_term_patterns" 2>/dev/null || echo "0")
   avg_quality=$(sqlite3 "$PATTERNS_DB" "SELECT ROUND(AVG(quality), 3) FROM short_term_patterns" 2>/dev/null || echo "0")
+  # AVG() over zero rows is NULL → sqlite3 prints an empty string and the
+  # `|| echo 0` above never fires (the query itself succeeded). Without this
+  # default, the learning.json heredoc below emits `"avgQuality": ,` —
+  # invalid JSON that breaks the `status` subcommand's jq read.
+  avg_quality="${avg_quality:-0}"
   routing_accuracy=$(calculate_routing_accuracy)
 
   # Calculate intelligence score

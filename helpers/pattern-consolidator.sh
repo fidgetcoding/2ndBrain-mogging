@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Vendored from FidgetFlo (fidgetcoding/fidgetflo) — a FidgetFlo-internal build
 # descended from ruvnet/ruflo@v3.5.80 with additional pattern-graph logic
 # extended by Lorecraft. Upstream: https://github.com/ruvnet/ruflo/tree/v3.5.80

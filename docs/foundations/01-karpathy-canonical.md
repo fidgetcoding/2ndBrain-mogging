@@ -2,7 +2,7 @@
 
 The `LLM Wiki` gist by Andrej Karpathy is the origin point for the second-brain-over-Claude-Code genre. This foundations note captures the exact primitives as Karpathy described them, so that downstream skills in this pack can be understood as specific extensions of a well-defined base.
 
-Source: https://gist.github.com/karpathy/3d3797cfe72b4fd78dab7a5c35caf0f9
+Source: https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f
 
 ## The primitives
 
