@@ -6,7 +6,7 @@ allowed-tools: Read, Write, Edit, Glob, Grep, Bash
 
 # wiki — add, audit, heal, find
 
-Shared schema: `../references/wiki-schema.md` is the binding source of truth for frontmatter keys, folder roles, wikilink grammar, and the entity/concept/claim data model used below. This file defines the operator-facing behavior; the schema file defines the data.
+Shared schema: `./references/wiki-schema.md` is the binding source of truth for frontmatter keys, folder roles, wikilink grammar, and the entity/concept/claim data model used below. This file defines the operator-facing behavior; the schema file defines the data.
 
 `wiki` is the single entry point for anything that treats the vault as a knowledge graph rather than a capture bucket. The `save` skill handles conversational capture. `wiki` handles graph-aware work: ingesting sources, auditing graph health, healing known deformations, and searching with citations.
 
@@ -33,7 +33,7 @@ These are non-negotiable and apply to every branch below:
 2. **Never write to `01-Projects/*/<project-name>.md` or any file directly named as a project index.** Project index files are human-curated (per vault rules in `CLAUDE.md`). `wiki` may LINK into them but never mutate them. Scaffolding new projects is explicitly out of scope for this skill.
 3. **Never write anywhere under `05-Tasks/`.** Task state is owned by the Obsidian Tasks plugin and the n8n 2-way sync (Obsidian ↔ Morgen, post-2026-05-04 Notion drop). `wiki` may READ tasks to resolve wikilink targets but never creates, edits, completes, or deletes a task.
 4. **Every branch that writes uses its own git branch.** No direct writes to `main`. Branch names below are the contract.
-5. **Every write file includes the frontmatter keys `source_of_truth`, `last_confirmed`, and `owner` per `../references/wiki-schema.md`.**
+5. **Every write file includes the frontmatter keys `source_of_truth`, `last_confirmed`, and `owner` per `./references/wiki-schema.md`.**
 6. **Branch pollution discipline.** If a branch already exists for today, append to it; do not create `-v2` siblings.
 
 ## 3. Branch 1 — ADD
@@ -164,7 +164,7 @@ AUDIT never writes except to a timestamped report. It scans:
 | Dead wikilinks              | `[[foo]]` where no file `foo.md` (or alias-resolved target) exists.                                    |
 | Missing cross-refs          | Concept A references Concept B, but Concept B has no reverse mention of A.                             |
 | Index consistency           | `04-Index/Index.md` lists a page that no longer exists, or a page that exists but isn't in the index.  |
-| Data gaps                   | Pages with frontmatter fields missing per `../references/wiki-schema.md` (e.g., `source_of_truth` empty). |
+| Data gaps                   | Pages with frontmatter fields missing per `./references/wiki-schema.md` (e.g., `source_of_truth` empty). |
 
 ### 4.1 Mechanics
 
@@ -340,6 +340,6 @@ A critical FIND rule: the skill MUST NOT emit a `[[wikilink]]` to a page that is
 - **FIND → save.** FIND can propose saving a synthesis; the actual write is delegated to `/save` branch 3.
 - **ADD "discuss before write" residue → save.** If during DISCUSS the user says "this is really a fleeting thought, not a source," the ADD run aborts cleanly and suggests `/save` branch 3.
 
-Both skills read the same `../references/wiki-schema.md` and the same `Claude-Memory/aliases.yaml`. If those two files ever drift, fix the schema first — it's the source of truth, and both skills are downstream.
+Both skills read the same `./references/wiki-schema.md` and the same `Claude-Memory/aliases.yaml`. If those two files ever drift, fix the schema first — it's the source of truth, and both skills are downstream.
 
-Reference: `../references/wiki-schema.md` is the binding definition for every frontmatter key, folder role, and linking grammar token used above. Read it before any write.
+Reference: `./references/wiki-schema.md` is the binding definition for every frontmatter key, folder role, and linking grammar token used above. Read it before any write.

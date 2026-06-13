@@ -5,15 +5,23 @@
 # Usage:
 #   backup-vault.sh [VAULT_PATH]
 #
-# Produces ~/Desktop/2ndBrain-backup-YYYYMMDD-HHMMSS.tar.gz from the given
-# vault path (defaults to ~/Desktop/WORK/OBSIDIAN/2ndBrain). Excludes
-# Obsidian workspace state files and .DS_Store.
+# Produces ~/WORK/<vault-name>-BACKUPS/<vault-name>-backup-YYYYMMDD-HHMMSS.tar.gz
+# from the given vault path. Vault resolution order: $1 arg, then the
+# ~/.claude/.mogging-vault marker install.sh writes, then ~/BRAIN2.
+# Excludes Obsidian workspace state files and .DS_Store.
+#
+# NEVER writes to ~/Desktop — modern macOS permission-protects it (TCC),
+# and the vault non-negotiables forbid Desktop tarballs outright.
 #
 
 set -euo pipefail
 IFS=$'\n\t'
 
-VAULT="${1:-$HOME/Desktop/WORK/OBSIDIAN/2ndBrain}"
+VAULT="${1:-}"
+if [[ -z "$VAULT" && -f "$HOME/.claude/.mogging-vault" ]]; then
+  VAULT="$(head -n 1 "$HOME/.claude/.mogging-vault" | tr -d '\r\n')"
+fi
+VAULT="${VAULT:-$HOME/BRAIN2}"
 
 if [[ ! -d "$VAULT" ]]; then
   echo "backup-vault: not a directory: $VAULT" >&2
@@ -23,7 +31,9 @@ fi
 VAULT_ABS="$(cd -P "$VAULT" >/dev/null 2>&1 && pwd)"
 PARENT="$(dirname "$VAULT_ABS")"
 NAME="$(basename "$VAULT_ABS")"
-OUT="$HOME/Desktop/2ndBrain-backup-$(date +%Y%m%d-%H%M%S).tar.gz"
+BACKUP_DIR="$HOME/WORK/${NAME}-BACKUPS"
+mkdir -p "$BACKUP_DIR"
+OUT="$BACKUP_DIR/${NAME}-backup-$(date +%Y%m%d-%H%M%S).tar.gz"
 
 tar --exclude='.obsidian/workspace*' \
     --exclude='.DS_Store' \

@@ -33,8 +33,11 @@ Killed folders: `00-Inbox/`, `01-Fleeting/`, `05-Templates/`, `06-Assets/`.
 cd /path/to/2ndBrain
 git tag v0-pre-migration
 git push origin v0-pre-migration
-tar czf ~/Desktop/2ndBrain-backup-$(date +%Y%m%d-%H%M%S).tar.gz .
+mkdir -p ~/WORK/2ndBrain-BACKUPS
+tar czf ~/WORK/2ndBrain-BACKUPS/2ndBrain-backup-$(date +%Y%m%d-%H%M%S).tar.gz .
 ```
+
+(Never tarball to `~/Desktop/` — it's TCC permission-protected on modern macOS and Desktop tarballs are forbidden by non-negotiable #1.)
 
 The tag is your full-rollback anchor. The tarball is your oh-shit anchor if git itself corrupts.
 
@@ -277,7 +280,7 @@ grep -c '<!-- mogging:start -->' CLAUDE.md
 | Last step only | `git reset --hard HEAD~1` |
 | Last N steps | `git reset --hard HEAD~N` |
 | Full rollback to pre-migration | `git reset --hard v0-pre-migration` |
-| Tarball (git corrupted) | `tar xzf ~/Desktop/2ndBrain-backup-*.tar.gz -C /tmp/restore` |
+| Tarball (git corrupted) | `tar xzf ~/WORK/2ndBrain-BACKUPS/2ndBrain-backup-*.tar.gz -C /tmp/restore` |
 
 Phase boundaries are natural checkpoints. If Phase C surfaces 200+ broken wikilinks, reset to end of Phase B and fix in a branch before proceeding.
 

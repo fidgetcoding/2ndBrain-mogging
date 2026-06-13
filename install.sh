@@ -591,11 +591,17 @@ JSON
   else
     # Append: concat .hooks.Stop arrays, keep rest of settings via deep merge,
     # then overwrite .hooks.Stop with the concatenation.
+    # NOTE: bind $old/$new BEFORE piping into the merged object — after `| $m`
+    # the pipeline context is an object, so `.[0]` would throw "Cannot index
+    # object with number" and silently punt every run to the fallback below.
+    # Same bug class as the merge_intelligence_hooks() fix in CHANGELOG 0.1.x
+    # (04c796e); this is the missed sibling instance.
     if ! jq -s '
-      ( .[0] * .[1] ) as $m
-      | $m
+      .[0] as $old
+      | .[1] as $new
+      | ($old * $new)
       | .hooks = (.hooks // {})
-      | .hooks.Stop = ((.[0].hooks.Stop // []) + (.[1].hooks.Stop // []))
+      | .hooks.Stop = (($old.hooks.Stop // []) + ($new.hooks.Stop // []))
     ' "$base" "$overlay_resolved" > "$merged" 2>/dev/null; then
       # Fallback: do it in two passes (older jq)
       if ! jq -s --slurpfile o <(cat "$overlay_resolved") '
