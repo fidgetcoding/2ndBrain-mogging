@@ -2,14 +2,20 @@
 #
 # 2ndBrain-mogging — doctor
 #
+# Usage: doctor.sh [--vault PATH]
+#
 # Sanity-check that the install is healthy:
 #   - every symlink under ~/.claude/{skills,commands,agents}/ resolves
+#     (a link that resolves to a DIFFERENT clone is a WARN, not a FAIL)
 #   - every plist shipped in scheduled/launchd/ is installed and loaded
 #   - the plugin is reachable (via symlinks — Claude's plugin registry is
 #     forward-looking; install.sh does not call `claude plugin add`)
 #
+# --vault PATH overrides vault discovery (marker file / $VAULT env) — used
+# by install.sh to thread its resolved --vault through.
+#
 # Exit codes:
-#   0 = all green
+#   0 = all green (warnings allowed)
 #   3 = one or more checks reported FAIL (intentionally non-standard so
 #       callers using doctor.sh as a CI gate can distinguish real FAILs
 #       from shell errors like "file not found" or "permission denied")
@@ -30,14 +36,32 @@ REPO_ROOT="$(cd -P "$BIN_DIR/.." >/dev/null 2>&1 && pwd)"
 CLAUDE_HOME="${CLAUDE_HOME:-$HOME/.claude}"
 LAUNCHAGENTS_DIR="$HOME/Library/LaunchAgents"
 
-# Vault path is discovered at runtime from the statusline marker that
-# install.sh step 10.8 writes (~/.claude/.mogging-vault). Falls back to
-# the $VAULT environment variable if it's set, then to empty (in which
-# case vault-scoped checks are skipped with [doctor:info], not failed —
-# doctor on a non-vault host is a valid scenario).
+# ---- argv -------------------------------------------------------------------
+# --vault PATH: explicit vault override (highest precedence). install.sh
+# threads its resolved --vault through here so doctor checks the vault THIS
+# install run targeted — not whatever ~/.claude/.mogging-vault points at from
+# a previous install on the same machine.
+VAULT_FLAG=""
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --vault)   VAULT_FLAG="${2:-}"; shift 2 ;;
+    --vault=*) VAULT_FLAG="${1#*=}"; shift ;;
+    *)         shift ;;
+  esac
+done
+
+# Vault path resolution, in precedence order:
+#   1. --vault flag (explicit, always wins)
+#   2. the statusline marker that install.sh step 10.8 writes
+#      (~/.claude/.mogging-vault)
+#   3. the $VAULT environment variable
+# Empty after all three → vault-scoped checks are skipped with [doctor:info],
+# not failed — doctor on a non-vault host is a valid scenario.
 MOGGING_VAULT_MARKER="$CLAUDE_HOME/.mogging-vault"
 VAULT_PATH=""
-if [[ -f "$MOGGING_VAULT_MARKER" ]]; then
+if [[ -n "$VAULT_FLAG" ]]; then
+  VAULT_PATH="$VAULT_FLAG"
+elif [[ -f "$MOGGING_VAULT_MARKER" ]]; then
   # Marker contains a single line: the absolute vault path.
   VAULT_PATH="$(head -n 1 "$MOGGING_VAULT_MARKER" 2>/dev/null | tr -d '\r\n' || true)"
 fi
@@ -46,6 +70,7 @@ if [[ -z "$VAULT_PATH" && -n "${VAULT:-}" ]]; then
 fi
 
 FAIL_COUNT=0
+WARN_COUNT=0
 # Exit code for "one or more FAILs fired" — non-standard on purpose so
 # callers can distinguish a real health-check failure (exit 3) from
 # shell plumbing errors (exit 1/2/127/etc).
@@ -53,9 +78,28 @@ DOCTOR_FAIL_EXIT=3
 
 pass() { printf '[doctor:ok]   %s\n' "$*"; }
 fail() { printf '[doctor:FAIL] %s\n' "$*" >&2; FAIL_COUNT=$((FAIL_COUNT + 1)); }
+warn() { printf '[doctor:warn] %s\n' "$*" >&2; WARN_COUNT=$((WARN_COUNT + 1)); }
 info() { printf '[doctor:info] %s\n' "$*"; }
 
 # ---- symlink checks ---------------------------------------------------------
+
+# A symlink that resolves but points at a DIFFERENT clone than the one doctor
+# runs from is a WARN, not a FAIL — running doctor from a fresh clone on an
+# already-installed machine is a valid scenario. The target counts as a valid
+# alternate when it is the same kind of thing (dir vs file) and, for skill
+# directories, ships the same SKILL.md the repo entry does.
+symlink_target_is_valid_alternate() {
+  local dest="$1" entry="$2"
+  [[ -e "$dest" ]] || return 1
+  if [[ -d "$entry" ]]; then
+    [[ -d "$dest" ]] || return 1
+    if [[ -f "$entry/SKILL.md" && ! -f "$dest/SKILL.md" ]]; then
+      return 1
+    fi
+    return 0
+  fi
+  [[ -f "$dest" ]]
+}
 
 check_symlinks_for_kind() {
   local kind="$1"
@@ -74,7 +118,11 @@ check_symlinks_for_kind() {
     fi
     target="$(readlink "$dest" 2>/dev/null || true)"
     if [[ "$target" != "$entry" ]]; then
-      fail "$dest -> $target (expected $entry)"
+      if symlink_target_is_valid_alternate "$dest" "$entry"; then
+        warn "$kind/$name -> $target (installed from a different clone than $REPO_ROOT; target valid, accepting)"
+      else
+        fail "$dest -> $target (expected $entry)"
+      fi
       continue
     fi
     if [[ ! -e "$dest" ]]; then
@@ -286,8 +334,16 @@ check_projects_index_stale_wikilinks() {
     case "$file_target" in
       Projects-Index|Home-Index|Tech-Index|Poetry-Index|Index|TASKS|GITHUB|LORECRAFT-HQ) continue ;;
     esac
-    if [[ ! -f "$projects_dir/$file_target/$file_target.md" ]]; then
-      fail "Projects-Index.md links to [[$file_target]] but 01-Projects/$file_target/$file_target.md is missing"
+    # Project folders may be nested under grouping hubs (INCUBATOR/, ARCHIVE/,
+    # CREATIVE/, MINDFULNESS/, …) — the layout the vault CLAUDE.md mandates.
+    # Search <target>/<target>.md at folder depth 1-3 under 01-Projects/
+    # instead of assuming depth-1. Glob metachars in the target are escaped
+    # so find -path matches them literally.
+    local escaped_target
+    escaped_target="$(printf '%s' "$file_target" | sed 's/[][*?\\]/\\&/g')"
+    if ! find "$projects_dir" -mindepth 2 -maxdepth 4 \
+         -path "*/$escaped_target/$escaped_target.md" -print -quit 2>/dev/null | grep -q .; then
+      fail "Projects-Index.md links to [[$file_target]] but no $file_target/$file_target.md exists under 01-Projects/ (searched 3 levels deep)"
       fail "  flag for human review (do NOT auto-delete; CLAUDE.md hard rule)"
       stale_count=$((stale_count + 1))
     fi
@@ -314,7 +370,11 @@ main() {
   check_project_filename_equals_folder
   check_projects_index_stale_wikilinks
   if [[ "$FAIL_COUNT" -eq 0 ]]; then
-    printf '[doctor] all checks passed\n'
+    if [[ "$WARN_COUNT" -gt 0 ]]; then
+      printf '[doctor] all checks passed (%d warning(s))\n' "$WARN_COUNT"
+    else
+      printf '[doctor] all checks passed\n'
+    fi
     exit 0
   fi
   printf '[doctor] %d check(s) FAILED — exiting %d\n' "$FAIL_COUNT" "$DOCTOR_FAIL_EXIT" >&2

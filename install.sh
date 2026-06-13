@@ -1427,7 +1427,14 @@ run_doctor() {
   log "step 12: doctor"
   local d="$REPO_ROOT/bin/doctor.sh"
   if [[ -x "$d" ]]; then
-    if ! bash "$d"; then
+    # Thread the resolved vault through — doctor must check the vault THIS
+    # install run targeted, not whatever ~/.claude/.mogging-vault points at
+    # from a previous install on the same machine.
+    local -a doctor_args=()
+    if [[ -n "$VAULT" ]]; then
+      doctor_args+=(--vault "$VAULT")
+    fi
+    if ! bash "$d" ${doctor_args[@]+"${doctor_args[@]}"}; then
       warn "doctor reported issues (non-fatal on install)"
     fi
   else
