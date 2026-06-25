@@ -1,4 +1,4 @@
-***REMOVED***
+# ============================================================================
 # .gitleaks.toml — 2ndBrain-mogging public repo secret scan config
 # ----------------------------------------------------------------------------
 # Extends gitleaks' default ruleset and adds project-specific custom rules
@@ -9,7 +9,7 @@
 # Invocation:
 #   gitleaks detect --config .gitleaks.toml --no-git
 #   gitleaks protect --config .gitleaks.toml --staged
-***REMOVED***
+# ============================================================================
 
 title = "2ndBrain-mogging public repo secret scan"
 
@@ -52,13 +52,16 @@ keywords    = ["n8n_api_"]
 #   gitleaks detect --config .gitleaks.private.toml --no-git   # additional pass
 # The private file is gitignored and must never be committed.
 
-***REMOVED***
+# ============================================================================
 # Allowlist — self-referential, docs, and synthetic test data
-***REMOVED***
+# ============================================================================
 [allowlist]
-description = "Allow matches inside this config, placeholder docs, and synthetic fixtures"
+description = "Allow matches inside this config, placeholder docs, synthetic fixtures, and descriptive filename slugs"
 paths = [
   '''(^|/)\.gitleaks\.toml$''',
   '''(^|/)docs/placeholder-names\.md$''',
   '''(^|/)tests/fixtures/''',
+]
+regexes = [
+  '''morgen-[a-z]+-[a-z]+-[a-z]+''',
 ]

@@ -71,7 +71,7 @@ fi
 # Case 2: existing customized file is preserved verbatim.
 # ---------------------------------------------------------------------------
 CUSTOM_CONTENT='aliases:
-  nate: ["the operator", "nate"]
+  operator: ["the operator", "operator"]
   <ORG-A>: ["<ORG-A>", "<ORG-A>"]
 # user-custom-marker-do-not-remove
 '

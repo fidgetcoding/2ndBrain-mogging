@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -uo pipefail
 
-***REMOVED***=
+# ============================================================================
 # import-notes.sh
 # Pre-flight helper for importing existing notes (Apple Notes, OneNote,
 # Notion, Evernote, raw files) into your 2ndBrain-mogging vault.
@@ -31,7 +31,7 @@ set -uo pipefail
 #   0 — success
 #   1 — user-facing runtime error (no vault, missing --source, …)
 #   2 — usage error (unknown flag, missing flag value, bad --kind)
-***REMOVED***=
+# ============================================================================
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'

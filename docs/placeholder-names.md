@@ -6,6 +6,9 @@ This skill pack is an **operator's personal vault tooling**. It was extracted fr
 
 Before this repo was made public, every real personal name and every private client-project name was redacted and replaced with a **stable placeholder**. You will see tokens like the following throughout the skills, commands, agents, tests, and sample memory:
 
+- `the operator` — the person who built and runs this vault. Appears in prose where the operator's name would otherwise be used.
+- `operator@example.com` — the operator's email address.
+- `<ORG-A>` through `<ORG-E>` — the operator's own organizations, brands, and project hubs (LLCs, GitHub orgs, branded project folders). These are distinct from `<PROJECT-*>` tokens, which represent *client* projects.
 - `<PERSON-A>`, `<PERSON-B>`, `<PERSON-C>`, ... — individual humans (collaborators, clients, cofounders, teammates, vendors)
 - `<PEER-A>`, `<PEER-B>`, ... — peers in ongoing conversations where the human is not a client but is named in the transcript
 - `<PROJECT-A>`, `<PROJECT-B>`, ... — private client projects, product names, or internal codenames that the operator does not want associated with their public-facing work
@@ -33,6 +36,8 @@ When you install this pack into your own vault, your `Claude-Memory/aliases.yaml
 
 The current public release uses the following placeholder families. New placeholders may be added as the pack grows; removed placeholders are never re-used.
 
+- `the operator` / `operator@example.com` — the vault operator's identity and email
+- `<ORG-A>` through `<ORG-E>` — 5 operator-owned organizations and brands
 - `<PERSON-A>` through `<PERSON-I>` — 9 individuals
 - `<PROJECT-A>` through `<PROJECT-C>` — 3 client projects
 
