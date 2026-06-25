@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-***REMOVED***
+# ============================================================================
 # scripts/prepublish-check.sh — local security gate, run before every release.
 # ----------------------------------------------------------------------------
 # Seven checks, fail-closed, in order:
@@ -25,7 +25,7 @@
 #   10  a required tool is missing and --skip-missing-tools was NOT passed.
 #       Distinct code so CI can tell "secret scan was not even run" apart
 #       from "secret scan ran and found nothing/something".
-***REMOVED***
+# ============================================================================
 
 set -euo pipefail
 
@@ -134,16 +134,12 @@ else
   trap 'rm -f "${PII_TMP}"' EXIT
   grep -vE '^\s*(#|$)' config/nathan.pii > "${PII_TMP}" || true
 
-  # -I skips binary, --exclude-dir drops .git + fixtures, --exclude drops
-  # the gitleaks config (which legitimately references these patterns).
-  if grep -rIEn -f "${PII_TMP}" . \
-        --exclude-dir=.git \
-        --exclude-dir=tests/fixtures \
-        --exclude-dir=node_modules \
-        --exclude=.gitleaks.toml \
-        --exclude=.gitleaks.private.toml \
-        --exclude=nathan.pii \
-        --exclude=.filter-repo-replacements.txt; then
+  # Only scan git-tracked files — gitignored files (private operator skills,
+  # local-only configs) are never published and legitimately contain PII.
+  # Exclude test fixtures and the gitleaks config (which references patterns).
+  if git ls-files -z \
+        -- ':!tests/fixtures' ':!.gitleaks.toml' ':!.gitleaks.private.toml' \
+     | xargs -0 grep -IEn -f "${PII_TMP}" --; then
     fail "nathan.pii patterns matched — scrub before publishing"
   fi
   ok "nathan.pii sweep clean"

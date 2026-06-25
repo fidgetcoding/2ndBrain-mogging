@@ -41,8 +41,8 @@ Before routing any content, load `Claude-Memory/aliases.yaml` from the vault roo
 aliases:
   - key: <person-h>
     names: [<person-h>, <person-h>, <project-b>, <project-c>]
-    destination: 01-Projects/MMA/<PROJECT-B>/<PROJECT-B>.md
-    tags: [mma, client, <person-h>]
+    destination: 01-Projects/<ORG-D>/<PROJECT-B>/<PROJECT-B>.md
+    tags: [org-d, client, <person-h>]
     confidence_boost: 0.15
   - key: morgen-mcp
     names: [morgen mcp, morgen-mcp, morgen bot, w1, obsidian-tasks-sync]
@@ -77,7 +77,7 @@ Before any `Write` or `Edit`, print a table:
 ┌───────────────────────────────┬────────────────────────────────────────────────────┬──────────────┐
 │ Signal                        │ Destination                                        │ Confidence   │
 ├───────────────────────────────┼────────────────────────────────────────────────────┼──────────────┤
-│ "<person-h>", "<project-c>"   │ 01-Projects/MMA/<PROJECT-B>/…/2026-04-16.md        │ 0.88         │
+│ "<person-h>", "<project-c>"   │ 01-Projects/<ORG-D>/<PROJECT-B>/…/2026-04-16.md        │ 0.88         │
 │ "stripe webhook" (ambiguous)  │ 01-Projects/<ORG-A>/stripe-notes.md  [stub]   │ 0.41         │
 │ "tax deduction"               │ 01-Projects/LEGAL-FINANCE/tax-notes-2025.md        │ 0.72         │
 └───────────────────────────────┴────────────────────────────────────────────────────┴──────────────┘

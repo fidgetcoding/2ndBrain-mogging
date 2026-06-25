@@ -67,7 +67,7 @@ For each session that clears the `--since` filter and is not already in `backfil
    8. Research conclusions
 5. **Classification.** Load `Claude-Memory/aliases.yaml` (the `aliases` skill is the upstream producer). Route the session to a project by:
    - Direct `[[PROJECT]]` wikilinks found in the transcript.
-   - Aliased entity mentions (`<PERSON-C>` → <ORG-B>/<PROJECT-A>, `<PERSON-H>` → MMA/<PROJECT-B>, etc.).
+   - Aliased entity mentions (`<PERSON-C>` → <ORG-B>/<PROJECT-A>, `<PERSON-H>` → <ORG-D>/<PROJECT-B>, etc.).
    - File-path cues (any edits inside `01-Projects/FOO/` → FOO).
    - Fallback: `MISC-CLAUDE`.
 6. **Routing.** Write to `01-Projects/{PROJECT}/conversations/YYYY-MM-DD-{slug}.md` where `YYYY-MM-DD` is the session's first-turn timestamp and `{slug}` is a 3–6 word kebab-case summary of the dominant topic.

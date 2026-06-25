@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -uo pipefail
 
-***REMOVED***=
+# ============================================================================
 # import-claude.sh
 # Import a Claude.ai (or ChatGPT) data export into your 2ndBrain-mogging vault.
 # Unzips the export to a staging area and hands the parsing off to Claude
@@ -18,7 +18,7 @@ set -uo pipefail
 #   0 — success (including dry-run)
 #   1 — user-facing runtime error (no vault, no zip, extraction failed, etc.)
 #   2 — usage error (unknown flag, missing flag value)
-***REMOVED***=
+# ============================================================================
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'

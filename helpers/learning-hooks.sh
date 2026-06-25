@@ -44,9 +44,9 @@ generate_session_id() {
   echo "session_$(date +%Y%m%d_%H%M%S)_$$"
 }
 
-***REMOVED***=
+# ============================================================================
 # Session Start Hook
-***REMOVED***=
+# ============================================================================
 session_start() {
   local session_id="${1:-$(generate_session_id)}"
 
@@ -97,9 +97,9 @@ EOF
   fi
 }
 
-***REMOVED***=
+# ============================================================================
 # Session End Hook
-***REMOVED***=
+# ============================================================================
 session_end() {
   log "Consolidating learning data..."
 
@@ -158,9 +158,9 @@ session_end() {
   return 0
 }
 
-***REMOVED***=
+# ============================================================================
 # Store Pattern (called by post-edit hooks)
-***REMOVED***=
+# ============================================================================
 store_pattern() {
   local strategy="$1"
   local domain="${2:-general}"
@@ -197,9 +197,9 @@ store_pattern() {
   fi
 }
 
-***REMOVED***=
+# ============================================================================
 # Search Patterns (called by pre-edit hooks)
-***REMOVED***=
+# ============================================================================
 search_patterns() {
   local query="$1"
   local k="${2:-3}"
@@ -230,9 +230,9 @@ search_patterns() {
   fi
 }
 
-***REMOVED***=
+# ============================================================================
 # Record Pattern Usage (for promotion tracking)
-***REMOVED***=
+# ============================================================================
 record_usage() {
   local pattern_id="$1"
   local success="${2:-true}"
@@ -246,9 +246,9 @@ record_usage() {
   log "Recording usage: $pattern_id (success=$success)"
 }
 
-***REMOVED***=
+# ============================================================================
 # Run Benchmark
-***REMOVED***=
+# ============================================================================
 run_benchmark() {
   log "Running HNSW benchmark..."
 
@@ -273,9 +273,9 @@ run_benchmark() {
   fi
 }
 
-***REMOVED***=
+# ============================================================================
 # Get Stats
-***REMOVED***=
+# ============================================================================
 get_stats() {
   local result
   if result=$(node "$LEARNING_SERVICE" stats 2>&1); then
@@ -287,9 +287,9 @@ get_stats() {
   fi
 }
 
-***REMOVED***=
+# ============================================================================
 # Main
-***REMOVED***=
+# ============================================================================
 case "${1:-help}" in
   "session-start"|"start")
     # ${N:-} defaults are load-bearing: this file runs under `set -u`, so a

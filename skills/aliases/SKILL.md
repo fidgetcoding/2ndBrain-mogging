@@ -42,8 +42,8 @@ projects:
   <ORG-B>/<PROJECT-A>:
     path: 01-Projects/<ORG-B>/<PROJECT-A>
     aliases: ["<project-a-lower>", "<PROJECT-A>", "<project-a-colloquial>"]
-  MMA/<PROJECT-B>:
-    path: 01-Projects/MMA/<PROJECT-B>
+  <ORG-D>/<PROJECT-B>:
+    path: 01-Projects/<ORG-D>/<PROJECT-B>
     aliases: ["<project-b-short>", "<project-b-lower>", "<PROJECT-C>", "<project-c-amp>", "<PERSON-H>'s funnel"]
   # ...one entry per 01-Projects folder
 
@@ -72,7 +72,7 @@ people:
     public_safe: true
   person_h_placeholder:
     canonical: <PERSON-H>
-    project: MMA/<PROJECT-B>
+    project: <ORG-D>/<PROJECT-B>
     aliases: ["<PERSON-H>", "<person-h-short>"]
     public_safe: true
   person_e_placeholder:
@@ -99,7 +99,7 @@ concepts:
     aliases: ["tribecoding", "tribe coding", "collab coding"]
   concept_project_c:
     canonical: <PROJECT-C>
-    project: MMA/<PROJECT-B>
+    project: <ORG-D>/<PROJECT-B>
     aliases: ["<project-c-lower>", "<project-c-amp>", "c&w funnel"]
   concept_project_a:
     canonical: <PROJECT-A>
@@ -146,7 +146,7 @@ Two distinct people. Never collapse.
 
 `--bootstrap` populates `aliases.yaml` by pulling from:
 
-1. **Folder scan of `01-Projects/`.** Every direct child folder becomes an entry in `projects:`. Sub-project folders (`<ORG-B>/<PROJECT-A>`, `MMA/<PROJECT-B>`) get their own entries.
+1. **Folder scan of `01-Projects/`.** Every direct child folder becomes an entry in `projects:`. Sub-project folders (`<ORG-B>/<PROJECT-A>`, `<ORG-D>/<PROJECT-B>`) get their own entries.
 2. **Memory file grep.** Walk `~/.claude/projects/**/memory/MEMORY.md` and the project-specific memory files referenced there. Extract canonical IDs (`project_*`, `person_*`, `user_*`, `concept_*`).
 3. **Proper-noun scan of the vault.** Run a capitalized-word frequency analysis across all `.md` files. Candidates with ≥ 3 mentions get surfaced as person/concept proposals.
 4. **Task file `@name` mentions.** `Grep` `05-Tasks/**` for `@Name` patterns — Obsidian Tasks assignee mentions.

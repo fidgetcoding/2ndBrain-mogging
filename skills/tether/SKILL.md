@@ -25,12 +25,12 @@ Project folders drift. Index files get renamed with stray `-Index` suffixes. New
 
 Every project folder has an index note whose filename matches the folder exactly, **with no `-Index` suffix**.
 
-- Correct: `01-Projects/<ORG-B>/<ORG-B>.md`, `01-Projects/<parent>/GITHUB/GITHUB.md`, `01-Projects/MMA/MMA.md`.
-- Wrong: `<ORG-B>-Index.md`, `GITHUB-Index.md`, `MMA-Index.md`.
+- Correct: `01-Projects/<ORG-B>/<ORG-B>.md`, `01-Projects/<parent>/GITHUB/GITHUB.md`, `01-Projects/<ORG-D>/<ORG-D>.md`.
+- Wrong: `<ORG-B>-Index.md`, `GITHUB-Index.md`, `<ORG-D>-Index.md`.
 
 Wrong filenames break `[[PROJECT]]` wikilink resolution — the wikilink goes stale and the project drifts off the main graph.
 
-Sub-projects follow the same rule: `01-Projects/<ORG-B>/<PROJECT-A>/<PROJECT-A>.md`, `01-Projects/MMA/<PROJECT-B>/<PROJECT-B>.md`.
+Sub-projects follow the same rule: `01-Projects/<ORG-B>/<PROJECT-A>/<PROJECT-A>.md`, `01-Projects/<ORG-D>/<PROJECT-B>/<PROJECT-B>.md`.
 
 ### Rule 2 — Bidirectional links
 
@@ -122,7 +122,7 @@ Dry-run output is a grouped violation list:
 
 ### Broken bidirectional links (4)
 - <ORG-B>/<PROJECT-A> links to [[<ORG-A>]] but <ORG-A>.md does not list it
-- MMA/<PROJECT-B> links to [[MMA]] but MMA.md ## Sub-projects omits it
+- <ORG-D>/<PROJECT-B> links to [[<ORG-D>]] but <ORG-D>.md ## Sub-projects omits it
 - ...
 
 ### Unlinked mention candidates (12)
