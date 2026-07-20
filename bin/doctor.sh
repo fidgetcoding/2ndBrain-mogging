@@ -332,7 +332,7 @@ check_projects_index_stale_wikilinks() {
     [[ -z "$file_target" ]] && continue
     # Skip well-known non-project wikilinks (other index hubs, common refs).
     case "$file_target" in
-      Projects-Index|Home-Index|Tech-Index|Poetry-Index|Index|TASKS|GITHUB|<ORG-A>) continue ;;
+      Projects-Index|Home-Index|Tech-Index|Poetry-Index|Index|TASKS|GITHUB|'<ORG-A>') continue ;;
     esac
     # Project folders may be nested under grouping hubs (INCUBATOR/, ARCHIVE/,
     # CREATIVE/, MINDFULNESS/, …) — the layout the vault CLAUDE.md mandates.
