@@ -3,7 +3,7 @@ name: nightly
 description: Nightly 10:00 PM ET vault audit — AUDIT-ONLY, no writes to concept or source notes. Runs /wiki audit scoped to 02-Sources, 03-Concepts, and 04-Index. Appends the report to the daily audit log and increments the lint counter.
 schedule: "0 22 * * * America/New_York"
 plist: scheduled/launchd/io.<ORG-A>.mogging.nightly.plist
-allowed-tools: Read, Write, Glob, Grep, Bash
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash
 writes:
   - 01-Projects/VAULT/conversations/reports/audit-YYYY-MM-DD.md
   - Claude-Memory/lint-counter.json
@@ -55,7 +55,9 @@ Body for each run: one section per check, counts + top 20 findings per check. If
 
 ## 4. Lint counter
 
-Increment `Claude-Memory/lint-counter.json`:
+> **Symlink caveat.** `Claude-Memory/` is a symlink into the Claude project memory dir. `Write`/`Edit` hard-refuse to traverse a symlink, and the resolved target sits outside the vault sandbox root. Resolve it first (`readlink Claude-Memory`) and write the **resolved absolute path**; the scheduler must grant that directory via `--add-dir`. Writing `Claude-Memory/lint-counter.json` directly will always fail.
+
+Increment `Claude-Memory/lint-counter.json` (via its resolved path):
 
 ```json
 {

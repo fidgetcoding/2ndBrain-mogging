@@ -3,7 +3,7 @@ name: weekly
 description: Friday 6:00 PM ET weekly review — runs /emerge --days 7 --audit, produces a week-in-review report covering new concepts, killed ideas, unresolved contradictions, and the rolling 7-day audit trend.
 schedule: "0 18 * * 5 America/New_York"
 plist: scheduled/launchd/io.<ORG-A>.mogging.weekly.plist
-allowed-tools: Read, Write, Glob, Grep, Bash
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash
 writes:
   - 01-Projects/VAULT/conversations/reports/weekly-YYYY-WW.md
 reads:
@@ -60,6 +60,8 @@ Body sections in this order:
 6. **Unresolved contradictions** — top 5 from the `challenge` index, with paths + one-line summary.
 
 ## 4. Snapshot rotation
+
+> **Symlink caveat.** `Claude-Memory/` is a symlink; `Write`/`Edit` hard-refuse to traverse it and the resolved target is outside the vault sandbox root. Resolve it (`readlink Claude-Memory`) and use the **resolved absolute path** for both the read and the snapshot write; the scheduler must grant that directory via `--add-dir`.
 
 After writing the weekly report, copy the current `Claude-Memory/lint-counter.json` to `Claude-Memory/lint-counter-snapshots/YYYY-MM-DD.json` so next week can diff against it. Keep only the last 13 weekly snapshots (one quarter); older snapshots get deleted.
 
