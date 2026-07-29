@@ -3,7 +3,7 @@ name: morning
 description: Daily 8:00 AM ET briefing — pulls today's Morgen events, surfaces overdue/today tasks, and primes Claude-Memory/hot.md with the day's context window. Writes a single daily report; does NOT touch concept or source notes.
 schedule: "0 8 * * * America/New_York"
 plist: scheduled/launchd/io.<ORG-A>.mogging.morning.plist
-allowed-tools: Read, Write, Edit, Glob, Bash
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash, mcp__morgen__list_events, mcp__morgen__list_tasks, mcp__morgen__list_calendars
 writes:
   - 01-Projects/VAULT/conversations/reports/daily-YYYY-MM-DD.md
   - Claude-Memory/hot.md
@@ -57,6 +57,8 @@ Body sections in this order:
 4. **Weather signal** (optional) — from `Claude-Memory/hot.md` previous entry, not a fresh fetch.
 
 ## 4. Prime `Claude-Memory/hot.md`
+
+> **Symlink caveat.** `Claude-Memory/` is a symlink into the Claude project memory dir. `Write`/`Edit` hard-refuse to traverse a symlink, and the resolved target sits outside the vault sandbox root. Resolve it first (`readlink Claude-Memory`) and write the **resolved absolute path**; the scheduler must grant that directory via `--add-dir`.
 
 `hot.md` is the short working-context file the operator's other skills read at invocation to avoid cold starts. Prime it with:
 

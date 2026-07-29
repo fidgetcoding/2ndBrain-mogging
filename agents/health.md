@@ -3,7 +3,7 @@ name: health
 description: Sunday 9:00 PM ET vault integrity check — verifies symlink resolution, Obsidian plugin loads, n8n sync freshness, and Morgen↔Obsidian task-count parity (within in-flight tolerance). Writes a one-line status plus a diagnostics block.
 schedule: "0 21 * * 0 America/New_York"
 plist: scheduled/launchd/io.<ORG-A>.mogging.health.plist
-allowed-tools: Read, Glob, Bash, Write
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash, mcp__morgen__list_tasks, mcp__morgen__list_events
 writes:
   - 01-Projects/VAULT/conversations/reports/health-YYYY-MM-DD.md
 reads:
