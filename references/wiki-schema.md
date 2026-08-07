@@ -88,10 +88,29 @@ author: "Name or @handle"                   # optional; use "unknown" if not att
 **type: concept** (goes to `03-Concepts/`)
 
 ```yaml
+source_of_truth: "<URL or absolute path>"   # required; see "source_of_truth rules" below
 last_confirmed: 2026-04-16                  # required; used by /wiki audit staleness check
 needs_review: true                          # auto-true on first write, flipped by /wiki promote
 owner: human | llm                          # 'human' locks the note from silent LLM edits
 ```
+
+#### `source_of_truth` rules
+
+`source_of_truth` answers one question: **where do I go to check whether this note is still true?** It is only meaningful paired with `last_confirmed` — `last_confirmed` says when someone verified the claim, `source_of_truth` says where to verify it again. One without the other is a smoke alarm with no exit sign.
+
+**Required on `type: concept` and `type: synthesis`.** These are the only note types that assert things about a live external world, so they are the only ones that can rot. A concept page claiming an API rate limit goes wrong when the vendor changes it; the vendor's docs page is what tells you.
+
+**Not required on `type: source`, `type: conversation`, `type: moc`, or `type: adr`.** These are *records*, not *claims* — a capture of what an article said, or what was decided in a conversation, cannot become false. `type: source` already carries `source_url`, which answers a different question (*where did this come from?*, permanent history) than `source_of_truth` (*where is the live authority?*, mutable). A note may carry both; they are not duplicates.
+
+**Valid values:**
+
+- A vendor URL, for things someone else owns — `https://docs.usemotion.com/`
+- An **absolute local path**, for the operator's own rules and configs — `/Users/<user>/BRAIN2/CLAUDE.md`, `~/.claude/skills/<name>/SKILL.md`, `.zshrc`. This is the common case for convention notes and is a *better* authority than a URL, because it is the file that actually governs behavior.
+- Absent, for genuine syntheses assembled from many sources where no single authority exists (tool benches, opportunity maps, relationship graphs).
+
+**Banned values.** `pending`, `vault structure`, `this file`, or any other word-in-a-slot. If there is no real address, **omit the key**. A missing field is an honest gap; a placeholder is a gap that reads as done and will never be revisited. A skill encountering a banned value treats the field as absent and flags it.
+
+**Verify before writing.** Never write a `source_of_truth` on the strength of a plausible-looking URL. Confirm the URL resolves or the path exists first. An address that 404s is worse than no address.
 
 **type: synthesis** (cross-concept rollups, also in `03-Concepts/` or `04-Index/`)
 
