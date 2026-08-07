@@ -194,12 +194,45 @@ remove_statusline_marker() {
   fi
 }
 
+# The third-party vault skill packs (step 10.75) are COPIED in, not symlinked,
+# so unlink_kind() deliberately leaves them ("not a symlink; leaving") and they
+# would otherwise orphan in ~/.claude/skills forever. Remove them here.
+#
+# Conservative on purpose: only delete a real directory. If the path is a
+# symlink, some other tool (or a manual install) owns it — leave it alone.
+remove_vault_skill_packs() {
+  local packs=(obsidian-markdown obsidian-bases obsidian-cli json-canvas defuddle)
+  local dest_root="$CLAUDE_HOME/skills"
+  local s dest removed=0
+  for s in "${packs[@]}"; do
+    dest="$dest_root/$s"
+    if [[ -L "$dest" ]]; then
+      vlog "$dest is a symlink (not ours); leaving"
+    elif [[ -d "$dest" ]]; then
+      rm -rf "${dest_root:?}/${s:?}"
+      log "removed skill pack $s"
+      removed=$((removed + 1))
+    else
+      vlog "skill pack $s not present"
+    fi
+  done
+  [[ "$removed" -eq 0 ]] && vlog "no vault skill packs to remove"
+
+  # The defuddle npm CLI is a SHARED global binary — the user may rely on it
+  # outside this vault. Never yank it silently; just say it's still there.
+  if command -v defuddle >/dev/null 2>&1; then
+    log "note: the 'defuddle' CLI is still installed globally (shared tool)."
+    log "      remove it yourself if you want: npm uninstall -g defuddle"
+  fi
+}
+
 main() {
   log "starting uninstall"
   uninstall_launchd
   unlink_kind "skills"
   unlink_kind "commands"
   unlink_kind "agents"
+  remove_vault_skill_packs
   restore_settings
   remove_claude_memory_link
   remove_statusline_marker
