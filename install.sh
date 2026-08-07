@@ -10,7 +10,7 @@
 #   install.sh [--vault PATH] [--apply] [--dry-run] [--no-launchd]
 #              [--skip-tests] [--verbose] [--merge-stop]
 #              [--with-intelligence] [--symlink] [--no-obsidian-mcp]
-#              [--no-skill-packs]
+#              [--no-skill-packs] [--with-research]
 #              [--no-statusline-brain] [--no-obsidian-app]
 #
 # NEVER uses `set -x`. Settings.json contents must never be echoed
@@ -62,6 +62,7 @@ USE_SYMLINK=0
 NO_SEED_VAULT=0
 NO_SHELL_SHORTCUTS=0
 NO_SKILL_PACKS=0
+WITH_RESEARCH=0
 
 usage() {
   cat <<'USAGE'
@@ -88,6 +89,12 @@ Options:
                        defuddle npm CLI they depend on. Default is to install
                        them — the vault's note formats and its web-capture path
                        both assume they are present.
+  --with-research      Install the research tier: hyperresearch (16-step deep
+                       research pipeline, owns $VAULT/research/) + graphify
+                       (folder -> knowledge graph). OFF by default — both are
+                       heavy pipx installs and a full research run bills real
+                       tokens. hyperresearch is pinned to python3.11-3.13;
+                       pipx's default 3.14 installs but breaks at fetch time.
   --skip-tests         Skip running tests/test_onboarding.sh
   --verbose            Verbose logging (does NOT echo settings.json contents)
   --merge-stop         Replace any existing Stop hook with ours instead of append
@@ -129,6 +136,7 @@ while [[ $# -gt 0 ]]; do
     --no-obsidian-app)    NO_OBSIDIAN_APP=1; shift ;;
     --no-shell-shortcuts) NO_SHELL_SHORTCUTS=1; shift ;;
     --no-skill-packs)     NO_SKILL_PACKS=1; shift ;;
+    --with-research)      WITH_RESEARCH=1; shift ;;
     --skip-tests)         SKIP_TESTS=1; shift ;;
     --verbose)            VERBOSE=1; shift ;;
     --merge-stop)         MERGE_STOP=1; shift ;;
@@ -1284,6 +1292,11 @@ SKILLPACK_COMMIT="a1dc48e68138490d522c04cbf5822214c6eb1202"
 SKILLPACK_SKILLS=(obsidian-markdown obsidian-bases obsidian-cli json-canvas defuddle)
 
 install_vault_skill_packs() {
+  if [[ "$WITH_RESEARCH" -eq 1 ]]; then
+    echo "│  Research tier:         ON   (hyperresearch + graphify)      │"
+  else
+    echo "│  Research tier:         OFF  (opt-in via --with-research)    │"
+  fi
   if [[ "$NO_SKILL_PACKS" -eq 1 ]]; then
     log "step 10.75: vault skill packs SKIPPED (--no-skill-packs)"
     return 0
@@ -1357,6 +1370,108 @@ install_vault_skill_packs() {
     warn "npm not found — defuddle skill installed but its CLI is missing"
     warn "  install node, then: npm install -g defuddle"
   fi
+}
+
+# ---- step 10.76: research tier (opt-in) -------------------------------------
+#
+# Two pipx tools that read and write INSIDE the vault, so they belong to the
+# vault pack rather than to cli-maxxing's generic tool steps:
+#
+#   hyperresearch  16-step adversarial deep-research pipeline. Owns its own
+#                  note vault at $VAULT/research/ and injects a block into the
+#                  vault's CLAUDE.md. `hyperresearch install` does the whole
+#                  wiring itself; we only place the binary and invoke it.
+#   graphify       any folder -> navigable knowledge graph. Ships its own
+#                  skill via `graphify install --platform claude`.
+#
+# OFF by default, same posture as --with-intelligence: both are heavy (a
+# full-tier hyperresearch run reads 55-130 sources and bills real tokens),
+# and nobody should get that wired in as a surprise. Enable with
+# --with-research.
+#
+# PYTHON PIN (hyperresearch only, and it matters): the package declares
+# requires-python >=3.11,<3.14. Plain `pipx install` picks whatever python3
+# pipx defaults to, which on current Homebrew is 3.14 — pipx installs it
+# ANYWAY and only warns, so the failure doesn't surface until fetch time,
+# where crawl4ai is broken on 3.14. Always pin to 3.13. graphify needs no
+# pin (requires-python >=3.10).
+
+HYPERRESEARCH_VERSION="0.10.0"
+GRAPHIFY_VERSION="0.9.35"
+
+install_research_tier() {
+  if [[ "$WITH_RESEARCH" -ne 1 ]]; then
+    log "step 10.76: research tier OFF (opt-in via --with-research)"
+    return 0
+  fi
+  log "step 10.76: install research tier (hyperresearch + graphify)"
+
+  if ! command -v pipx >/dev/null 2>&1; then
+    warn "pipx not found — skipping the research tier"
+    warn "  install it first:  brew install pipx && pipx ensurepath"
+    return 0
+  fi
+
+  # ---- hyperresearch --------------------------------------------------------
+  # Find a 3.11-3.13 interpreter. Prefer 3.13, then 3.12, then 3.11.
+  local py="" cand
+  for cand in python3.13 python3.12 python3.11; do
+    if command -v "$cand" >/dev/null 2>&1; then py="$(command -v "$cand")"; break; fi
+  done
+
+  if [[ -z "$py" ]]; then
+    warn "no python3.11-3.13 found — skipping hyperresearch"
+    warn "  hyperresearch requires-python is >=3.11,<3.14; pipx's default is likely 3.14."
+    warn "  fix:  brew install python@3.13   then re-run with --with-research"
+  else
+    log "using $py for hyperresearch (pinned: requires-python >=3.11,<3.14)"
+    run pipx install --python "$py" "hyperresearch==$HYPERRESEARCH_VERSION"
+
+    # `hyperresearch install` inits the research vault, injects its CLAUDE.md
+    # block, and installs its skills + agents. Run it INSIDE the vault so the
+    # research base lands at $VAULT/research/.
+    if [[ "$APPLY" -eq 1 ]]; then
+      if command -v hyperresearch >/dev/null 2>&1; then
+        if (cd "$VAULT" && hyperresearch install >/dev/null 2>&1); then
+          log "hyperresearch wired into $VAULT (research base at $VAULT/research/)"
+        else
+          warn "hyperresearch install failed — run manually: cd \"$VAULT\" && hyperresearch install"
+        fi
+      else
+        warn "hyperresearch not on PATH after pipx install — run: pipx ensurepath, then reopen your shell"
+      fi
+    else
+      log "would run: (cd \"$VAULT\" && hyperresearch install)"
+    fi
+  fi
+
+  # ---- graphify -------------------------------------------------------------
+  run pipx install "graphifyy==$GRAPHIFY_VERSION"
+  if [[ "$APPLY" -eq 1 ]]; then
+    if command -v graphify >/dev/null 2>&1; then
+      if graphify install --platform claude >/dev/null 2>&1; then
+        log "graphify skill installed"
+      else
+        warn "graphify skill install failed — run manually: graphify install --platform claude"
+      fi
+    else
+      warn "graphify not on PATH after pipx install — run: pipx ensurepath, then reopen your shell"
+    fi
+  else
+    log "would run: graphify install --platform claude"
+  fi
+
+  # HARD guardrail. /graphify on a vault ROOT is a foot-gun: a mature vault
+  # carries embedded git clones and node_modules, and the walk balloons into
+  # tens of gigabytes. Always scope it to a subtree.
+  log ""
+  log "  NOTE: never run /graphify against your vault ROOT."
+  log "  A real vault contains embedded clones and node_modules; the crawl"
+  log "  explodes. Scope every run to a subtree, e.g.:"
+  log "      /graphify \"$VAULT/03-Concepts\""
+  log "      /graphify \"$VAULT/02-Sources\""
+  log "  Keep graphify-out/ out of git and out of the Obsidian graph."
+  log ""
 }
 
 # ---- step 10.8: statusline brain marker -------------------------------------
@@ -1588,6 +1703,8 @@ run_doctor() {
 #   step 10.75 install_vault_skill_packs kepano/obsidian-skills @ pinned commit → 5 skills
 #                                        (obsidian-markdown/bases/cli, json-canvas, defuddle) +
 #                                        defuddle npm CLI; opt out w/ --no-skill-packs
+#   step 10.76 install_research_tier     (opt-in --with-research) hyperresearch (python-pinned)
+#                                        + graphify; hyperresearch owns $VAULT/research/
 #   step 10.8 install_statusline_marker  write $HOME/.claude/.mogging-vault (vault path marker for
 #                                        cli-maxxing's 🧠 indicator); opt out w/ --no-statusline-brain
 #   step 10.9 install_shell_shortcuts    write cbrain + cbraintg to ~/.local/bin (reads vault from
@@ -1617,6 +1734,7 @@ main() {
   repair_stale_hooks
   install_obsidian_mcp
   install_vault_skill_packs
+  install_research_tier
   install_statusline_marker
   install_shell_shortcuts
   run_tests

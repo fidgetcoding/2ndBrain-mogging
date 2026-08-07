@@ -140,6 +140,7 @@ cd 2ndBrain-mogging
 | `--no-obsidian-app` | off | Skip auto-installing the Obsidian.app desktop client (macOS; default runs `brew install --cask obsidian` when the app is missing). |
 | `--no-shell-shortcuts` | off | Skip writing the `cbrain` / `cbraintg` launchers to `~/.local/bin`. |
 | `--no-skill-packs` | off | Skip the 5 third-party vault skill packs from `kepano/obsidian-skills` (and the `defuddle` npm CLI they need). See [Vault skill packs](#vault-skill-packs) below. |
+| `--with-research` | off | Install the research tier — `hyperresearch` + `graphify`. See [Research tier](#research-tier-opt-in) below. |
 | `--skip-tests` | off | Skip the onboarding test suite at the end. |
 | `--merge-stop` | off | Replace the existing Stop hook instead of jq-merging onto it. |
 | `--no-seed-vault` | off | Skip seeding the 6-folder vault layout from `vault-template/`. By default the installer copies in any of `01-Projects/<PROJECT>/conversations/`, `02-Sources/`, `03-Concepts/`, `04-Index/Projects-Index.md`, `01-Projects/{example-project-1, example-project-2, example-project-3, INCUBATOR}/`, `05-Tasks/`, `Claude-Memory/`, `CLAUDE.md`, `AGENTS.md` that are missing. Existing files are never overwritten. |
@@ -165,6 +166,24 @@ Five skills from [`kepano/obsidian-skills`](https://github.com/kepano/obsidian-s
 The skill shells out to a `defuddle` binary, so the installer also runs `npm install -g defuddle`. If npm is missing or the install fails you get a warning and a manual command, not a hard failure. On uninstall the five skill directories are removed, but the `defuddle` CLI is **left in place** — it is a shared global binary you may use outside the vault, and the uninstaller tells you the command to remove it yourself.
 
 To update the pin: bump `SKILLPACK_COMMIT` in `install.sh`.
+
+### Research tier (opt-in)
+
+Two pipx tools that read and write **inside** the vault, which is why they live here rather than in cli-maxxing's generic tool steps. Both are **off by default** — same posture as the self-learning tier. A full-tier research run reads 55–130 sources and bills real tokens; nobody should get that wired in as a surprise.
+
+```bash
+./install.sh --vault ~/BRAIN2 --apply --with-research
+```
+
+| Tool | What it does | Where it writes |
+|---|---|---|
+| [`hyperresearch`](https://pypi.org/project/hyperresearch/) | 16-step adversarial deep-research pipeline — decompose, width sweep, contradiction graph, depth investigation, 4 critics, patch, polish | Its own note base at `$VAULT/research/`, plus a block in your vault's `CLAUDE.md` |
+| [`graphifyy`](https://pypi.org/project/graphifyy/) | Turns any folder into a navigable knowledge graph (interactive HTML + GraphRAG JSON + a plain-language report) | `graphify-out/` wherever you run it |
+
+**The Python pin is not optional.** `hyperresearch` declares `requires-python >=3.11,<3.14`. A plain `pipx install` picks whatever interpreter pipx defaults to — currently 3.14 on Homebrew — and pipx **installs it anyway with only a warning**. Nothing breaks at install time; it breaks later at fetch time, where `crawl4ai` is broken on 3.14. The installer therefore hunts for `python3.13` → `python3.12` → `python3.11` and pins to the first one it finds. No interpreter in that range means hyperresearch is skipped with a `brew install python@3.13` pointer rather than installed broken. `graphify` needs no pin (`>=3.10`).
+
+> [!WARNING]
+> **Never run `/graphify` against your vault root.** A mature vault contains embedded git clones and `node_modules`; the crawl balloons into tens of gigabytes. Always scope it to a subtree — `/graphify "$VAULT/03-Concepts"`, `/graphify "$VAULT/02-Sources"`. Keep `graphify-out/` out of git and out of the Obsidian graph. The installer prints this same warning on the way out.
 
 ### Obsidian MCP
 
