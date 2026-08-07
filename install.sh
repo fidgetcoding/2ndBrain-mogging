@@ -10,6 +10,7 @@
 #   install.sh [--vault PATH] [--apply] [--dry-run] [--no-launchd]
 #              [--skip-tests] [--verbose] [--merge-stop]
 #              [--with-intelligence] [--symlink] [--no-obsidian-mcp]
+#              [--no-skill-packs]
 #              [--no-statusline-brain] [--no-obsidian-app]
 #
 # NEVER uses `set -x`. Settings.json contents must never be echoed
@@ -60,6 +61,7 @@ WITH_INTELLIGENCE=0
 USE_SYMLINK=0
 NO_SEED_VAULT=0
 NO_SHELL_SHORTCUTS=0
+NO_SKILL_PACKS=0
 
 usage() {
   cat <<'USAGE'
@@ -80,6 +82,12 @@ Options:
   --no-shell-shortcuts Skip writing cbrain/cbraintg shortcuts to ~/.local/bin
                        (by default we install these so `cbrain` launches Claude
                        Code inside the vault with skip-permissions)
+  --no-skill-packs     Skip the third-party vault skill packs (obsidian-markdown,
+                       obsidian-bases, obsidian-cli, json-canvas, defuddle from
+                       kepano/obsidian-skills at a pinned commit) and the
+                       defuddle npm CLI they depend on. Default is to install
+                       them — the vault's note formats and its web-capture path
+                       both assume they are present.
   --skip-tests         Skip running tests/test_onboarding.sh
   --verbose            Verbose logging (does NOT echo settings.json contents)
   --merge-stop         Replace any existing Stop hook with ours instead of append
@@ -120,6 +128,7 @@ while [[ $# -gt 0 ]]; do
     --no-statusline-brain) NO_STATUSLINE_BRAIN=1; shift ;;
     --no-obsidian-app)    NO_OBSIDIAN_APP=1; shift ;;
     --no-shell-shortcuts) NO_SHELL_SHORTCUTS=1; shift ;;
+    --no-skill-packs)     NO_SKILL_PACKS=1; shift ;;
     --skip-tests)         SKIP_TESTS=1; shift ;;
     --verbose)            VERBOSE=1; shift ;;
     --merge-stop)         MERGE_STOP=1; shift ;;
@@ -1239,6 +1248,117 @@ install_obsidian_mcp() {
   fi
 }
 
+# ---- step 10.75: third-party vault skill packs ------------------------------
+#
+# Installs the third-party skills that make the vault pipeline actually work.
+# These are NOT vendored into repo/skills/ — they are fetched from upstream at
+# a PINNED revision, same rug-pull defense creativity-maxxing uses for
+# blader/humanizer and Leonxlnx/taste-skill. Vendoring would fork them; pinning
+# lets us take upstream fixes on a deliberate version bump instead.
+#
+# What lands and why it belongs to the VAULT pack specifically:
+#
+#   obsidian-markdown   wikilinks / embeds / callouts / properties — the format
+#                       every note in 02-Sources, 03-Concepts and 04-Index is
+#                       written in. Without it agents emit plain CommonMark and
+#                       the graph silently loses edges.
+#   obsidian-bases      .base files (views, filters, formulas)
+#   json-canvas         .canvas files — 04-Index/Map.canvas is one
+#   obsidian-cli        live vault operations. Requires the Obsidian 1.12.7+
+#                       installer; on older Obsidian it installs but stays
+#                       inert. That is expected, not a broken install.
+#   defuddle            web page -> clean markdown. This is the capture front
+#                       door for `/wiki add` and `/save --source`: WebFetch
+#                       runs a page through a small model and returns a lossy
+#                       summary (a 12.5k-word source comes back as ~20 lines),
+#                       which is exactly the failure the 02-Sources contract
+#                       exists to prevent. Needs the npm CLI, installed below.
+#
+# Upstream: kepano/obsidian-skills (MIT) — Obsidian's founder, so these track
+# the app's own formats. Bump SKILLPACK_COMMIT to update.
+#
+# Opt out with --no-skill-packs.
+
+SKILLPACK_URL="https://github.com/kepano/obsidian-skills"
+SKILLPACK_COMMIT="a1dc48e68138490d522c04cbf5822214c6eb1202"
+SKILLPACK_SKILLS=(obsidian-markdown obsidian-bases obsidian-cli json-canvas defuddle)
+
+install_vault_skill_packs() {
+  if [[ "$NO_SKILL_PACKS" -eq 1 ]]; then
+    log "step 10.75: vault skill packs SKIPPED (--no-skill-packs)"
+    return 0
+  fi
+  log "step 10.75: install vault skill packs (kepano/obsidian-skills @ ${SKILLPACK_COMMIT:0:7})"
+
+  if ! command -v git >/dev/null 2>&1; then
+    warn "git not found — skipping vault skill packs"
+    return 0
+  fi
+
+  local dest_root="$CLAUDE_HOME/skills"
+
+  if [[ "$APPLY" -eq 0 ]]; then
+    local s
+    for s in "${SKILLPACK_SKILLS[@]}"; do
+      log "would install skill: $dest_root/$s (pinned @ ${SKILLPACK_COMMIT:0:7})"
+    done
+    log "would run: npm install -g defuddle   (CLI behind the defuddle skill)"
+    return 0
+  fi
+
+  mkdir -p "$dest_root"
+
+  local tmp
+  tmp="$(mktemp -d)" || { warn "mktemp failed — skipping vault skill packs"; return 0; }
+
+  if ! git clone --quiet "$SKILLPACK_URL" "$tmp" 2>/dev/null; then
+    rm -rf "$tmp"
+    warn "vault skill packs: clone failed ($SKILLPACK_URL) — skipping (non-fatal)"
+    return 0
+  fi
+  if ! git -C "$tmp" checkout --quiet "$SKILLPACK_COMMIT" 2>/dev/null; then
+    rm -rf "$tmp"
+    warn "vault skill packs: pinned commit $SKILLPACK_COMMIT not found upstream — skipping"
+    warn "  (upstream may have force-pushed; verify then bump SKILLPACK_COMMIT)"
+    return 0
+  fi
+
+  local s src
+  for s in "${SKILLPACK_SKILLS[@]}"; do
+    src="$tmp/skills/$s"
+    if [[ ! -f "$src/SKILL.md" ]]; then
+      warn "vault skill packs: $s missing at the pinned commit — skipping that one"
+      continue
+    fi
+    # Strip upstream VCS metadata; we manage the pin, not their history.
+    # ${var:?} guards: an empty dest_root or s would make these `rm -rf /`.
+    rm -rf "${dest_root:?}/${s:?}"
+    cp -R "$src" "$dest_root/$s"
+    rm -rf "${dest_root:?}/${s:?}/.git"
+    vlog "installed skill: $dest_root/$s"
+  done
+
+  rm -rf "$tmp"
+  log "vault skill packs installed (${#SKILLPACK_SKILLS[@]} skills, pinned @ ${SKILLPACK_COMMIT:0:7})"
+
+  # The defuddle SKILL.md shells out to a `defuddle` binary. Without it the
+  # skill loads and then fails on first use, which reads as a broken vault
+  # rather than a missing dependency — so install it here, not lazily.
+  if command -v defuddle >/dev/null 2>&1; then
+    vlog "defuddle CLI already present — skipping"
+  elif command -v npm >/dev/null 2>&1; then
+    if npm install -g defuddle >/dev/null 2>&1; then
+      log "defuddle CLI installed (npm -g)"
+    else
+      warn "defuddle CLI install failed — run manually: npm install -g defuddle"
+      warn "  (if this is an EACCES error, see the ~/.npm ownership note at the end of install)"
+    fi
+  else
+    warn "npm not found — defuddle skill installed but its CLI is missing"
+    warn "  install node, then: npm install -g defuddle"
+  fi
+}
+
 # ---- step 10.8: statusline brain marker -------------------------------------
 #
 # Writes $HOME/.claude/.mogging-vault containing the absolute vault path.
@@ -1465,6 +1585,9 @@ run_doctor() {
 #   step 10.6 repair_stale_hooks         rewrite stale $HOME/.claude/helpers hook paths → ${CLAUDE_PROJECT_DIR}
 #                                        (runs always — fixes MODULE_NOT_FOUND spam independent of opt-in)
 #   step 10.7 install_obsidian_mcp       claude mcp add obsidian → vault; opt out w/ --no-obsidian-mcp
+#   step 10.75 install_vault_skill_packs kepano/obsidian-skills @ pinned commit → 5 skills
+#                                        (obsidian-markdown/bases/cli, json-canvas, defuddle) +
+#                                        defuddle npm CLI; opt out w/ --no-skill-packs
 #   step 10.8 install_statusline_marker  write $HOME/.claude/.mogging-vault (vault path marker for
 #                                        cli-maxxing's 🧠 indicator); opt out w/ --no-statusline-brain
 #   step 10.9 install_shell_shortcuts    write cbrain + cbraintg to ~/.local/bin (reads vault from
@@ -1493,6 +1616,7 @@ main() {
   install_intelligence
   repair_stale_hooks
   install_obsidian_mcp
+  install_vault_skill_packs
   install_statusline_marker
   install_shell_shortcuts
   run_tests
@@ -1529,6 +1653,12 @@ print_install_summary() {
   fi
   if [[ "$NO_OBSIDIAN_MCP" -eq 1 ]]; then
     echo "│  obsidian-mcp registration: SKIPPED (--no-obsidian-mcp)     │"
+  fi
+  if [[ "$NO_SKILL_PACKS" -eq 1 ]]; then
+    echo "│  vault skill packs:     SKIPPED (--no-skill-packs)          │"
+  else
+    echo "│  vault skill packs:     ON   (obsidian-* · json-canvas ·    │"
+    echo "│                              defuddle, pinned upstream)     │"
   fi
   echo "└──────────────────────────────────────────────────────────────┘"
   echo ""
