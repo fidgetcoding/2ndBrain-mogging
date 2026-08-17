@@ -140,7 +140,8 @@ SKILLS_DIR="$FAKE_HOME/.claude/skills"
 # symlink in only the extra real binaries install.sh genuinely needs. The git
 # shim already execs the real git by absolute path, so dropping the Homebrew
 # dir costs us nothing.
-for real in jq; do
+REAL_BINS=(jq)   # extra real binaries install.sh genuinely needs on the closed PATH
+for real in "${REAL_BINS[@]}"; do
   p="$(command -v "$real" 2>/dev/null || true)"
   [[ -n "$p" ]] && ln -sf "$p" "$MOCK_BIN/$real"
 done
@@ -226,7 +227,7 @@ rm -f "$MOCK_BIN/defuddle"
 # Case 3: --no-skill-packs skips the whole step.
 # ---------------------------------------------------------------------------
 reset_skills
-OUT3="$(run_install --no-skill-packs || true)"
+run_install --no-skill-packs >/dev/null || true   # output unused; only the side effects are asserted
 if [[ -d "$SKILLS_DIR/obsidian-markdown" ]]; then
   _fail "--no-skill-packs still installed the skill packs"
 else
