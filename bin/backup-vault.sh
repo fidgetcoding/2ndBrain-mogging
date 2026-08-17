@@ -7,7 +7,7 @@
 #
 # Produces ~/WORK/<vault-name>-BACKUPS/<vault-name>-backup-YYYYMMDD-HHMMSS.tar.gz
 # from the given vault path. Vault resolution order: $1 arg, then the
-# ~/.claude/.mogging-vault marker install.sh writes, then ~/BRAIN2.
+# ~/.claude/.mogging-vault marker install.sh writes, then ~/MyVault.
 # Excludes Obsidian workspace state files and .DS_Store.
 #
 # NEVER writes to ~/Desktop — modern macOS permission-protects it (TCC),
@@ -21,7 +21,7 @@ VAULT="${1:-}"
 if [[ -z "$VAULT" && -f "$HOME/.claude/.mogging-vault" ]]; then
   VAULT="$(head -n 1 "$HOME/.claude/.mogging-vault" | tr -d '\r\n')"
 fi
-VAULT="${VAULT:-$HOME/BRAIN2}"
+VAULT="${VAULT:-$HOME/MyVault}"
 
 if [[ ! -d "$VAULT" ]]; then
   echo "backup-vault: not a directory: $VAULT" >&2
