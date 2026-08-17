@@ -252,7 +252,7 @@ check_npm_cache_ownership() {
 # Hard rule from CLAUDE.md: every project folder under 01-Projects/ must have
 # an index note where filename = foldername (e.g. <ORG-B>/<ORG-B>.md, never
 # <ORG-B>/<ORG-B>-Index.md). Folder renames (e.g. example-project-1 →
-# NiFe-WARS-Kostas) leave the inner .md unchanged, breaking [[PROJECT]]
+# example-project-2) leave the inner .md unchanged, breaking [[PROJECT]]
 # wikilink resolution. Surface drift, suggest the rename, never auto-rename
 # (project index files are owner=human; CLAUDE.md forbids auto-rewrite).
 
