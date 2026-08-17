@@ -105,7 +105,7 @@ owner: human | llm                          # 'human' locks the note from silent
 **Valid values:**
 
 - A vendor URL, for things someone else owns — `https://docs.usemotion.com/`
-- An **absolute local path**, for the operator's own rules and configs — `/Users/<user>/BRAIN2/CLAUDE.md`, `~/.claude/skills/<name>/SKILL.md`, `.zshrc`. This is the common case for convention notes and is a *better* authority than a URL, because it is the file that actually governs behavior.
+- An **absolute local path**, for the operator's own rules and configs — `/Users/<user>/MyVault/CLAUDE.md`, `~/.claude/skills/<name>/SKILL.md`, `.zshrc`. This is the common case for convention notes and is a *better* authority than a URL, because it is the file that actually governs behavior.
 - Absent, for genuine syntheses assembled from many sources where no single authority exists (tool benches, opportunity maps, relationship graphs).
 
 **Banned values.** `pending`, `vault structure`, `this file`, or any other word-in-a-slot. If there is no real address, **omit the key**. A missing field is an honest gap; a placeholder is a gap that reads as done and will never be revisited. A skill encountering a banned value treats the field as absent and flags it.

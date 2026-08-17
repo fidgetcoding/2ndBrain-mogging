@@ -70,11 +70,11 @@ The pack installs the Obsidian *configuration* on top of the Obsidian app. If th
 1. Go to **[obsidian.md](https://obsidian.md/download)** and download the installer for your OS.
 2. Run the installer. It takes about 30 seconds.
 3. Open Obsidian. It'll ask where your vault should live.
-4. **Strong recommendation:** put it at `~/BRAIN2/`. That's `/Users/<you>/BRAIN2/` on macOS — directly in your home folder, **not** under `~/Desktop`. Reasons:
-   - **Do NOT use `~/Desktop`, `~/Documents`, or `~/Downloads`.** On modern macOS those directories are permission-protected (TCC / Full Disk Access). The terminal gets "Operation not permitted" there, and git + the installer fail. Keep the vault in your home dir (`~/BRAIN2`, or `~/<vault-name>`).
+4. **Strong recommendation:** put it at `~/MyVault/`. That's `/Users/<you>/MyVault/` on macOS — directly in your home folder, **not** under `~/Desktop`. Reasons:
+   - **Do NOT use `~/Desktop`, `~/Documents`, or `~/Downloads`.** On modern macOS those directories are permission-protected (TCC / Full Disk Access). The terminal gets "Operation not permitted" there, and git + the installer fail. Keep the vault in your home dir (`~/MyVault`, or `~/<vault-name>`).
    - Short path — easier to type in scripts and your shell.
    - You'll have a lot of subfolders. A shallow root path keeps them navigable.
-   - The import + sync scripts auto-detect vaults at `~/BRAIN/` or `~/BRAIN2/` without needing a `VAULT_PATH=…` prefix.
+   - The import + sync scripts auto-detect vaults at `~/BRAIN/` or `~/MyVault/` without needing a `VAULT_PATH=…` prefix.
 5. Accept the "Create new vault" prompt. Obsidian makes the folder.
 6. **Done — close Obsidian.** The next step runs from the terminal and wants the vault folder empty-ish.
 
@@ -112,19 +112,19 @@ Already have it? Run `jq --version` to confirm.
 
 ## Install the mogging pack
 
-Once Obsidian is installed and you have a vault folder (e.g. `~/BRAIN2/`), the pack's installer takes over.
+Once Obsidian is installed and you have a vault folder (e.g. `~/MyVault/`), the pack's installer takes over.
 
-> **Vault location matters.** Keep your vault in your home dir (`~/BRAIN2`, `~/<vault-name>`). Do **not** put it under `~/Desktop`, `~/Documents`, or `~/Downloads` — modern macOS permission-protects those folders, so the terminal gets "Operation not permitted" and git + the installer fail.
+> **Vault location matters.** Keep your vault in your home dir (`~/MyVault`, `~/<vault-name>`). Do **not** put it under `~/Desktop`, `~/Documents`, or `~/Downloads` — modern macOS permission-protects those folders, so the terminal gets "Operation not permitted" and git + the installer fail.
 
 ```bash
 git clone https://github.com/fidgetcoding/2ndBrain-mogging.git
 cd 2ndBrain-mogging
 
 # Dry-run first (default) — shows every change without touching disk
-./install.sh --vault ~/BRAIN2
+./install.sh --vault ~/MyVault
 
 # Then apply for real
-./install.sh --vault ~/BRAIN2 --apply
+./install.sh --vault ~/MyVault --apply
 ```
 
 **The useful flags:**
@@ -172,7 +172,7 @@ To update the pin: bump `SKILLPACK_COMMIT` in `install.sh`.
 Two pipx tools that read and write **inside** the vault, which is why they live here rather than in cli-maxxing's generic tool steps. Both are **off by default** — same posture as the self-learning tier. A full-tier research run reads 55–130 sources and bills real tokens; nobody should get that wired in as a surprise.
 
 ```bash
-./install.sh --vault ~/BRAIN2 --apply --with-research
+./install.sh --vault ~/MyVault --apply --with-research
 ```
 
 | Tool | What it does | Where it writes |

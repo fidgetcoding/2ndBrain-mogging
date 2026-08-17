@@ -245,7 +245,7 @@ which records intent for the CURRENT session only and prints a one-line confirma
 ~/.claude/projects/<vault-encoded-path>/session-*.jsonl
 ```
 
-`<vault-encoded-path>` is Claude Code's slug for the absolute vault path — leading slash replaced with `-`, every remaining `/` replaced with `-`. Derive it at runtime from `$VAULT_ROOT` (e.g. `/Users/nathandavidovich/BRAIN2` → `-Users-nathandavidovich-BRAIN2`). Do NOT hardcode a vault-specific slug in this file — the vault may be renamed or moved.
+`<vault-encoded-path>` is Claude Code's slug for the absolute vault path — leading slash replaced with `-`, every remaining `/` replaced with `-`. Derive it at runtime from `$VAULT_ROOT` (e.g. `/Users/you/MyVault` → `-Users-nathandavidovich-MyVault`). Do NOT hardcode a vault-specific slug in this file — the vault may be renamed or moved.
 
 Pipeline:
 

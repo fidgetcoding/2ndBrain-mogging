@@ -166,13 +166,13 @@ mode_banner() {
     echo "│                                                              │"
     echo "│  This run only SHOWS what would happen. To actually install: │"
     echo "│                                                              │"
-    echo "│    ./install.sh --vault ~/BRAIN2 --apply                    │"
+    echo "│    ./install.sh --vault ~/MyVault --apply                    │"
     echo "│                                                              │"
-    echo "│  Replace ~/BRAIN2 with your actual Obsidian vault path.     │"
-    echo "│  Keep the vault in your home dir (~/BRAIN2, ~/<vault-name>).│"
-    echo "│  Do NOT put it under ~/Desktop, ~/Documents, or ~/Downloads │"
-    echo "│  — on modern macOS those dirs are permission-protected and  │"
-    echo "│  break terminal/git access to the vault.                    │"
+    echo "│  Replace ~/MyVault with your actual Obsidian vault path.     │"
+    echo "│  Keep the vault in your home dir (~/MyVault, ~/<vault-name>).│"
+    echo "│  Do NOT put it under ~/Desktop, ~/Documents, or ~/Downloads  │"
+    echo "│  — on modern macOS those dirs are permission-protected and   │"
+    echo "│  break terminal/git access to the vault.                     │"
     echo "└──────────────────────────────────────────────────────────────┘"
     echo ""
   fi
@@ -361,8 +361,8 @@ validate_vault() {
   log "step 2/3: validate vault"
   if [[ "$APPLY" -eq 1 && -z "$VAULT" ]]; then
     err "--apply requires --vault PATH  (the path to your Obsidian vault folder)"
-    err "Example: ./install.sh --vault ~/BRAIN2 --apply"
-    err "Keep the vault in your home dir (e.g. ~/BRAIN2). Do NOT use ~/Desktop,"
+    err "Example: ./install.sh --vault ~/MyVault --apply"
+    err "Keep the vault in your home dir (e.g. ~/MyVault). Do NOT use ~/Desktop,"
     # shellcheck disable=SC2088  # literal help text; tilde intentionally not expanded
     err "~/Documents, or ~/Downloads — modern macOS permission-protects those and breaks terminal access."
     err "Not sure where your vault is? Open Obsidian → Settings → Files and Links → Vault path."
@@ -371,7 +371,7 @@ validate_vault() {
 
   # Directory-traversal guard. Reject any path containing a `..` component.
   # `..` anywhere in the chain lets a caller escape the intended vault root
-  # (e.g. --vault ~/BRAIN2/../../.ssh) and we refuse to install there.
+  # (e.g. --vault ~/MyVault/../../.ssh) and we refuse to install there.
   # Pure-prefix matches like "..safe/foo" are NOT rejected — we only match a
   # `..` that stands alone between separators or at the ends of the path.
   if [[ -n "$VAULT" ]]; then
@@ -387,8 +387,8 @@ validate_vault() {
   if [[ -n "$VAULT" && ! -d "$VAULT" ]]; then
     # <ORG-D> install-call (2026-04-22): teammates were getting bounced here when
     # they'd just installed Obsidian and the vault folder didn't exist yet
-    # (e.g. Obsidian created `~/BRAIN2` but they passed
-    # `--vault ~/BRAIN2/`-with-typo, OR they hadn't opened Obsidian
+    # (e.g. Obsidian created `~/MyVault` but they passed
+    # `--vault ~/MyVault/`-with-typo, OR they hadn't opened Obsidian
     # at all). Auto-create the directory in --apply mode and let the
     # vault-template seed step (3.5) populate it.
     #
@@ -1560,7 +1560,7 @@ if [ ! -f "$MARKER" ]; then
   echo "cbrain: 2ndBrain vault marker not found ($MARKER)"
   echo ""
   echo "Install 2ndBrain-mogging first:"
-  echo "  bash <(curl -fsSL https://raw.githubusercontent.com/fidgetcoding/2ndBrain-mogging/main/install.sh) --vault ~/BRAIN2 --apply"
+  echo "  bash <(curl -fsSL https://raw.githubusercontent.com/fidgetcoding/2ndBrain-mogging/main/install.sh) --vault ~/MyVault --apply"
   echo ""
   echo "Or use 'cskip' for skip-permissions without the vault."
   echo ""

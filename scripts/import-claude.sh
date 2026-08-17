@@ -52,7 +52,7 @@ FLOW:
     1. Resolve the vault:
          a. --vault PATH          (explicit)
          b. VAULT_PATH env var    (explicit)
-         c. Auto-discover common locations (~/BRAIN2, ~/Desktop/2ndBrain, …)
+         c. Auto-discover common locations (~/MyVault, ~/Desktop/2ndBrain, …)
             and confirm which one was picked if more than one candidate matched.
     2. Resolve the export zip:
          a. --export-zip PATH
@@ -79,7 +79,7 @@ EXAMPLES:
     # Specific zip + specific vault:
     bash scripts/import-claude.sh \
         --export-zip ~/Downloads/data-abc-batch-1.zip \
-        --vault ~/BRAIN2 --yes
+        --vault ~/MyVault --yes
 USAGE
 }
 
@@ -171,14 +171,14 @@ fi
 if [ -z "$VAULT_PATH" ]; then
     VAULT_CANDIDATES=()
     # Home-dir candidates first — they're the documented recommendation
-    # (~/BRAIN2; Desktop/Documents are TCC-protected on modern macOS).
+    # (~/MyVault; Desktop/Documents are TCC-protected on modern macOS).
     for candidate in \
-        "$HOME/BRAIN2" \
+        "$HOME/MyVault" \
         "$HOME/BRAIN" \
         "$HOME/2ndBrain" \
         "$HOME/Second-Brain" \
         "$HOME/Desktop/BRAIN" \
-        "$HOME/Desktop/BRAIN2" \
+        "$HOME/Desktop/MyVault" \
         "$HOME/Desktop/2ndBrain" \
         "$HOME/Desktop/Second-Brain" \
         "$HOME/Documents/BRAIN" \

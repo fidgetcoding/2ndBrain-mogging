@@ -4,7 +4,7 @@ You just ran `install.sh`. Now what? This is the one doc that explains how to **
 
 The system is your **second brain**, also called the **vault**. It's an Obsidian folder full of markdown notes that a terminal-based Claude (the slash commands `/save` and `/wiki`) reads from and writes to. The more you use it, the better it gets at putting things where they belong.
 
-A note on where the vault lives: the default is `~/BRAIN2`. Don't put it on your Desktop — macOS protects that folder and the sync and backup scripts break against it.
+A note on where the vault lives: the default is `~/MyVault`. Don't put it on your Desktop — macOS protects that folder and the sync and backup scripts break against it.
 
 ---
 
@@ -37,7 +37,7 @@ The more you save, the more it understands where things go — *as long as the i
 ## The folder model
 
 ```
-~/BRAIN2/
+~/MyVault/
 ├── 01-Projects/    # one folder per project you actually work on
 ├── 02-Sources/     # literature — things NOT tied to a project
 ├── 03-Concepts/    # your own ideas, in your words, distilled from sources
