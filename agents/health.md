@@ -38,15 +38,15 @@ Existence check only — do NOT read plugin content (`.obsidian/**` is in the fo
 
 ### Gate C — n8n sync freshness
 
-Query the n8n MCP (or read the cached last-execution timestamp in `Claude-Memory/n8n-last-exec.json`) for the W1 workflow. Healthy: last successful execution was within the last 30 minutes (the polling window is 20m + 10m slack — the orchestrator `W0-Sync-Orchestrator` runs `Every 20 Minutes → W2 → W1`, so a healthy W1 commit lands at most every 20 minutes).
+Query the n8n MCP (or read the cached last-execution timestamp in `Claude-Memory/n8n-last-exec.json`) for the `W0-Sync-Orchestrator` workflow (`WJig0XZ7NV1pCa8e` — the W1 code node is inlined there since 2026-09-21). Healthy: last successful execution was within the last 45 minutes (the polling window is 30m + 15m slack — the orchestrator runs `Every 30 Minutes → W2 code → W1 code` in one execution, so a healthy `[bot:W1]` commit lands at most every 30 minutes).
 
-If stale: flag + suggest the user check the n8n dashboard. There's also an hourly `Sync-Health-Watchdog` workflow (`mzpCCbqD1MvxJhAm`) that auto-opens a GitHub issue + Telegram alert when the gap exceeds 60m — Gate C tightens that threshold for the weekly rollup.
+If stale: flag + suggest the user check the n8n dashboard. There's also a `Sync-Health-Watchdog` workflow (`mzpCCbqD1MvxJhAm`, every 2 hours) that auto-opens a GitHub issue + Telegram alert when the gap exceeds 90m — Gate C tightens that threshold for the weekly rollup.
 
 ### Gate D — Morgen ↔ Obsidian task-count parity
 
 Pull the Morgen task count (`list_tasks` with `limit=500` per `reference_morgen_api_pagination`). Pull the Obsidian task count via `Grep -c` on `^- \[ \]` across `05-Tasks/**/*.md` plus an aggregated scan of inline tasks in the project subtrees.
 
-The counts should match within ±5 (the in-flight tolerance covers tasks written to Obsidian in the last 15 minutes that haven't round-tripped through W1 to Morgen yet, per the operator's `feedback_task_state_source_of_truth` rule).
+The counts should match within ±5 (the in-flight tolerance covers tasks written to Obsidian in the last 30 minutes that haven't round-tripped through W1 to Morgen yet, per the operator's `feedback_task_state_source_of_truth` rule).
 
 If the delta exceeds tolerance: flag the sync as drifting and include the top 10 UUIDs present in one side but not the other.
 
@@ -78,7 +78,7 @@ Following the status line, a diagnostics block with one `## Gate <A|B|C|D>` sect
 ## 3. Thresholds for WARN vs. FAIL
 
 - **FAIL** if: Gate A has ≥1 broken symlink OR Gate B is missing obsidian-tasks-plugin OR Gate C is >90 minutes stale OR Gate D delta is >20.
-- **WARN** if: Gate C is 30m–90m stale OR Gate D delta is 6–20 OR any informational plugin (dataview, templater) is missing.
+- **WARN** if: Gate C is 45m–90m stale OR Gate D delta is 6–20 OR any informational plugin (dataview, templater) is missing.
 - **OK** otherwise.
 
 ## 4. Commit
