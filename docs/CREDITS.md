@@ -109,7 +109,8 @@
 - The `/tether` graph-audit skill
 - The `/backfill` historical-transcript migration skill
 - The integration rules between Morgen UUIDs, n8n W1 pipeline, and vault writes
-- The reserved frontmatter slots for tier-3 bi-temporal facts (`asof:`, `seenat:`, `bi-temporal:`)
+- The small tier-3 memory tier: `bin/memory` and its frontmatter (`asof:`, `seenat:`, `bi-temporal:`)
+- The vault guard: `bin/save`, `bin/wiki`, `bin/aliases` and `hooks/vault-guard.sh`
 - The migration runbook in `docs/MIGRATION.md`
 
 These are the load-bearing additions that justify shipping a new pack rather than configuring one of the upstream sources. Everything else in this pack is a credited borrow.

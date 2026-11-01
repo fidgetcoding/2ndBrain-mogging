@@ -142,6 +142,7 @@ cd 2ndBrain-mogging
 | `--no-skill-packs` | off | Skip the 5 third-party vault skill packs from `kepano/obsidian-skills` (and the `defuddle` npm CLI they need). See [Vault skill packs](#vault-skill-packs) below. |
 | `--with-research` | off | Install the research tier — `hyperresearch` + `graphify`. See [Research tier](#research-tier-opt-in) below. |
 | `--with-guard` | off | Install the vault guard, a hook that blocks edits that break a task's 🆔. See [Vault guard](#vault-guard-opt-in) below. |
+| `--with-memory` | off | Turn on the memory tier for this vault. See [Memory tier](#memory-tier-opt-in) below. |
 | `--skip-tests` | off | Skip the onboarding test suite at the end. |
 | `--merge-stop` | off | Replace the existing Stop hook instead of jq-merging onto it. |
 | `--no-seed-vault` | off | Skip seeding the 6-folder vault layout from `vault-template/`. By default the installer copies in any of `01-Projects/<PROJECT>/conversations/`, `02-Sources/`, `03-Concepts/`, `04-Index/Projects-Index.md`, `01-Projects/{example-project-1, example-project-2, example-project-3, INCUBATOR}/`, `05-Tasks/`, `Claude-Memory/`, `CLAUDE.md`, `AGENTS.md` that are missing. Existing files are never overwritten. |
@@ -307,6 +308,24 @@ Pass `--with-guard` and `hooks/vault-guard.sh` runs them as a Claude Code hook, 
 - **Scope.** Once `/wiki` or `/autoresearch` runs, Claude Code keeps that skill's hook for the rest of the session. It refuses writes to `05-Tasks/`, project indexes and `owner: human` notes. So after a `/wiki` run, start a new session to edit tasks.
 
 It's off by default because it can refuse an edit you actually asked for. Removing or moving a task under the guard is a job for you in Obsidian. It covers Claude's Write and Edit tools only, so a shell command in Bash can still change a file.
+
+---
+
+## Memory tier (opt-in)
+
+Notes go out of date without telling you. Pass `--with-memory` and `bin/memory` keeps track of when each concept note was last known to be true, using nothing but frontmatter:
+
+```bash
+export VAULT_DIR=~/MyVault
+bin/memory status                     # what's fresh, stale, decayed. Read-only.
+bin/memory decay                      # dry run. Add --apply to write.
+bin/memory promote                    # dry run. Add --apply to write.
+bin/memory confirm 03-Concepts/x.md --apply
+bin/memory record 03-Concepts/x.md --claim "v0.2.0 is out" --replaces "v0.1.7 is current" --asof 2026-06-20 --apply
+bin/memory when 2026-05-01            # what the vault held as true that day
+```
+
+It's a date rule and a link count. It doesn't read your notes, so it can't tell you a claim is wrong, only how long it's been since anyone said it was right. It never rewrites `owner: human` notes or anything under `05-Tasks/`, and nothing runs it for you. [`PHILOSOPHY.md`](PHILOSOPHY.md#bi-temporal-facts-the-small-version) has the rules and the list of what it doesn't do.
 
 ---
 

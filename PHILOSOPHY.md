@@ -22,7 +22,7 @@ I think of second-brain automation as three layers of ambition. Not everyone nee
 
 **Tier 3 — memory lifecycle.** The plugin remembers which notes you've touched recently, which ones you avoid, which ones contradict which. It has a concept of "bi-temporal facts" (what was true when I wrote it, what's true now, when did the delta land). It decays stale claims, promotes durable ones, and has opinions about which facts are foundational vs. expiring.
 
-This pack ships tier 1 and tier 2. Tier 3 is explicitly deferred. I acknowledge it as the frontier and have left hooks for it in the schema (`bi-temporal:` frontmatter slot is reserved), but implementing it properly requires a graph store, a reasoner, and a decay model that I have not built. Anyone who tells you they've solved this in a Claude Code plugin is overstating.
+This pack ships tier 1 and tier 2, plus the smallest honest version of tier 3, off by default. `install.sh --with-memory` turns on `bin/memory`, which keeps dates in frontmatter and applies a decay rule and a promotion rule to them. Doing tier 3 properly still takes a graph store and a reasoner, and I haven't built either. Anyone who tells you they've solved this in a Claude Code plugin is overstating. That includes me, so the next section says what mine doesn't do.
 
 **The default tier for this pack is tier 2.** Tier 1 alone is Karpathy's gist — use his if that's all you need.
 
@@ -61,11 +61,26 @@ Every write in this pack begins by asking: what regime is the target file? If th
 
 This is the single design decision that most distinguishes this pack from its upstream sources, and it's the one that matters most for operators with live sync pipelines.
 
-## Bi-temporal facts (deferred)
+## Bi-temporal facts (the small version)
 
-One thing I want and haven't built: a notion of "true-when" vs. "true-now". A claim like "Morgen MCP is at v0.1.7" is true as of the date it was written. If I still think of it as true a month later when v0.2.0 has shipped, the vault has misled me. A bi-temporal fact store would let the plugin flag stale claims ("this was true as of 2026-04-14, 60 days ago, consider verifying") and even decay them out of wiki compilations.
+The thing I wanted: a notion of "true-when" vs. "true-now". A claim like "Morgen MCP is at v0.1.7" is true as of the date it was written. If I still think of it as true a month later when v0.2.0 has shipped, the vault has misled me. So the plugin should flag stale claims ("this was true as of 2026-04-14, 60 days ago, consider verifying") and decay them out of wiki compilations.
 
-This is tier 3 work and it requires more than markdown. I've left the schema slot open (`asof:` and `seenat:` keys are reserved in `wiki-schema.md`) but the inference on top of them is not shipped. If you want this today, look at Anthropic's "memory" work or at graph databases. Don't let me pretend this pack has it.
+`bin/memory` does that much, with frontmatter as the only data model, because the folder is the app. No sidecar database, no index, nothing to re-sync:
+
+- **What was true when.** `asof:` and `seenat:` date a whole note. A `bi-temporal:` list dates single claims, with `asof`, `until` and `recorded`, and `memory when 2026-05-01` answers from those.
+- **Decay.** A concept or synthesis not seen in 60 days goes stale and gets `needs_review: true`. At 180 days it is decayed, and `/wiki` leaves it out of what it compiles. Sources and conversations are exempt, because they're records of what was said and that can't go stale.
+- **Promotion.** A note that has held for 90 days, with 3 other notes linking to it, moves from `expiring` to `durable`, which gets three times as long. `foundational` never decays, and only a human can set it.
+- **The regimes hold.** It rewrites `owner: wiki` and `owner: llm` notes, only with `--apply`, with a backup first, and only the frontmatter. For a HUMAN note or one with no owner it prints a proposal and stops. It never touches SYNC files.
+
+What it doesn't do, and this is most of what I described above as tier 3:
+
+- **No reasoner.** Decay is a date rule. A note that was wrong the day it was written reads as fresh for 60 days, and a note that is still right goes stale on schedule. It never reads the prose.
+- **No contradiction detection.** Two notes can disagree forever and it won't notice. `/wiki audit` looks for that, using a model, and has nothing to do with this tier.
+- **No inference.** It doesn't extract claims from notes. A `bi-temporal:` claim exists because someone ran `memory record`, and `until` lands because someone said what replaced it.
+- **No graph store.** Promotion counts wikilinks on every run, and that is the whole of its graph. It has no idea which notes you avoid, either.
+- **Nothing runs on its own.** No schedule calls it. You run it, or a skill does.
+
+If you want the real thing, look at Anthropic's "memory" work or at graph databases. Don't let me pretend this is that.
 
 ---
 

@@ -149,6 +149,10 @@ When a concept already exists, UPDATE instead of CREATE. "Update" means:
 
 Only create a new concept page if `Glob` + alias resolution truly returns zero matches.
 
+### 3.3a Memory tier
+
+If `Claude-Memory/memory-tier.yaml` exists, the vault has the memory tier on. Before compiling, run `VAULT_DIR="$PWD" "${CLAUDE_SKILL_DIR}/../../bin/memory" list --state decayed` and leave those notes out as sources for what you write, naming them in the discussion so the operator can overrule you. When you verify a claim against its `source_of_truth`, run `memory confirm <note> --apply`. When a claim has changed, run `memory record <note> --claim "<new>" --replaces "<old>" --asof <date> --apply`. If the file doesn't exist, skip all of this.
+
 ### 3.4 Index + log
 
 - `04-Index/Index.md` gets one new line per new concept or entity page, sorted into its topical section.
