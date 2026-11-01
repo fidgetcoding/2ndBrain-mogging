@@ -119,7 +119,7 @@ the operator's task pipeline (Obsidian ↔ Morgen via n8n W1/W2, orchestrated by
 ### Canonical line
 
 ```
-- [ ] <task text> <priority?> 📅 YYYY-MM-DD <🔁 recurrence?> 🆔 <uuidv4>
+- [ ] <task text> <priority?> 📅 YYYY-MM-DD <🔁 recurrence?> 🆔 m-XXXXXXXX
 ```
 
 **Token order is mandatory.** The Tasks plugin parses positionally in several render paths. Deviating breaks Morgen tag-sync.
@@ -129,13 +129,14 @@ Glyphs:
 - Priority: 🔺 highest · ⏫ high · 🔼 medium · 🔽 low · ⏬ lowest
 - Dates: 📅 due · ⏳ scheduled · 🛫 start · ✅ done · ❌ cancelled
 - Recurrence: `🔁 every week`, `🔁 every 2 weeks`, `🔁 every month on the 1st`
-- 🆔 stable identifier, UUIDv4, mandatory on every new task
+- 🆔 stable identifier, `m-` plus 8 lowercase hex chars. W1 writes it on the first sync. Tasks from before 2026-05-04 carry a UUIDv4 instead, which W1's parser ignores, so leave those alone
 
 ### UUID rules (non-negotiable)
 
-1. **Every new task gets a 🆔.** Generate with `uuidgen | tr '[:upper:]' '[:lower:]'`. Append AFTER date/recurrence tokens, never inside the body.
+1. **New tasks go in with no 🆔.** W1 mints `m-XXXXXXXX` on the next sync and appends it after the date/recurrence tokens. W1's parser only matches `m-[0-9a-f]{8}`, so a self-minted UUIDv4 is silently ignored and the task strands in Obsidian.
 2. **Edits preserve 🆔 byte-for-byte.** A rewrite that changes or drops the UUID creates a duplicate task in Morgen that cannot be silently undone. The fix costs the operator 15+ minutes of manual deduping. (Pre-2026-05-04 the duplicate also appeared in Notion; Notion was dropped from the sync stack on 2026-05-04.)
-3. **Missing UUID on a legacy task = mint + log.** If a skill touches a task line that lacks 🆔, it mints one AND appends a line to `Claude-Memory/task-uuid-mints.log` recording (file, line, uuid, timestamp). The mint is a side effect, so it must be auditable.
+3. **Missing UUID on a legacy task = leave it.** W1 mints one on its next sync. A skill that touches the line keeps it ID-less rather than inventing a token.
+4. **Enforced by `bin/save`.** `bin/save check-tasks` and `bin/save write-tasks` run these rules on a before and after pair, and `install.sh --with-guard` runs the same check as a PreToolUse hook on every Write or Edit under `05-Tasks/`.
 
 ## 6. Security scrub
 

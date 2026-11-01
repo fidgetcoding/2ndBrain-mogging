@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 # tests/test_uuid_preservation.sh
-# /save must never mutate Obsidian Tasks 🆔 UUIDs.
+# Task 🆔 IDs must survive every edit byte-for-byte. Runs the real gate (bin/save)
+# and the optional PreToolUse hook (hooks/vault-guard.sh) against the fixtures in
+# tests/fixtures/tasks/.
+#
+# This proves the gate. It can't prove what a model does when the hook isn't
+# installed, because /save itself is instructions to a model.
 
 set -u
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -13,100 +18,195 @@ assert_reset "test_uuid_preservation"
 TMPROOT="$(mktemp -d -t 2brain-uuid-XXXXXX)"
 cleanup() {
   if [[ -n "${TMPROOT:-}" && ( "$TMPROOT" == /tmp/* || "$TMPROOT" == /var/folders/* ) ]]; then
-    rm -rf "$TMPROOT"
+    rm -rf "${TMPROOT:?}"
   fi
 }
 trap cleanup EXIT
 
 VAULT="$TMPROOT/vault"
 cp -R "$HERE/fixtures/sample-vault/." "$VAULT/"
+export HOME="$TMPROOT/home"
+unset CLAUDE_HOME
+mkdir -p "$HOME/.claude"
 
-# Seed a tasks file with 3 known UUIDs. Use fixed strings so we can grep
-# byte-for-byte afterwards.
-UUID1="abc123"
-UUID2="def456"
-UUID3="ghi789"
-TASKS_FILE="$VAULT/05-Tasks/TASKS-UUID.md"
+SAVE_CMD="$REPO_ROOT/bin/save"
+GUARD="$REPO_ROOT/hooks/vault-guard.sh"
+FIX="$HERE/fixtures/tasks"
+assert_file "$SAVE_CMD" "bin/save exists"
+assert_file "$GUARD" "hooks/vault-guard.sh exists"
 
-cat > "$TASKS_FILE" <<EOF
-# TASKS-UUID
+UUID1="m-0a1b2c3d"
+UUID2="m-4e5f6a7b"
+UUID3="m-8c9d0e1f"
+UUID_LEGACY="3f2b8a60-7c1e-4f8e-9a3b-5d6e7f8a9b0c"
+TASKS_FILE="$VAULT/05-Tasks/TASKS-SAMPLE.md"
+cp "$FIX/before.md" "$TASKS_FILE"
 
-## Open
+expect_pass() {
+  local after="$1" label="$2"
+  if "$SAVE_CMD" check-tasks --before "$FIX/before.md" --after "$FIX/$after" >/dev/null 2>&1; then
+    _pass "$label"
+  else
+    _fail "$label (gate rejected it)"
+  fi
+}
 
-- [ ] uuid-task-one 🆔 ${UUID1} 📅 2026-05-01
-- [ ] uuid-task-two 🆔 ${UUID2} ⏫
-- [ ] uuid-task-three 🆔 ${UUID3} 🔁 every week
-- [ ] plain-task-no-uuid
+# Exit 1 and the reason on stdout. Exit 1 alone isn't enough: a crash can exit 1 too.
+expect_reject() {
+  local after="$1" reason="$2" label="$3" out rc
+  out="$("$SAVE_CMD" check-tasks --before "$FIX/before.md" --after "$FIX/$after" 2>/dev/null)"
+  rc=$?
+  assert_eq "$rc" "1" "$label: exits 1"
+  if printf '%s' "$out" | grep -q "$reason"; then
+    _pass "$label: says $reason"
+  else
+    _fail "$label: expected '$reason' in: $out"
+  fi
+}
 
-EOF
+# ---------------------------------------------------------------------------
+# The rule, case by case.
+# ---------------------------------------------------------------------------
+expect_pass   before.md                   "no change passes"
+expect_pass   after-legit-edit.md         "text, date and done-mark edits pass"
+expect_pass   after-new-task-no-id.md     "a new task with no ID passes (W1 mints it)"
+expect_reject after-rewritten.md          "rewritten"   "rewritten ID"
+expect_reject after-dropped.md            "dropped"     "dropped ID"
+expect_reject after-removed.md            "removed"     "removed task"
+expect_reject after-duplicated.md         "duplicated"  "duplicated ID"
+expect_reject after-swapped.md            "swapped"     "IDs swapped between tasks"
+expect_reject after-self-minted-uuidv4.md "self-minted" "self-minted UUIDv4"
+expect_reject after-self-minted-short.md  "self-minted" "self-minted m-XXXXXXXX"
+expect_reject after-legacy-rewritten.md   "rewritten"   "legacy UUIDv4 rewritten to the new format"
 
-# Locate the save command. Skip if missing.
-SAVE_CMD=""
-for candidate in \
-  "$REPO_ROOT/skills/save/run.sh" \
-  "$REPO_ROOT/skills/save/save" \
-  "$REPO_ROOT/bin/save" \
-  "$REPO_ROOT/scripts/save.sh"
-do
-  if [[ -x "$candidate" ]]; then SAVE_CMD="$candidate"; break; fi
-done
-
-if [[ -z "$SAVE_CMD" ]]; then
-  # Forward-looking SKIP. /save ships as a SKILL.md + Claude-driven
-  # capture — there is no shell entrypoint at skills/save/run.sh today.
-  # UUID preservation is enforced inside the skill's instruction block to
-  # the model. When a runnable save CLI lands (or a dedicated
-  # 05-Tasks-rewriter shim), this test will exercise byte-preservation of
-  # the three planted 🆔 tokens.
-  printf "%sSKIP%s test_uuid_preservation (no save CLI entrypoint — skill is SKILL.md-only)\n" \
-    "${_C_YELLOW:-}" "${_C_RESET:-}"
-  exit 0
-fi
-
+# ---------------------------------------------------------------------------
+# write-tasks, against a real file in a temp vault.
+# ---------------------------------------------------------------------------
 BEFORE_MD5="$(md5_of "$TASKS_FILE")"
 BEFORE_COUNT="$(grep -c '🆔' "$TASKS_FILE" | tr -d ' ')"
 
-# Invoke /save against the vault. We don't care about the summary output —
-# only that UUIDs are preserved.
-VAULT_DIR="$VAULT" "$SAVE_CMD" --yes >/dev/null 2>&1 || true
+# A no-op write through the gate.
+cp "$TASKS_FILE" "$TMPROOT/same.md"
+VAULT_DIR="$VAULT" "$SAVE_CMD" write-tasks --target 05-Tasks/TASKS-SAMPLE.md --from "$TMPROOT/same.md" --yes >/dev/null 2>&1
 
-# ---------------------------------------------------------------------------
-# Assertions.
-# ---------------------------------------------------------------------------
 assert_file "$TASKS_FILE" "tasks file still exists after /save"
 
 assert_contains "$TASKS_FILE" "🆔 ${UUID1}" "UUID ${UUID1} preserved byte-for-byte"
 assert_contains "$TASKS_FILE" "🆔 ${UUID2}" "UUID ${UUID2} preserved byte-for-byte"
 assert_contains "$TASKS_FILE" "🆔 ${UUID3}" "UUID ${UUID3} preserved byte-for-byte"
+assert_contains "$TASKS_FILE" "🆔 ${UUID_LEGACY}" "legacy UUID preserved byte-for-byte"
 
 AFTER_COUNT="$(grep -c '🆔' "$TASKS_FILE" | tr -d ' ')"
 assert_eq "$AFTER_COUNT" "$BEFORE_COUNT" "UUID count unchanged ($BEFORE_COUNT)"
 
 # No rogue UUIDs injected. We define "UUID" here loosely as '🆔 <token>' where
-# token is not one of the three we planted, nor the empty string.
+# token is not one of the ones we planted, nor the empty string.
 ROGUE=0
 while IFS= read -r line; do
   tok="$(echo "$line" | sed -n 's/.*🆔[[:space:]]*\([A-Za-z0-9_-]\{1,\}\).*/\1/p')"
   [[ -z "$tok" ]] && continue
   case "$tok" in
-    "$UUID1"|"$UUID2"|"$UUID3") ;;
+    "$UUID1"|"$UUID2"|"$UUID3"|"$UUID_LEGACY") ;;
     *) ROGUE=$((ROGUE + 1)) ;;
   esac
 done < "$TASKS_FILE"
 assert_eq "$ROGUE" "0" "no rogue UUIDs injected by /save"
 
-# File content hash — if /save was a pure no-op, this matches. If /save
-# legitimately updates non-UUID fields we soften to "no UUID drift" via the
-# explicit UUID checks above. So we record, not assert, the full-file hash.
-AFTER_MD5="$(md5_of "$TASKS_FILE")"
-if [[ "$BEFORE_MD5" == "$AFTER_MD5" ]]; then
-  _pass "tasks file byte-identical after /save (pure no-op)"
-else
-  # Not a failure — just informational.
-  if [[ "${VERBOSE:-0}" == "1" ]]; then
-    printf "  (info) file hash changed but UUIDs intact: %s -> %s\n" \
-      "$BEFORE_MD5" "$AFTER_MD5"
-  fi
-fi
+assert_eq "$(md5_of "$TASKS_FILE")" "$BEFORE_MD5" "tasks file byte-identical after a no-op write"
+
+# A broken edit changes nothing on disk.
+VAULT_DIR="$VAULT" "$SAVE_CMD" write-tasks --target 05-Tasks/TASKS-SAMPLE.md --from "$FIX/after-rewritten.md" --yes >/dev/null 2>&1
+assert_eq "$?" "1" "write-tasks refuses a rewritten ID"
+assert_eq "$(md5_of "$TASKS_FILE")" "$BEFORE_MD5" "tasks file untouched after the refusal"
+
+# Declining the prompt changes nothing either.
+printf 'n\n' | VAULT_DIR="$VAULT" "$SAVE_CMD" write-tasks --target 05-Tasks/TASKS-SAMPLE.md --from "$FIX/after-legit-edit.md" >/dev/null 2>&1
+assert_eq "$(md5_of "$TASKS_FILE")" "$BEFORE_MD5" "tasks file untouched after answering n"
+
+# A good edit lands, keeps the IDs, and leaves a backup behind.
+VAULT_DIR="$VAULT" "$SAVE_CMD" write-tasks --target 05-Tasks/TASKS-SAMPLE.md --from "$FIX/after-legit-edit.md" --yes >/dev/null 2>&1
+assert_eq "$?" "0" "write-tasks accepts a legitimate edit"
+assert_contains "$TASKS_FILE" "with the receipts" "the edit landed"
+assert_contains "$TASKS_FILE" "🆔 ${UUID2}" "edited task kept its ID"
+BACKUPS="$(find "$VAULT/Claude-Memory/backups" -type f -name '*TASKS-SAMPLE.md.bak' 2>/dev/null | wc -l | tr -d ' ')"
+assert_eq "$BACKUPS" "1" "a backup was taken before overwriting"
+
+# write-tasks is only for tasks.
+VAULT_DIR="$VAULT" "$SAVE_CMD" write-tasks --target 02-Sources/not-tasks.md --from "$FIX/before.md" --yes >/dev/null 2>&1
+assert_eq "$?" "3" "write-tasks refuses a path outside 05-Tasks/"
+if [[ -e "$VAULT/02-Sources/not-tasks.md" ]]; then _fail "file written outside 05-Tasks/"; else _pass "nothing written outside 05-Tasks/"; fi
+
+# ---------------------------------------------------------------------------
+# The hook, with the same JSON Claude Code feeds it on stdin.
+# ---------------------------------------------------------------------------
+cp "$FIX/before.md" "$TASKS_FILE"
+
+hook() { "$GUARD" 2>"$TMPROOT/hook.err"; }
+
+write_json() { jq -n --arg f "$1" --rawfile c "$2" '{tool_name:"Write",tool_input:{file_path:$f,content:$c}}'; }
+edit_json() {
+  jq -n --arg f "$1" --arg o "$2" --arg n "$3" --argjson a "${4:-false}" \
+    '{tool_name:"Edit",tool_input:{file_path:$f,old_string:$o,new_string:$n,replace_all:$a}}'
+}
+
+# Off unless installed: no marker, no enforcement.
+write_json "$TASKS_FILE" "$FIX/after-rewritten.md" | hook
+assert_eq "$?" "0" "hook does nothing without the opt-in marker"
+
+printf '%s\n' "$VAULT" > "$HOME/.claude/.mogging-guard"
+
+write_json "$TASKS_FILE" "$FIX/after-legit-edit.md" | hook
+assert_eq "$?" "0" "hook allows a Write that keeps the IDs"
+
+write_json "$TASKS_FILE" "$FIX/after-rewritten.md" | hook
+assert_eq "$?" "2" "hook blocks a Write that rewrites an ID"
+assert_contains "$TMPROOT/hook.err" "rewritten" "the block tells Claude why"
+
+write_json "$TASKS_FILE" "$FIX/after-new-task-no-id.md" | hook
+assert_eq "$?" "0" "hook allows a new task with no ID"
+
+write_json "$TASKS_FILE" "$FIX/after-self-minted-uuidv4.md" | hook
+assert_eq "$?" "2" "hook blocks a self-minted UUIDv4"
+
+edit_json "$TASKS_FILE" "🆔 $UUID1" "🆔 m-11111111" | hook
+assert_eq "$?" "2" "hook blocks an Edit that rewrites an ID"
+
+edit_json "$TASKS_FILE" " 🆔 $UUID3" "" | hook
+assert_eq "$?" "2" "hook blocks an Edit that drops an ID"
+
+edit_json "$TASKS_FILE" "renew the library card" "renew the library card online" | hook
+assert_eq "$?" "0" "hook allows an Edit to the task text"
+
+edit_json "$TASKS_FILE" "- [ ] book the dentist" "- [x] book the dentist" | hook
+assert_eq "$?" "0" "hook allows marking a task done"
+
+edit_json "$TASKS_FILE" "m-" "z-" true | hook
+assert_eq "$?" "2" "hook blocks a replace_all that rewrites every ID"
+
+# old_string isn't in the file, so the tool will change nothing. Not the hook's call.
+edit_json "$TASKS_FILE" "this text is not in the file" "🆔 m-22222222" | hook
+assert_eq "$?" "0" "an Edit whose old_string isn't there isn't blocked"
+
+jq -n --arg f "$TASKS_FILE" --arg i "🆔 $UUID2" '{tool_name:"MultiEdit",tool_input:{file_path:$f,edits:[
+    {old_string:"send the Q3 invoice",new_string:"send the invoice"},
+    {old_string:$i,new_string:"🆔 m-33333333"}]}}' | hook
+assert_eq "$?" "2" "hook blocks a MultiEdit that rewrites an ID in a later edit"
+
+# Outside 05-Tasks/ the UUID rule has nothing to say, and neither does the hook.
+write_json "$VAULT/02-Sources/note.md" "$FIX/after-rewritten.md" | hook
+assert_eq "$?" "0" "hook ignores files outside 05-Tasks/"
+write_json "/somewhere/else/entirely.md" "$FIX/after-rewritten.md" | hook
+assert_eq "$?" "0" "hook ignores files outside the vault"
+
+# Symlinks can't dodge it.
+ln -s "$TASKS_FILE" "$VAULT/02-Sources/alias-to-tasks.md"
+write_json "$VAULT/02-Sources/alias-to-tasks.md" "$FIX/after-rewritten.md" | hook
+assert_eq "$?" "2" "hook follows a symlink into 05-Tasks/"
+
+# A hook that can't read its input must not block the session.
+printf 'not json' | hook
+assert_eq "$?" "1" "malformed input is a non-blocking error, not a block"
+
+assert_eq "$(md5_of "$TASKS_FILE")" "$(md5_of "$FIX/before.md")" "the hook never writes the file itself"
 
 assert_report

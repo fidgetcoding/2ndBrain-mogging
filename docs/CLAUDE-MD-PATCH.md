@@ -147,7 +147,7 @@ Every prefix in this table MUST be listed in the n8n W1 filter.
 ### Hard rules
 
 - **Never auto-rewrite `01-Projects/*/<project>.md` index files.** Filename-equals-folder rule is preserved; violations break `[[PROJECT]]` wikilink resolution.
-- **Never edit `05-Tasks/` content directly.** Use `/save` with Obsidian Tasks plugin syntax and strict UUID preservation. Missing UUID on a legacy task is mint-and-log, not rewrite.
+- **Never edit `05-Tasks/` content directly.** Use `/save` with Obsidian Tasks plugin syntax and strict UUID preservation. A task with no 🆔 stays that way until W1 mints one on its next sync.
 - **Never use `[[MOC-*]]` wikilinks.** Legacy shape, dead after the `04-MOC/` → `04-Index/` rename. Use `[[*-Index]]`. `/wiki heal` rewrites existing `[[MOC-*]]` references automatically.
 - **Never remove a note or wikilink** without flagging it for human review. Dead wikilinks get struck through with an HTML comment (`~~[[orphaned]]~~ <!-- dead: YYYY-MM-DD -->`), never silently deleted.
 - **Always check `Claude-Memory/aliases.yaml`** before classifying entities. If `jq`/`yaml` can't parse it, the skill halts — partial classification is worse than no classification.
@@ -167,7 +167,7 @@ Canonical line (token order is mandatory — the Tasks plugin parses positionall
 - Priorities: 🔺 highest · ⏫ high · 🔼 medium · 🔽 low · ⏬ lowest
 - Dates: 📅 due · ⏳ scheduled · 🛫 start · ✅ done · ❌ cancelled
 - Recurrence: `🔁 every week`, `🔁 every 2 weeks`, `🔁 every month on the 1st`
-- 🆔 is `m-XXXXXXXX` (8 lowercase hex chars), mandatory on every new task — minted by W1 on first sync. Edits preserve it byte-for-byte. Missing 🆔 on a legacy line is mint-and-log (appended to `Claude-Memory/task-uuid-mints.log`), never rewrite. (Pre-2026-05-04 entries used UUIDv4 format; W1 only matches `m-[0-9a-f]{8}` so legacy entries are stranded but archived — do not auto-rewrite.)
+- 🆔 is `m-XXXXXXXX` (8 lowercase hex chars), mandatory on every new task, minted by W1 on first sync. Edits preserve it byte-for-byte. A line missing its 🆔 stays ID-less until W1 mints one, and no skill invents a token. (Pre-2026-05-04 entries used UUIDv4 format; W1 only matches `m-[0-9a-f]{8}` so legacy entries are stranded but archived — do not auto-rewrite.)
 
 Rewriting tokens in the wrong order or dropping the 🆔 breaks the n8n W1/W2 sync and creates duplicate tasks in Morgen that cost ~15 minutes of manual deduping to undo. (W3 was deprecated 2026-05-04 when Notion was dropped from the sync stack.)
 

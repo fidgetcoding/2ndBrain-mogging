@@ -2,6 +2,12 @@
 name: wiki
 description: Add, audit, heal, and find across the 2ndBrain Obsidian vault. Single skill with four branches — ADD ingests sources (URL/file/paste/YouTube/PDF) into the 02-Sources → 03-Concepts → 04-Index pipeline with discuss-before-write; AUDIT is read-only integrity scan; HEAL applies safe repairs on a dry-run branch; FIND is semantic retrieval with wikilink-cited synthesis. Never writes owner:human files, never touches 01-Projects/*/index or 05-Tasks/.
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash
+hooks:
+  PreToolUse:
+    - matcher: "Write|Edit|MultiEdit"
+      hooks:
+        - type: command
+          command: "sh -c 'g=\"$HOME/.claude/skills/wiki/../../hooks/vault-guard.sh\"; [ -x \"$g\" ] || exit 0; exec \"$g\" --skill wiki'"
 ---
 
 # wiki — add, audit, heal, find
@@ -32,6 +38,8 @@ These are non-negotiable and apply to every branch below:
 1. **Never write files with `owner: human` in their frontmatter.** Read the target file's frontmatter BEFORE any Edit/Write. If `owner: human` is present, route around it (log-only, or create a sibling `-wiki.md` file).
 2. **Never write to `01-Projects/*/<project-name>.md` or any file directly named as a project index.** Project index files are human-curated (per vault rules in `CLAUDE.md`). `wiki` may LINK into them but never mutate them. Scaffolding new projects is explicitly out of scope for this skill.
 3. **Never write anywhere under `05-Tasks/`.** Task state is owned by the Obsidian Tasks plugin and the n8n 2-way sync (Obsidian ↔ Morgen, post-2026-05-04 Notion drop). `wiki` may READ tasks to resolve wikilink targets but never creates, edits, completes, or deletes a task.
+
+   Rules 1 to 3 have a runnable check. From the vault root, before each Write or Edit: `VAULT_DIR="$PWD" "${CLAUDE_SKILL_DIR}/../../bin/wiki" check --target <path>`. Exit 3 means stop, and it says why. With `install.sh --with-guard` the same check runs as a hook on every Write and Edit once `/wiki` has been invoked, and stays on for the rest of that session.
 4. **Every branch that writes uses its own git branch.** No direct writes to `main`. Branch names below are the contract.
 5. **Every write file includes the frontmatter keys `source_of_truth`, `last_confirmed`, and `owner` per `./references/wiki-schema.md`.**
 6. **Branch pollution discipline.** If a branch already exists for today, append to it; do not create `-v2` siblings.

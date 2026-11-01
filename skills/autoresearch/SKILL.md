@@ -2,6 +2,12 @@
 name: autoresearch
 description: Three-round web research loop that decomposes a topic, gathers sources, gap-fills contradictions, and emits vault-ready source + concept notes with confidence labels. Ported from AgriciDaniel with source-freshness hardening, SSRF guards, and a Karpathy factual-only rule for source notes (02-Sources/).
 allowed-tools: Read, Write, WebSearch, WebFetch, Grep, Glob
+hooks:
+  PreToolUse:
+    - matcher: "Write|Edit|MultiEdit"
+      hooks:
+        - type: command
+          command: "sh -c 'g=\"$HOME/.claude/skills/autoresearch/../../hooks/vault-guard.sh\"; [ -x \"$g\" ] || exit 0; exec \"$g\" --skill autoresearch'"
 ---
 
 # /autoresearch

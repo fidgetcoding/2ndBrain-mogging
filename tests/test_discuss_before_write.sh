@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # tests/test_discuss_before_write.sh
-# /wiki Add must prompt for confirmation before touching the vault.
+# /wiki Add must prompt for confirmation before touching the vault. Runs bin/wiki,
+# the write gate. The conversation that comes before it is the skill's to have.
 # - 'n' => no files change
 # - 'y' => new file created
 # - --yes flag => prompt bypassed
@@ -16,7 +17,7 @@ assert_reset "test_discuss_before_write"
 TMPROOT="$(mktemp -d -t 2brain-wiki-XXXXXX)"
 cleanup() {
   if [[ -n "${TMPROOT:-}" && ( "$TMPROOT" == /tmp/* || "$TMPROOT" == /var/folders/* ) ]]; then
-    rm -rf "$TMPROOT"
+    rm -rf "${TMPROOT:?}"
   fi
 }
 trap cleanup EXIT
@@ -24,28 +25,8 @@ trap cleanup EXIT
 VAULT="$TMPROOT/vault"
 cp -R "$HERE/fixtures/sample-vault/." "$VAULT/"
 
-# Locate the wiki command. We try a few canonical locations; if none exist we
-# SKIP rather than fail — the test harness was written alongside a growing
-# implementation.
-WIKI_CMD=""
-for candidate in \
-  "$REPO_ROOT/skills/wiki/run.sh" \
-  "$REPO_ROOT/skills/wiki/wiki" \
-  "$REPO_ROOT/bin/wiki" \
-  "$REPO_ROOT/scripts/wiki.sh"
-do
-  if [[ -x "$candidate" ]]; then WIKI_CMD="$candidate"; break; fi
-done
-
-if [[ -z "$WIKI_CMD" ]]; then
-  # Forward-looking SKIP. /wiki currently ships as a SKILL.md only — the
-  # prompt→edit flow is Claude-driven, there is no shell entrypoint for
-  # automated confirm/reject testing. This test will auto-exercise when a
-  # runnable wiki CLI lands. run_all.sh surfaces SKIP distinctly from PASS.
-  printf "%sSKIP%s test_discuss_before_write (no wiki CLI entrypoint — skill is SKILL.md-only)\n" \
-    "${_C_YELLOW:-}" "${_C_RESET:-}"
-  exit 0
-fi
+WIKI_CMD="$REPO_ROOT/bin/wiki"
+assert_file "$WIKI_CMD" "bin/wiki exists"
 
 # ---------------------------------------------------------------------------
 # Pre-snapshot vault.
@@ -75,7 +56,7 @@ fi
 # Case 2: user types 'y' -> file is created under 02-Sources/.
 # ---------------------------------------------------------------------------
 TARGET_REL="02-Sources/LIT-confirm-write.md"
-rm -f "$VAULT/$TARGET_REL"
+rm -f "${VAULT:?}/${TARGET_REL:?}"
 printf 'y\n' | VAULT_DIR="$VAULT" "$WIKI_CMD" add \
   --title "confirm-write" \
   --body  "this should land on disk" \
@@ -88,7 +69,7 @@ assert_file "$VAULT/$TARGET_REL" "file created after 'y' response"
 # Case 3: --yes flag bypasses prompt (no stdin needed).
 # ---------------------------------------------------------------------------
 TARGET_REL2="02-Sources/LIT-auto-yes.md"
-rm -f "$VAULT/$TARGET_REL2"
+rm -f "${VAULT:?}/${TARGET_REL2:?}"
 VAULT_DIR="$VAULT" "$WIKI_CMD" add \
   --title "auto-yes" \
   --body  "--yes should skip prompt" \
@@ -107,6 +88,39 @@ if echo "$YES_OUT" | grep -qi 'confirm\|proceed?\|(y/n)'; then
   _fail "--yes still emitted a confirmation prompt"
 else
   _pass "--yes suppresses the confirmation prompt"
+fi
+
+# ---------------------------------------------------------------------------
+# Case 4: no answer at all is a no. A closed stdin must not write.
+# ---------------------------------------------------------------------------
+TARGET_REL3="02-Sources/LIT-no-answer.md"
+VAULT_DIR="$VAULT" "$WIKI_CMD" add \
+  --title "no-answer" \
+  --body "stdin is closed" \
+  --target "$TARGET_REL3" \
+  </dev/null >/dev/null 2>&1 || true
+if [[ -e "$VAULT/$TARGET_REL3" ]]; then
+  _fail "file created with no answer on stdin"
+else
+  _pass "no answer on stdin writes nothing"
+fi
+
+# ---------------------------------------------------------------------------
+# Case 5: the prompt is real, and the preview shows the note before it.
+# ---------------------------------------------------------------------------
+PROMPT_OUT="$(printf 'n\n' | VAULT_DIR="$VAULT" "$WIKI_CMD" add \
+  --title "preview-me" \
+  --body "visible before the prompt" \
+  --target "02-Sources/LIT-preview.md" 2>&1 || true)"
+if printf '%s' "$PROMPT_OUT" | grep -q '(y/n)'; then
+  _pass "without --yes it asks"
+else
+  _fail "without --yes it did not ask"
+fi
+if printf '%s' "$PROMPT_OUT" | grep -q 'visible before the prompt'; then
+  _pass "the preview shows the note"
+else
+  _fail "the preview did not show the note"
 fi
 
 assert_report

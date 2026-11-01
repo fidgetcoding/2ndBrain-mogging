@@ -5,14 +5,13 @@ name: Tests
 # The harness lives at tests/run_all.sh and orchestrates every test_*.sh
 # script, distinguishing PASS / SKIP / FAIL via a SKIP sentinel.
 #
-# We do NOT run with --strict yet because several skills still legitimately
-# skip when their runnable entrypoint is not yet wired. Flip to --strict
-# once every test has a real entrypoint.
+# --strict turns a SKIP into a failure. Every test has a real entrypoint, so a
+# skip now means coverage quietly went away.
 # ----------------------------------------------------------------------------
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'ci/**']
     paths-ignore:
       - '**.md'
       - 'docs/**'
@@ -110,4 +109,4 @@ jobs:
       - name: Run tests/run_all.sh
         run: |
           chmod +x tests/run_all.sh
-          bash tests/run_all.sh
+          bash tests/run_all.sh --strict

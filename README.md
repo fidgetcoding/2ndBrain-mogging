@@ -141,6 +141,7 @@ cd 2ndBrain-mogging
 | `--no-shell-shortcuts` | off | Skip writing the `cbrain` / `cbraintg` launchers to `~/.local/bin`. |
 | `--no-skill-packs` | off | Skip the 5 third-party vault skill packs from `kepano/obsidian-skills` (and the `defuddle` npm CLI they need). See [Vault skill packs](#vault-skill-packs) below. |
 | `--with-research` | off | Install the research tier — `hyperresearch` + `graphify`. See [Research tier](#research-tier-opt-in) below. |
+| `--with-guard` | off | Install the vault guard, a hook that blocks edits that break a task's 🆔. See [Vault guard](#vault-guard-opt-in) below. |
 | `--skip-tests` | off | Skip the onboarding test suite at the end. |
 | `--merge-stop` | off | Replace the existing Stop hook instead of jq-merging onto it. |
 | `--no-seed-vault` | off | Skip seeding the 6-folder vault layout from `vault-template/`. By default the installer copies in any of `01-Projects/<PROJECT>/conversations/`, `02-Sources/`, `03-Concepts/`, `04-Index/Projects-Index.md`, `01-Projects/{example-project-1, example-project-2, example-project-3, INCUBATOR}/`, `05-Tasks/`, `Claude-Memory/`, `CLAUDE.md`, `AGENTS.md` that are missing. Existing files are never overwritten. |
@@ -293,6 +294,19 @@ Deep rationale for each skill is in [`PHILOSOPHY.md`](PHILOSOPHY.md).
 Pass `--with-intelligence` to the installer and the pack wires in a pattern-graph from **[FidgetFlo](https://github.com/fidgetcoding/fidgetflo)** that plugs into `/save` and `/wiki` so routing gets progressively smarter as the vault grows, without rewriting a single one of your notes. 11 helper scripts get hardlinked into `$VAULT/.claude/helpers/` and 5 additional hook types (PreToolUse / PostToolUse / UserPromptSubmit / SessionStart / SessionEnd) get jq-merged into `~/.claude/settings.json` — your existing hooks are preserved. (FidgetFlo is my MIT-licensed fork of [ruvnet's `ruflo@v3.5.80`](https://github.com/ruvnet/ruflo/tree/v3.5.80); upstream copyright is preserved in FidgetFlo's `LICENSE`.)
 
 Off by default so the advertised pack works for people who just want the folders and the skills. Turn it on when you want the vault to start learning from your session history.
+
+---
+
+## Vault guard (opt-in)
+
+The skills are instructions to a model, and a model can forget an instruction. The rules I can't afford to lose also exist as code, in `bin/save`, `bin/wiki` and `bin/aliases`. The skills call those, and `tests/` runs them against fixtures in a temp vault.
+
+Pass `--with-guard` and `hooks/vault-guard.sh` runs them as a Claude Code hook, so a broken edit gets blocked before it lands:
+
+- **Task IDs.** Any Write or Edit under `05-Tasks/` that rewrites, drops, duplicates, swaps or invents a 🆔 is refused. A new task with no 🆔 is fine, because W1 mints it on the next sync.
+- **Scope.** Once `/wiki` or `/autoresearch` runs, Claude Code keeps that skill's hook for the rest of the session. It refuses writes to `05-Tasks/`, project indexes and `owner: human` notes. So after a `/wiki` run, start a new session to edit tasks.
+
+It's off by default because it can refuse an edit you actually asked for. Removing or moving a task under the guard is a job for you in Obsidian. It covers Claude's Write and Edit tools only, so a shell command in Bash can still change a file.
 
 ---
 

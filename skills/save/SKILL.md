@@ -185,13 +185,15 @@ Recurrence example: `🔁 every week`, `🔁 every 2 weeks`, `🔁 every month o
 
 On edit of an existing task line, the skill MUST preserve the `🆔 m-XXXXXXXX` verbatim — byte-for-byte. The 🆔 is the stable join key for the n8n 2-way sync (Obsidian ↔ Morgen, post-2026-05-04 Notion drop). Rewriting it creates a duplicate in Morgen that cannot be silently undone.
 
-On create of a new task line, generate a fresh UUIDv4:
+On create of a new task line, leave the 🆔 off. W1 mints `m-XXXXXXXX` on its next sync and appends it as the final trailing token. W1's parser only matches `m-[0-9a-f]{8}`, so a self-minted UUIDv4 is silently ignored and the task strands in Obsidian.
+
+Every edit under `05-Tasks/` goes through the gate. From the vault root:
 
 ```bash
-uuidgen | tr '[:upper:]' '[:lower:]'
+VAULT_DIR="$PWD" "${CLAUDE_SKILL_DIR}/../../bin/save" write-tasks --target 05-Tasks/<file>.md --from <edited copy>
 ```
 
-Insert it as the final trailing token after the date/recurrence tokens. Never as a prefix, never inside the body.
+It previews the diff, asks, backs up, and writes. It refuses, and writes nothing, if an ID was rewritten, dropped, duplicated, swapped between tasks, or self-minted. Use `bin/save check-tasks --before <old> --after <new>` to check without writing. On a plugin install with no `bin/` on disk, apply the same rule by hand.
 
 ## 9. Security scrub (every write, every branch, no exceptions)
 
@@ -273,7 +275,7 @@ Backfill commits use `[bot:save --backfill]` as the prefix so they're still W1-t
 | Destination file exists but is owned by a human (frontmatter `owner: human`) | Read frontmatter before write | Skip write, route to `02-Sources/save-blocked-2026-04-16-<slug>.md` instead (the pre-mogging `00-Inbox/` was killed), and note the block in the commit. |
 | Secret detected in content                             | Regex panel §9                           | Redact inline, add warning row in preview, continue.                     |
 | Secret detected in commit message                      | Regex panel §9                           | Redact in message, print a warning, continue.                            |
-| UUID missing on an existing task                       | Task regex with no `🆔` token            | Mint a new UUIDv4 and append it; log the mint event to `Claude-Memory/task-uuid-mints.log`. |
+| UUID missing on an existing task                       | Task regex with no `🆔` token            | Leave it off. W1 mints one on its next sync. |
 | User picks `n` at the preview                          | Explicit abort                           | Exit cleanly; no partial writes; no commit.                              |
 | Write to forbidden path (`.env`, `.git/`, `node_modules`, root `CLAUDE.md`) | Path allowlist check | Hard-refuse, print the blocked path, suggest a legal sibling.            |
 | 50/50 ambiguity with NO second candidate above 30% confidence | Score threshold | Fall through to `02-Sources/` with a TODO note (the pre-mogging `00-Inbox/` was killed); do NOT stub a random second file. |
