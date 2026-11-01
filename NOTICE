@@ -9,7 +9,9 @@ in that directory are derivatives of work originally authored by ruvnet and
 distributed under the MIT License:
 
     Copyright (c) 2024-2026 ruvnet
+    Applies to:       the vendored helpers under helpers/
     Upstream:         https://github.com/ruvnet/ruflo
+    Via:              the fidgetcoding/fidgetflo intermediate fork
     Anchor tag:       v3.5.80
 
 The vendored files were imported via the <ORG-A>-owned intermediate fork
