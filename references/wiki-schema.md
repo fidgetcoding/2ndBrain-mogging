@@ -94,6 +94,22 @@ needs_review: true                          # auto-true on first write, flipped 
 owner: human | llm                          # 'human' locks the note from silent LLM edits
 ```
 
+**Optional, read by the memory tier (`bin/memory`, off unless `install.sh --with-memory`):**
+
+```yaml
+asof: 2026-04-14                 # the date the note's claim was true from; falls back to date
+seenat: 2026-05-01               # last time someone saw it still true; the later of this and last_confirmed counts
+durability: expiring             # expiring (default) | durable | foundational; only a human sets foundational
+memory_state: stale              # written by bin/memory: stale | decayed. Absent means fresh
+bi-temporal:                     # dated claims, written by `memory record`, answered by `memory when`
+  - claim: "Morgen MCP is at v0.1.7"
+    asof: 2026-04-14             # true from this date
+    until: 2026-06-20            # true up to this date, when the delta landed. Absent means still open
+    recorded: 2026-04-16         # the day it was written down
+```
+
+These apply to `type: concept` and `type: synthesis` only, the same two types `source_of_truth` applies to. Decay is a date rule and no more; `PHILOSOPHY.md` has the full list of what it doesn't do.
+
 #### `source_of_truth` rules
 
 `source_of_truth` answers one question: **where do I go to check whether this note is still true?** It is only meaningful paired with `last_confirmed` — `last_confirmed` says when someone verified the claim, `source_of_truth` says where to verify it again. One without the other is a smoke alarm with no exit sign.

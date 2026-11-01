@@ -1,0 +1,416 @@
+#!/usr/bin/env bash
+# bin/memory: the opt-in memory tier from PHILOSOPHY.md. Decay, promotion, and what
+# was true when, all computed from frontmatter. No database, no index, no graph.
+# It is date arithmetic and link counts. It does not read the prose of a note, so it
+# can't tell whether a claim is wrong, only how long ago anyone said it was right.
+#
+#   memory status                     What the rules say about every note. Read-only.
+#   memory list --state S             Paths in state fresh, stale, decayed or undated.
+#   memory when YYYY-MM-DD [--note N] What the vault held as true on that date.
+#   memory decay [--apply]            Flag stale notes, mark decayed ones, clear both
+#                                     once a note is confirmed again.
+#   memory promote [--apply]          Move expiring notes that have held up to durable.
+#   memory confirm NOTE [--apply]     A human or a skill checked it: seen today.
+#   memory record NOTE --claim C [--asof D] [--replaces OLD] [--apply]
+#                                     Add a dated claim, closing the one it replaces.
+#
+# Common flags: --vault PATH (or VAULT_DIR), --today YYYY-MM-DD.
+# Writes are a dry run unless you pass --apply. Only notes with owner: wiki or
+# owner: llm get rewritten. Everything else gets a proposal, never an edit.
+#
+# Exit codes: 0 ok, 2 bad usage, 3 refused, 4 the tier is off.
+set -u
+
+SELF="$0"
+while [ -L "$SELF" ]; do
+  link="$(readlink "$SELF")"
+  case "$link" in /*) SELF="$link" ;; *) SELF="$(dirname "$SELF")/$link" ;; esac
+done
+# shellcheck source=bin/lib/vault-gate.sh
+. "$(cd -P "$(dirname "$SELF")" && pwd)/lib/vault-gate.sh"
+
+usage() { sed -n '2,22p' "$SELF" | sed 's/^# \{0,1\}//' >&2; exit 2; }
+die() { echo "$1" >&2; exit "${2:-2}"; }
+
+[ $# -ge 1 ] || usage
+cmd="$1"
+shift
+note="" state="" claim="" asof="" replaces="" apply=0 today="" query=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --vault)    export VAULT_DIR="${2:-}"; shift 2 ;;
+    --today)    today="${2:-}"; shift 2 ;;
+    --apply)    apply=1; shift ;;
+    --state)    state="${2:-}"; shift 2 ;;
+    --note)     note="${2:-}"; shift 2 ;;
+    --claim)    claim="${2:-}"; shift 2 ;;
+    --asof)     asof="${2:-}"; shift 2 ;;
+    --replaces) replaces="${2:-}"; shift 2 ;;
+    -*)         usage ;;
+    *)
+      if [ "$cmd" = "when" ] && [ -z "$query" ]; then query="$1"
+      elif [ -z "$note" ]; then note="$1"
+      else usage
+      fi
+      shift
+      ;;
+  esac
+done
+
+vault="$(gate_vault_dir)" || exit 2
+vault="$(cd -P "$vault" && pwd -P)"
+
+is_date() { printf '%s' "$1" | grep -qE '^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$'; }
+[ -n "$today" ] || today="$(date +%Y-%m-%d)"
+is_date "$today" || die "--today must be YYYY-MM-DD"
+
+# ---- the tier is off until the vault says otherwise ---------------------------
+CONFIG="$vault/Claude-Memory/memory-tier.yaml"
+[ -f "$CONFIG" ] || die "The memory tier is off for this vault. Turn it on with install.sh --with-memory, which writes Claude-Memory/memory-tier.yaml." 4
+
+conf() {
+  local v
+  v="$(sed -n "s/^$1:[[:space:]]*\([0-9][0-9]*\).*$/\1/p" "$CONFIG" | head -n1)"
+  printf '%s' "${v:-$2}"
+}
+STALE_DAYS="$(conf stale_days 60)"
+DECAY_DAYS="$(conf decay_days 180)"
+DURABLE_MULT="$(conf durable_multiplier 3)"
+PROMOTE_SPAN="$(conf promote_span_days 90)"
+PROMOTE_INBOUND="$(conf promote_inbound 3)"
+
+# ---- reading -----------------------------------------------------------------
+# One row per note with a frontmatter block:
+# path, type, owner, asof, seen, durability, stored state, title.
+scan_notes() {
+  ( cd "$vault" && for d in 03-Concepts 04-Index; do
+      [ -d "$d" ] && find "$d" -type f -name '*.md' -exec awk '
+        function val(line, key) {
+          line = substr(line, length(key) + 2)
+          sub(/[ \t]+#.*$/, "", line)
+          gsub(/^[ \t"\047]+|[ \t"\047\r]+$/, "", line)
+          gsub(/\t/, " ", line)
+          return line
+        }
+        function day(v) { return (v ~ /^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]/) ? substr(v, 1, 10) : "" }
+        function flush_note() {
+          if (open != 2) return
+          a = (k["asof"] != "") ? k["asof"] : k["date"]
+          s = (k["seenat"] > k["last_confirmed"]) ? k["seenat"] : k["last_confirmed"]
+          if (s == "") s = a
+          printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", file, k["type"], k["owner"], a, s, k["durability"], k["memory_state"], k["title"]
+        }
+        FNR == 1 { flush_note(); open = 0; file = FILENAME; split("", k) }
+        FNR == 1 && /^---[ \t\r]*$/ { open = 1; next }
+        open == 1 && /^---[ \t\r]*$/ { open = 2; next }
+        open == 1 && /^[a-z_-]+:/ {
+          key = $0; sub(/:.*$/, "", key)
+          if (key == "asof" || key == "seenat" || key == "last_confirmed" || key == "date") k[key] = day(val($0, key))
+          else if (key == "type" || key == "owner" || key == "durability" || key == "memory_state" || key == "title") k[key] = val($0, key)
+        }
+        END { flush_note() }
+      ' {} +
+    done ) 2>/dev/null
+}
+
+# Only concepts and syntheses assert things about a live world (wiki-schema.md).
+# A source or a conversation is a record of what was said, and that can't go stale.
+# Adds the computed columns: state, age in days, can-write.
+classify() {
+  scan_notes | awk -F '\t' -v OFS='\t' -v today="$today" -v stale="$STALE_DAYS" -v decay="$DECAY_DAYS" -v mult="$DURABLE_MULT" '
+    function days(d,   y, m, dd) {
+      y = substr(d, 1, 4) + 0; m = substr(d, 6, 2) + 0; dd = substr(d, 9, 2) + 0
+      if (m <= 2) { y--; m += 12 }
+      return 365 * y + int(y / 4) - int(y / 100) + int(y / 400) + int(306 * (m + 1) / 10) + dd
+    }
+    $2 == "concept" || $2 == "synthesis" || $2 == "permanent" {
+      dur = ($6 == "durable" || $6 == "foundational") ? $6 : "expiring"
+      if ($5 == "") { st = "undated"; age = "" }
+      else {
+        age = days(today) - days($5)
+        if (dur == "foundational") st = "fresh"
+        else {
+          f = (dur == "durable") ? mult : 1
+          st = (age > decay * f) ? "decayed" : (age > stale * f) ? "stale" : "fresh"
+        }
+      }
+      w = ($3 == "wiki" || $3 == "llm") ? "write" : "propose"
+      print $1, $2, $3, $4, $5, dur, $7, $8, st, age, w
+    }
+  ' | LC_ALL=C sort
+}
+
+# The same rows for a `while read` loop. Tab is whitespace to `read`, which would
+# collapse empty columns, so these use the unit separator instead.
+FS=$'\037'
+classified_rows() { classify | tr '\t' "$FS"; }
+
+# Distinct notes linking to each note, by lowercase filename. Counted live, on every
+# run, because the folder is the data model and there is no index to go stale.
+inbound_counts() {
+  ( cd "$vault" && find . -type f -name '*.md' \
+      -not -path './.git/*' -not -path './node_modules/*' -not -path './.obsidian/*' -exec awk '
+      {
+        line = $0
+        while (match(line, /\[\[[^]|#]+/)) {
+          t = tolower(substr(line, RSTART + 2, RLENGTH - 2))
+          sub(/^.*\//, "", t)
+          sub(/\.md$/, "", t)
+          print FILENAME "\t" t
+          line = substr(line, RSTART + RLENGTH)
+        }
+      }' {} + ) 2>/dev/null | LC_ALL=C sort -u | awk -F '\t' '
+      {
+        self = tolower($1)
+        sub(/^.*\//, "", self)
+        sub(/\.md$/, "", self)
+        if (self != $2) n[$2]++
+      }
+      END { for (t in n) print t "\t" n[t] }'
+}
+
+# ---- writing -----------------------------------------------------------------
+# Set or delete frontmatter keys in place. The body stays byte for byte. An empty
+# value deletes the key. Args after the file are key=value.
+set_keys() {
+  local file="$1" pair key value tmp
+  shift
+  gate_backup "$vault" "${file#"$vault"/}" || die "Backup failed, nothing written: $file" 1
+  for pair in "$@"; do
+    key="${pair%%=*}"
+    value="${pair#*=}"
+    tmp="$file.tmp.$$"
+    awk -v key="$key" -v value="$value" '
+      NR == 1 { print; next }
+      !done && /^---[ \t\r]*$/ {
+        if (!found && value != "") print key ": " value
+        done = 1; print; next
+      }
+      !done && index($0, key ":") == 1 {
+        found = 1
+        if (value != "") print key ": " value
+        next
+      }
+      { print }
+    ' "$file" > "$tmp" && mv "$tmp" "$file" || die "Write failed: $file" 1
+  done
+}
+
+# Resolve NOTE to a vault-relative path and check this tier may rewrite it.
+writable_note() {
+  local target="$1" rel regime owner
+  rel="$(gate_relpath "$target" "$vault")" || die "refused: $target is outside the vault or contains '..'" 3
+  [ -f "$vault/$rel" ] || die "no such note: $rel" 2
+  regime="$(gate_regime "$vault" "$rel")"
+  gate_skill_allows memory "$regime" "$rel" >&2 || exit 3
+  owner="$(gate_frontmatter "$vault/$rel" owner)"
+  case "$owner" in
+    wiki|llm) ;;
+    *) die "refused: $rel has no owner: wiki or owner: llm, so it isn't this tier's to rewrite. Add the change by hand." 3 ;;
+  esac
+  printf '%s\n' "$rel"
+}
+
+verb() { if [ "$apply" = "1" ]; then printf 'did:   '; else printf 'would: '; fi; }
+
+# ---- commands ----------------------------------------------------------------
+case "$cmd" in
+  status)
+    rows="$(classify)"
+    printf 'Memory tier report for %s, as of %s\n' "$vault" "$today"
+    printf 'Rules: expiring goes stale at %sd and decays at %sd. Durable is %sx that. Foundational never decays.\n\n' "$STALE_DAYS" "$DECAY_DAYS" "$DURABLE_MULT"
+    for s in fresh stale decayed undated; do
+      n="$(printf '%s\n' "$rows" | awk -F '\t' -v s="$s" 'NF && $9 == s { c++ } END { print c + 0 }')"
+      printf '%s (%s)\n' "$s" "$n"
+      [ "$s" = "fresh" ] && continue
+      printf '%s\n' "$rows" | awk -F '\t' -v s="$s" 'NF && $9 == s {
+        if (s == "undated") print "  " $1 ": no asof, seenat, last_confirmed or date, so no rule can apply"
+        else print "  " $1 ": last seen " $5 ", " $10 " days ago (" $6 ")"
+      }'
+    done
+    ;;
+
+  list)
+    case "$state" in fresh|stale|decayed|undated) ;; *) die "--state must be fresh, stale, decayed or undated" ;; esac
+    classify | awk -F '\t' -v s="$state" '$9 == s { print $1 }'
+    ;;
+
+  decay)
+    found=0
+    while IFS="$FS" read -r path _ owner _ seen dur stored _ st age mode; do
+      [ -n "$path" ] || continue
+      case "$st" in
+        stale|decayed) [ "$stored" = "$st" ] && continue ;;
+        fresh) case "$stored" in stale|decayed) ;; *) continue ;; esac ;;
+        *) continue ;;
+      esac
+      found=1
+      if [ "$mode" = "propose" ]; then
+        printf 'propose: %s is %s (owner: %s, last seen %s, %s days ago). It is not this tier'"'"'s to rewrite.\n' "$path" "$st" "${owner:-none}" "$seen" "$age"
+        continue
+      fi
+      verb
+      if [ "$st" = "fresh" ]; then
+        printf '%s: seen again on %s, clear memory_state\n' "$path" "$seen"
+        [ "$apply" = "1" ] && set_keys "$vault/$path" "memory_state="
+      else
+        printf '%s: %s, last seen %s, %s days ago (%s)\n' "$path" "$st" "$seen" "$age" "$dur"
+        [ "$apply" = "1" ] && set_keys "$vault/$path" "memory_state=$st" "needs_review=true"
+      fi
+    done <<EOF
+$(classified_rows)
+EOF
+    [ "$found" = "1" ] || echo "Nothing to decay."
+    [ "$apply" = "1" ] || [ "$found" = "0" ] || echo "Dry run. Pass --apply to write."
+    ;;
+
+  promote)
+    counts="$(inbound_counts)"
+    found=0
+    while IFS="$FS" read -r path _ owner a seen dur _ _ st _ mode; do
+      [ -n "$path" ] || continue
+      [ "$dur" = "expiring" ] && [ "$st" = "fresh" ] && [ -n "$a" ] || continue
+      span="$(awk -v a="$a" -v s="$seen" '
+        function days(d,   y, m, dd) {
+          y = substr(d, 1, 4) + 0; m = substr(d, 6, 2) + 0; dd = substr(d, 9, 2) + 0
+          if (m <= 2) { y--; m += 12 }
+          return 365 * y + int(y / 4) - int(y / 100) + int(y / 400) + int(306 * (m + 1) / 10) + dd
+        }
+        BEGIN { print days(s) - days(a) }')"
+      [ "$span" -ge "$PROMOTE_SPAN" ] || continue
+      stem="$(basename "$path" .md | tr '[:upper:]' '[:lower:]')"
+      inbound="$(printf '%s\n' "$counts" | awk -F '\t' -v t="$stem" '$1 == t { print $2; exit }')"
+      [ "${inbound:-0}" -ge "$PROMOTE_INBOUND" ] || continue
+      found=1
+      if [ "$mode" = "propose" ]; then
+        printf 'propose: %s has held for %s days with %s inbound links. Mark it durable (owner: %s).\n' "$path" "$span" "$inbound" "${owner:-none}"
+        continue
+      fi
+      verb
+      printf '%s: durable, held for %s days with %s inbound links\n' "$path" "$span" "$inbound"
+      [ "$apply" = "1" ] && set_keys "$vault/$path" "durability=durable"
+    done <<EOF
+$(classified_rows)
+EOF
+    [ "$found" = "1" ] || echo "Nothing to promote."
+    [ "$apply" = "1" ] || [ "$found" = "0" ] || echo "Dry run. Pass --apply to write."
+    ;;
+
+  confirm)
+    [ -n "$note" ] || usage
+    rel="$(writable_note "$note")" || exit $?
+    verb
+    printf '%s: seen %s\n' "$rel" "$today"
+    if [ "$apply" = "1" ]; then
+      set_keys "$vault/$rel" "seenat=$today" "last_confirmed=$today" "memory_state="
+    else
+      echo "Dry run. Pass --apply to write."
+    fi
+    ;;
+
+  record)
+    [ -n "$note" ] && [ -n "$claim" ] || usage
+    case "$claim$replaces" in *$'\n'*) die "--claim and --replaces must be one line" ;; esac
+    [ -n "$asof" ] || asof="$today"
+    is_date "$asof" || die "--asof must be YYYY-MM-DD"
+    gate_scrub "$claim" || die "refused: the claim matches the secret deny list in config/secrets.patterns." 3
+    rel="$(writable_note "$note")" || exit $?
+    esc() { printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g'; }
+    new="$(esc "$claim")"
+    old=""
+    if [ -n "$replaces" ]; then
+      old="$(esc "$replaces")"
+      grep -qF -- "- claim: \"$old\"" "$vault/$rel" || die "refused: no claim \"$replaces\" in $rel to replace." 3
+    fi
+    verb
+    printf '%s: "%s" true as of %s%s\n' "$rel" "$claim" "$asof" "${replaces:+, closing \"$replaces\"}"
+    if [ "$apply" = "1" ]; then
+      gate_backup "$vault" "$rel" || die "Backup failed, nothing written." 1
+      NEW="$new" OLD="$old" awk -v asof="$asof" -v today="$today" '
+        BEGIN { new = ENVIRON["NEW"]; old = ENVIRON["OLD"] }
+        function closes() {
+          if (inclaim && matched && !hasuntil) print "    until: " asof
+          inclaim = 0; matched = 0; hasuntil = 0
+        }
+        function add() {
+          print "  - claim: \"" new "\""
+          print "    asof: " asof
+          print "    recorded: " today
+        }
+        NR == 1 { print; next }
+        !done && /^---[ \t\r]*$/ {
+          closes()
+          if (!block) print "bi-temporal:"
+          if (!added) add()
+          added = 1; done = 1; print; next
+        }
+        !done && /^bi-temporal:/ { block = 1; inblock = 1; print; next }
+        !done && inblock && /^  - claim: / {
+          closes()
+          inclaim = 1
+          matched = (old != "" && $0 == "  - claim: \"" old "\"")
+          print; next
+        }
+        !done && inblock && /^    until:/ { hasuntil = 1; print; next }
+        !done && inblock && /^    / { print; next }
+        !done && inblock {
+          closes()
+          add(); added = 1; inblock = 0
+          print; next
+        }
+        { print }
+      ' "$vault/$rel" > "$vault/$rel.tmp.$$" && mv "$vault/$rel.tmp.$$" "$vault/$rel" || die "Write failed: $rel" 1
+    else
+      echo "Dry run. Pass --apply to write."
+    fi
+    ;;
+
+  when)
+    is_date "$query" || die "usage: memory when YYYY-MM-DD [--note NOTE]"
+    filter=""
+    if [ -n "$note" ]; then
+      filter="$(gate_relpath "$note" "$vault")" || die "refused: $note is outside the vault or contains '..'" 3
+      [ -f "$vault/$filter" ] || die "no such note: $filter"
+    fi
+    hits=0
+    while IFS="$FS" read -r path _ _ a seen _ _ title _ _ _; do
+      [ -n "$path" ] || continue
+      [ -z "$filter" ] || [ "$filter" = "$path" ] || continue
+      out="$(awk -v q="$query" '
+        NR == 1 { next }
+        /^---[ \t\r]*$/ { exit }
+        /^bi-temporal:/ { inblock = 1; next }
+        inblock && /^  - claim: / { emit(); c = $0; sub(/^  - claim: /, "", c); a = ""; u = ""; r = ""; have = 1; next }
+        inblock && /^    asof:/ { a = $2; next }
+        inblock && /^    until:/ { u = $2; next }
+        inblock && /^    recorded:/ { r = $2; next }
+        inblock && !/^    / { emit(); inblock = 0; have = 0 }
+        function emit() {
+          if (have) {
+            any = 1
+            if (a != "" && a <= q && (u == "" || u > q)) {
+              print "  " c " (true from " a (u != "" ? " until " u : ", still open") (r != "" ? ", recorded " r : "") ")"
+            }
+            have = 0
+          }
+        }
+        END { emit(); if (!any) print "NOCLAIMS" }
+      ' "$vault/$path")"
+      if [ "$out" = "NOCLAIMS" ]; then
+        # A note with no claim list has one date to go on, for the whole note.
+        if [ -n "$a" ] && [ ! "$a" \> "$query" ]; then
+          printf '%s\n  "%s" (whole note, as of %s, last seen %s)\n' "$path" "$title" "$a" "$seen"
+          hits=1
+        fi
+      elif [ -n "$out" ]; then
+        printf '%s\n%s\n' "$path" "$out"
+        hits=1
+      fi
+    done <<EOF
+$(classified_rows)
+EOF
+    [ "$hits" = "1" ] || echo "Nothing in the vault was dated as true on $query."
+    ;;
+
+  *) usage ;;
+esac

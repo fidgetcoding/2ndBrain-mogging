@@ -10,7 +10,7 @@
 #   install.sh [--vault PATH] [--apply] [--dry-run] [--no-launchd]
 #              [--skip-tests] [--verbose] [--merge-stop]
 #              [--with-intelligence] [--symlink] [--no-obsidian-mcp]
-#              [--no-skill-packs] [--with-research] [--with-guard]
+#              [--no-skill-packs] [--with-research] [--with-guard] [--with-memory]
 #              [--no-statusline-brain] [--no-obsidian-app]
 #
 # NEVER uses `set -x`. Settings.json contents must never be echoed
@@ -64,6 +64,7 @@ NO_SHELL_SHORTCUTS=0
 NO_SKILL_PACKS=0
 WITH_RESEARCH=0
 WITH_GUARD=0
+WITH_MEMORY=0
 
 usage() {
   cat <<'USAGE'
@@ -100,6 +101,11 @@ Options:
                        Write or Edit that would break a task's 🆔, and that holds
                        /wiki and /autoresearch to their scope rules once invoked.
                        OFF by default, because it can refuse an edit you asked for.
+  --with-memory        Turn on the memory tier for this vault by writing
+                       Claude-Memory/memory-tier.yaml, which bin/memory reads. It
+                       decays stale claims, promotes durable ones, and answers
+                       what was true when. OFF by default. It only ever runs when
+                       you run it, and it writes only with --apply.
   --skip-tests         Skip running tests/test_onboarding.sh
   --verbose            Verbose logging (does NOT echo settings.json contents)
   --merge-stop         Replace any existing Stop hook with ours instead of append
@@ -143,6 +149,7 @@ while [[ $# -gt 0 ]]; do
     --no-skill-packs)     NO_SKILL_PACKS=1; shift ;;
     --with-research)      WITH_RESEARCH=1; shift ;;
     --with-guard)         WITH_GUARD=1; shift ;;
+    --with-memory)        WITH_MEMORY=1; shift ;;
     --skip-tests)         SKIP_TESTS=1; shift ;;
     --verbose)            VERBOSE=1; shift ;;
     --merge-stop)         MERGE_STOP=1; shift ;;
@@ -1154,6 +1161,30 @@ install_vault_guard() {
   fi
 }
 
+# ---- step 10.56: memory tier (opt-in) ----------------------------------------
+#
+# The config file is the switch: bin/memory refuses to run without it. Never
+# overwrites an existing one, so a re-install keeps your thresholds. Must run AFTER
+# link_claude_memory, since Claude-Memory is that symlink.
+
+install_memory_tier() {
+  if [[ "$WITH_MEMORY" -ne 1 ]]; then
+    vlog "step 10.56: memory tier SKIPPED (pass --with-memory to enable)"
+    return 0
+  fi
+  log "step 10.56: turn on the memory tier"
+  local src="$REPO_ROOT/vault-template/Claude-Memory/memory-tier.example.yaml"
+  local dest="$VAULT/Claude-Memory/memory-tier.yaml"
+  if [[ -e "$dest" ]]; then
+    log "memory-tier.yaml already present, leaving it untouched: $dest"
+  elif [[ "$APPLY" -eq 1 ]]; then
+    run cp "$src" "$dest"
+    log "memory tier on: $dest"
+  else
+    log "would write: $dest"
+  fi
+}
+
 # ---- step 10.6: repair stale hook paths -------------------------------------
 #
 # Some users have a ~/.claude/settings.json whose hook commands point at
@@ -1796,6 +1827,7 @@ main() {
   install_launchd
   install_intelligence
   install_vault_guard
+  install_memory_tier
   repair_stale_hooks
   install_obsidian_mcp
   install_vault_skill_packs
@@ -1835,6 +1867,11 @@ print_install_summary() {
     echo "│  Vault guard:           ON   (task ID + scope hook)          │"
   else
     echo "│  Vault guard:           OFF  (opt-in via --with-guard)       │"
+  fi
+  if [[ "$WITH_MEMORY" -eq 1 ]]; then
+    echo "│  Memory tier:           ON   (run bin/memory yourself)       │"
+  else
+    echo "│  Memory tier:           OFF  (opt-in via --with-memory)      │"
   fi
   if [[ "$NO_OBSIDIAN_APP" -eq 1 ]]; then
     echo "│  Obsidian.app auto-install: SKIPPED (--no-obsidian-app)     │"

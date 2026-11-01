@@ -1,0 +1,20 @@
+# Memory tier thresholds. This file existing is what turns the tier on.
+# Whole numbers of days. Delete a line to fall back to the default shown.
+#
+# Durability comes from the note's own frontmatter: durability: expiring (the
+# default if the key is missing), durable, or foundational. Foundational never
+# decays, and only you set it.
+
+# Past this many days since last seen, a note is stale. It gets needs_review: true.
+stale_days: 60
+
+# Past this many, it is decayed. /wiki leaves decayed notes out of what it compiles.
+decay_days: 180
+
+# Durable notes get this many times as long. At 3, that is 180 and 540.
+durable_multiplier: 3
+
+# An expiring note goes durable once it has held this long, between its asof and the
+# last time it was seen, AND this many other notes link to it.
+promote_span_days: 90
+promote_inbound: 3
