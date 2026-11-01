@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # tests/test_aliases_bootstrap.sh
-# /aliases --bootstrap creates an aliases.yaml scaffold if absent,
+# bin/aliases --bootstrap creates an aliases.yaml scaffold if absent,
 # and NEVER overwrites an existing customized file.
 
 set -u
@@ -14,7 +14,7 @@ assert_reset "test_aliases_bootstrap"
 TMPROOT="$(mktemp -d -t 2brain-alias-XXXXXX)"
 cleanup() {
   if [[ -n "${TMPROOT:-}" && ( "$TMPROOT" == /tmp/* || "$TMPROOT" == /var/folders/* ) ]]; then
-    rm -rf "$TMPROOT"
+    rm -rf "${TMPROOT:?}"
   fi
 }
 trap cleanup EXIT
@@ -22,38 +22,24 @@ trap cleanup EXIT
 VAULT="$TMPROOT/vault"
 cp -R "$HERE/fixtures/sample-vault/." "$VAULT/"
 
-ALIAS_CMD=""
-for candidate in \
-  "$REPO_ROOT/skills/aliases/run.sh" \
-  "$REPO_ROOT/skills/aliases/aliases" \
-  "$REPO_ROOT/bin/aliases" \
-  "$REPO_ROOT/scripts/aliases.sh"
-do
-  if [[ -x "$candidate" ]]; then ALIAS_CMD="$candidate"; break; fi
-done
+ALIAS_CMD="$REPO_ROOT/bin/aliases"
+assert_file "$ALIAS_CMD" "bin/aliases exists"
 
-if [[ -z "$ALIAS_CMD" ]]; then
-  # Forward-looking SKIP. The /aliases skill currently ships as a SKILL.md
-  # only — Claude Code drives the behaviour; there is no standalone shell
-  # entrypoint at skills/aliases/run.sh or bin/aliases. When a runnable
-  # aliases binary lands, this test will pick it up automatically via the
-  # loop above. run_all.sh surfaces SKIP distinctly from PASS so this
-  # absence stays visible.
-  printf "%sSKIP%s test_aliases_bootstrap (no aliases CLI entrypoint — skill is SKILL.md-only)\n" \
-    "${_C_YELLOW:-}" "${_C_RESET:-}"
-  exit 0
-fi
-
-ALIASES_YAML="$VAULT/04-Index/aliases.yaml"
+# skills/aliases/SKILL.md is the contract: the file lives in Claude-Memory/.
+ALIASES_YAML="$VAULT/Claude-Memory/aliases.yaml"
+PENDING="$VAULT/Claude-Memory/aliases-pending.md"
 
 # ---------------------------------------------------------------------------
 # Case 1: absent -> --bootstrap creates scaffold.
 # ---------------------------------------------------------------------------
-rm -f "$ALIASES_YAML"
+rm -f "${ALIASES_YAML:?}"
 VAULT_DIR="$VAULT" "$ALIAS_CMD" --bootstrap </dev/null >/dev/null 2>&1 || true
 
 assert_file "$ALIASES_YAML" "aliases.yaml created on --bootstrap"
 assert_contains "$ALIASES_YAML" "aliases:" "aliases.yaml contains 'aliases:' root key"
+for key in "version: 1" "projects:" "people:" "concepts:" "orgs:"; do
+  assert_contains "$ALIASES_YAML" "$key" "aliases.yaml has the schema's '$key'"
+done
 
 # Empty scaffold: either `aliases: {}` or `aliases:\n  ` (block-empty).
 if grep -qE '^aliases:[[:space:]]*(\{\}|$)' "$ALIASES_YAML"; then
@@ -65,6 +51,11 @@ else
   else
     _fail "aliases.yaml scaffold contains unexpected entries"
   fi
+fi
+if grep -qE '^[[:space:]]+[A-Za-z0-9_"-]+:' "$ALIASES_YAML"; then
+  _fail "scaffold for a vault with no projects has entries"
+else
+  _pass "scaffold for a vault with no projects has no entries"
 fi
 
 # ---------------------------------------------------------------------------
@@ -88,5 +79,28 @@ assert_contains "$ALIASES_YAML" "user-custom-marker-do-not-remove" \
   "user comment preserved in aliases.yaml"
 assert_contains "$ALIASES_YAML" "<ORG-A>:" \
   "user-defined alias entry preserved"
+assert_file "$PENDING" "the proposal went to aliases-pending.md instead"
+
+# ---------------------------------------------------------------------------
+# Case 3: the folder scan. Direct children are projects. A deeper folder counts
+# only with an index note named after itself, so content folders stay out.
+# ---------------------------------------------------------------------------
+rm -f "${ALIASES_YAML:?}" "${PENDING:?}"
+mkdir -p "$VAULT/01-Projects/ACME/Website" "$VAULT/01-Projects/ACME/scratch" "$VAULT/01-Projects/SOLO"
+: > "$VAULT/01-Projects/ACME/Website/Website.md"
+
+VAULT_DIR="$VAULT" "$ALIAS_CMD" --bootstrap </dev/null >/dev/null 2>&1 || true
+
+assert_contains "$ALIASES_YAML" 'path: "01-Projects/ACME"' "project folder scanned"
+assert_contains "$ALIASES_YAML" 'path: "01-Projects/SOLO"' "second project folder scanned"
+assert_contains "$ALIASES_YAML" 'path: "01-Projects/ACME/Website"' "sub-project with an index note scanned"
+assert_not_contains "$ALIASES_YAML" "scratch" "folder without an index note left out"
+
+# ---------------------------------------------------------------------------
+# Case 4: no vault named, no write. It must never guess from the working dir.
+# ---------------------------------------------------------------------------
+( cd "$TMPROOT" && env -u VAULT_DIR "$ALIAS_CMD" --bootstrap </dev/null >/dev/null 2>&1 )
+assert_eq "$?" "2" "--bootstrap with no vault exits 2"
+if [[ -e "$TMPROOT/Claude-Memory" ]]; then _fail "wrote into the working directory"; else _pass "nothing written to the working directory"; fi
 
 assert_report

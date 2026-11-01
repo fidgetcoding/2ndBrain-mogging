@@ -184,6 +184,26 @@ remove_shell_shortcuts() {
   # unrelated tooling.
 }
 
+# Restoring the settings backup isn't enough here: a re-install takes its backup
+# after the hook is already in, so the backup can hold the hook too. Strip it.
+remove_vault_guard() {
+  rm -f "${CLAUDE_HOME:?}/.mogging-guard"
+  [[ -f "$SETTINGS_PATH" ]] || return 0
+  command -v jq >/dev/null 2>&1 || return 0
+  local tmp="$SETTINGS_PATH.tmp.$$"
+  if jq --arg p "hooks/vault-guard.sh" '
+        if .hooks.PreToolUse then
+          .hooks.PreToolUse |= map(select(((.hooks // []) | map(.command // "") | any(contains($p))) | not))
+        else . end
+      ' "$SETTINGS_PATH" > "$tmp" 2>/dev/null; then
+    chmod 0600 "$tmp"
+    mv "$tmp" "$SETTINGS_PATH"
+    log "removed the vault guard"
+  else
+    rm -f "$tmp"
+  fi
+}
+
 remove_statusline_marker() {
   local marker="$HOME/.claude/.mogging-vault"
   if [[ -f "$marker" ]]; then
@@ -234,6 +254,7 @@ main() {
   unlink_kind "agents"
   remove_vault_skill_packs
   restore_settings
+  remove_vault_guard
   remove_claude_memory_link
   remove_statusline_marker
   remove_shell_shortcuts

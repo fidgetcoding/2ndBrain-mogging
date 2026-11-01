@@ -10,7 +10,7 @@
 #   install.sh [--vault PATH] [--apply] [--dry-run] [--no-launchd]
 #              [--skip-tests] [--verbose] [--merge-stop]
 #              [--with-intelligence] [--symlink] [--no-obsidian-mcp]
-#              [--no-skill-packs] [--with-research]
+#              [--no-skill-packs] [--with-research] [--with-guard]
 #              [--no-statusline-brain] [--no-obsidian-app]
 #
 # NEVER uses `set -x`. Settings.json contents must never be echoed
@@ -63,6 +63,7 @@ NO_SEED_VAULT=0
 NO_SHELL_SHORTCUTS=0
 NO_SKILL_PACKS=0
 WITH_RESEARCH=0
+WITH_GUARD=0
 
 usage() {
   cat <<'USAGE'
@@ -95,6 +96,10 @@ Options:
                        heavy pipx installs and a full research run bills real
                        tokens. hyperresearch is pinned to python3.11-3.13;
                        pipx's default 3.14 installs but breaks at fetch time.
+  --with-guard         Install the vault guard: a PreToolUse hook that blocks any
+                       Write or Edit that would break a task's 🆔, and that holds
+                       /wiki and /autoresearch to their scope rules once invoked.
+                       OFF by default, because it can refuse an edit you asked for.
   --skip-tests         Skip running tests/test_onboarding.sh
   --verbose            Verbose logging (does NOT echo settings.json contents)
   --merge-stop         Replace any existing Stop hook with ours instead of append
@@ -137,6 +142,7 @@ while [[ $# -gt 0 ]]; do
     --no-shell-shortcuts) NO_SHELL_SHORTCUTS=1; shift ;;
     --no-skill-packs)     NO_SKILL_PACKS=1; shift ;;
     --with-research)      WITH_RESEARCH=1; shift ;;
+    --with-guard)         WITH_GUARD=1; shift ;;
     --skip-tests)         SKIP_TESTS=1; shift ;;
     --verbose)            VERBOSE=1; shift ;;
     --merge-stop)         MERGE_STOP=1; shift ;;
@@ -1090,6 +1096,64 @@ install_intelligence() {
   seed_pattern_store
 }
 
+# ---- step 10.55: vault guard (opt-in) ----------------------------------------
+#
+# Off by default, same posture as --with-intelligence. Two pieces:
+#   - $CLAUDE_HOME/.mogging-guard holds the vault path. hooks/vault-guard.sh is a
+#     no-op without it, which is also what makes the hook declared in the /wiki
+#     and /autoresearch frontmatter opt-in.
+#   - a PreToolUse entry in settings.json, so the UUID rule runs on every edit
+#     under 05-Tasks/ whichever skill made it, or none.
+
+install_vault_guard() {
+  if [[ "$WITH_GUARD" -ne 1 ]]; then
+    vlog "step 10.55: vault guard SKIPPED (pass --with-guard to enable)"
+    return 0
+  fi
+  log "step 10.55: install vault guard"
+
+  local base="{}" merged
+  [[ -f "$SETTINGS_PATH" ]] && base="$(cat "$SETTINGS_PATH")"
+  if jq -e --arg p "hooks/vault-guard.sh" '
+        (.hooks.PreToolUse // []) | map(.hooks // []) | flatten
+        | map(.command // "") | any(contains($p))
+      ' <<<"$base" >/dev/null 2>&1; then
+    log "vault guard hook already present in settings.json, skipping merge"
+  else
+    merged="$(mktemp -t mogging-guard-merged.XXXXXX)"
+    if ! jq --arg cmd "$REPO_ROOT/hooks/vault-guard.sh" '
+          .hooks = (.hooks // {})
+          | .hooks.PreToolUse = ((.hooks.PreToolUse // []) + [{
+              matcher: "Write|Edit|MultiEdit",
+              hooks: [{ type: "command", command: $cmd, timeout: 10 }]
+            }])
+        ' <<<"$base" > "$merged" 2>/dev/null; then
+      err "jq vault guard merge failed"
+      rm -f "$merged"
+      exit 40
+    fi
+    if [[ "$APPLY" -eq 1 ]]; then
+      run mkdir -p "$CLAUDE_HOME"
+      run chmod 0700 "$CLAUDE_HOME"
+      cp "$merged" "$SETTINGS_PATH.tmp.$$"
+      chmod 0600 "$SETTINGS_PATH.tmp.$$"
+      mv "$SETTINGS_PATH.tmp.$$" "$SETTINGS_PATH"
+      log "settings.json updated with the vault guard hook (0600)"
+    else
+      log "would add the vault guard hook to $SETTINGS_PATH"
+    fi
+    rm -f "$merged"
+  fi
+
+  if [[ "$APPLY" -eq 1 ]]; then
+    printf '%s\n' "$VAULT" > "$CLAUDE_HOME/.mogging-guard"
+    chmod 0644 "$CLAUDE_HOME/.mogging-guard"
+    log "guard marker written: $CLAUDE_HOME/.mogging-guard → $VAULT"
+  else
+    log "would write guard marker: $CLAUDE_HOME/.mogging-guard → $VAULT"
+  fi
+}
+
 # ---- step 10.6: repair stale hook paths -------------------------------------
 #
 # Some users have a ~/.claude/settings.json whose hook commands point at
@@ -1731,6 +1795,7 @@ main() {
   apply_claude_md_patch
   install_launchd
   install_intelligence
+  install_vault_guard
   repair_stale_hooks
   install_obsidian_mcp
   install_vault_skill_packs
@@ -1765,6 +1830,11 @@ print_install_summary() {
     echo "│    └── this is NORMAL — installation is NOT broken if you    │"
     echo "│        don't see helpers/ in your vault. Pass the flag if    │"
     echo "│        you want the self-learning loop wired in.             │"
+  fi
+  if [[ "$WITH_GUARD" -eq 1 ]]; then
+    echo "│  Vault guard:           ON   (task ID + scope hook)          │"
+  else
+    echo "│  Vault guard:           OFF  (opt-in via --with-guard)       │"
   fi
   if [[ "$NO_OBSIDIAN_APP" -eq 1 ]]; then
     echo "│  Obsidian.app auto-install: SKIPPED (--no-obsidian-app)     │"

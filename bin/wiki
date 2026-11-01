@@ -1,0 +1,101 @@
+#!/usr/bin/env bash
+# bin/wiki: the write gate for /wiki. The compiling is the skill's job; this is
+# the last mile, where the scope rules and discuss-before-write stop being advice.
+#
+#   wiki check --target PATH [--vault PATH]
+#       Exit 0 if /wiki may write there, 3 with the reason if not.
+#   wiki add --title T (--body B | --body-file F) [--target PATH] [--source-of-truth S]
+#            [--yes] [--vault PATH]
+#       Previews the note, asks, and writes a new file. --target defaults to
+#       02-Sources/SRC-<today>-<slug>.md. Never overwrites an existing file.
+set -u
+
+SELF="$0"
+while [ -L "$SELF" ]; do
+  link="$(readlink "$SELF")"
+  case "$link" in /*) SELF="$link" ;; *) SELF="$(dirname "$SELF")/$link" ;; esac
+done
+# shellcheck source=bin/lib/vault-gate.sh
+. "$(cd -P "$(dirname "$SELF")" && pwd)/lib/vault-gate.sh"
+
+usage() { sed -n '2,10p' "$SELF" | sed 's/^# \{0,1\}//' >&2; exit 2; }
+
+[ $# -ge 1 ] || usage
+cmd="$1"
+shift
+title="" body="" body_file="" target="" sot="" yes=0
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --title)  title="${2:-}"; shift 2 ;;
+    --body)   body="${2:-}"; shift 2 ;;
+    --body-file) body_file="${2:-}"; shift 2 ;;
+    --target) target="${2:-}"; shift 2 ;;
+    --source-of-truth) sot="${2:-}"; shift 2 ;;
+    --vault)  export VAULT_DIR="${2:-}"; shift 2 ;;
+    --yes)    yes=1; shift ;;
+    *) usage ;;
+  esac
+done
+
+vault="$(gate_vault_dir)" || exit 2
+
+case "$cmd" in
+  check)
+    [ -n "$target" ] || usage
+    verdict="$(gate_check_path wiki "$target" "$vault")" || { echo "$verdict" >&2; exit 3; }
+    echo "$verdict"
+    ;;
+  add)
+    [ -n "$title" ] || usage
+    case "$title" in *$'\n'*) echo "--title must be one line" >&2; exit 2 ;; esac
+    if [ -n "$body_file" ]; then
+      [ -f "$body_file" ] || { echo "no such file: $body_file" >&2; exit 2; }
+      body="$(cat "$body_file")"
+    fi
+    today="$(date +%Y-%m-%d)"
+    if [ -z "$target" ]; then
+      slug="$(printf '%s' "$title" | tr '[:upper:]' '[:lower:]' | LC_ALL=C sed -E 's/[^a-z0-9]+/-/g; s/^-+//; s/-+$//')"
+      target="02-Sources/SRC-$today-${slug:-note}.md"
+    fi
+    verdict="$(gate_check_path wiki "$target" "$vault")" || { echo "$verdict" >&2; exit 3; }
+    rel="${verdict#* }"
+    if [ -e "$vault/$rel" ]; then
+      echo "refused: $rel already exists, and add never overwrites." >&2
+      exit 3
+    fi
+    if ! gate_scrub "$title
+$body"; then
+      echo "refused: the note matches the secret deny list in config/secrets.patterns." >&2
+      exit 3
+    fi
+    case "$rel" in
+      03-[Cc]oncepts/*) type=concept ;;
+      04-[Ii]ndex/*) type=index ;;
+      *) type=source ;;
+    esac
+    esc_title="$(printf '%s' "$title" | sed 's/\\/\\\\/g; s/"/\\"/g')"
+    note="---
+title: \"$esc_title\"
+date: $today
+type: $type
+owner: wiki
+last_confirmed: $today"
+    [ -n "$sot" ] && note="$note
+source_of_truth: \"$sot\""
+    note="$note
+tags: []
+---
+
+$body
+"
+    if [ "$yes" != "1" ]; then
+      echo "Would write $rel:"
+      printf '%s' "$note"
+    fi
+    gate_confirm "$yes" || { echo "Nothing written."; exit 0; }
+    mkdir -p "$(dirname "$vault/$rel")"
+    printf '%s' "$note" > "$vault/$rel.tmp.$$" && mv "$vault/$rel.tmp.$$" "$vault/$rel"
+    echo "Wrote $rel"
+    ;;
+  *) usage ;;
+esac

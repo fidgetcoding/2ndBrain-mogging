@@ -1,0 +1,88 @@
+#!/usr/bin/env bash
+# bin/aliases: the part of /aliases --bootstrap that needs no judgment.
+#
+#   aliases --bootstrap [--vault PATH]
+#       Scaffolds Claude-Memory/aliases.yaml from the folders in 01-Projects/.
+#       If aliases.yaml already exists it is never touched: the scaffold goes to
+#       Claude-Memory/aliases-pending.md for review instead.
+#
+# The rest of bootstrap (memory files, proper nouns, @mentions, related: arrays)
+# takes reading, so the skill does it and proposes through aliases-pending.md.
+set -u
+
+SELF="$0"
+while [ -L "$SELF" ]; do
+  link="$(readlink "$SELF")"
+  case "$link" in /*) SELF="$link" ;; *) SELF="$(dirname "$SELF")/$link" ;; esac
+done
+# shellcheck source=bin/lib/vault-gate.sh
+. "$(cd -P "$(dirname "$SELF")" && pwd)/lib/vault-gate.sh"
+
+usage() { sed -n '2,9p' "$SELF" | sed 's/^# \{0,1\}//' >&2; exit 2; }
+
+mode=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --bootstrap) mode=bootstrap; shift ;;
+    --vault) export VAULT_DIR="${2:-}"; shift 2 ;;
+    *) usage ;;
+  esac
+done
+[ "$mode" = "bootstrap" ] || usage
+vault="$(gate_vault_dir)" || exit 2
+
+# A direct child of 01-Projects is a project. A folder one level down is a
+# sub-project only if it has an index note named after itself.
+project_entries() {
+  local top sub name subname
+  for top in "$vault"/01-Projects/*/; do
+    [ -d "$top" ] || continue
+    name="$(basename "$top")"
+    printf '  "%s":\n    path: "01-Projects/%s"\n    aliases: ["%s"]\n' "$name" "$name" "$name"
+    for sub in "$top"*/; do
+      [ -d "$sub" ] || continue
+      subname="$(basename "$sub")"
+      [ -f "$sub$subname.md" ] || continue
+      printf '  "%s/%s":\n    path: "01-Projects/%s/%s"\n    aliases: ["%s"]\n' "$name" "$subname" "$name" "$subname" "$subname"
+    done
+  done
+}
+
+entries="$(project_entries)"
+if [ -n "$entries" ]; then
+  projects="projects:
+$entries"
+else
+  projects="projects: {}"
+fi
+scaffold="version: 1
+updated: $(date +%Y-%m-%d)
+
+$projects
+
+people: {}
+
+concepts: {}
+
+orgs: {}
+
+# Alternate spellings that do not belong to one entity.
+aliases: {}
+"
+
+memory="$vault/Claude-Memory"
+mkdir -p "$memory"
+if [ -e "$memory/aliases.yaml" ]; then
+  {
+    echo "# aliases-pending, proposed by --bootstrap on $(date +%Y-%m-%d)"
+    echo "aliases.yaml already exists, so it was left alone. Review, then run /aliases --accept."
+    echo
+    echo '```yaml'
+    printf '%s' "$scaffold"
+    echo '```'
+  } > "$memory/aliases-pending.md"
+  echo "aliases.yaml exists and was not touched. Proposal written to Claude-Memory/aliases-pending.md"
+else
+  printf '%s' "$scaffold" > "$memory/aliases.yaml"
+  echo "Wrote Claude-Memory/aliases.yaml"
+fi

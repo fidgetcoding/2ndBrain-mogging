@@ -1,0 +1,82 @@
+#!/usr/bin/env bash
+# bin/save: the gate /save goes through for anything under 05-Tasks/.
+# It does not capture conversations, that part is the skill. It answers one
+# question: does this edit keep every task ID byte-for-byte?
+#
+#   save check-tasks --before FILE --after FILE
+#       Exit 0 if the edit keeps the ID rule, 1 with the reasons if not.
+#   save write-tasks --target 05-Tasks/X.md --from FILE [--yes] [--vault PATH]
+#       The same check against what is on disk, then a preview and a prompt, then
+#       a backup and the write. Refuses anything outside 05-Tasks/.
+set -u
+
+SELF="$0"
+while [ -L "$SELF" ]; do
+  link="$(readlink "$SELF")"
+  case "$link" in /*) SELF="$link" ;; *) SELF="$(dirname "$SELF")/$link" ;; esac
+done
+# shellcheck source=bin/lib/vault-gate.sh
+. "$(cd -P "$(dirname "$SELF")" && pwd)/lib/vault-gate.sh"
+
+usage() { sed -n '2,10p' "$SELF" | sed 's/^# \{0,1\}//' >&2; exit 2; }
+
+[ $# -ge 1 ] || usage
+cmd="$1"
+shift
+before="" after="" target="" from="" yes=0
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --before) before="${2:-}"; shift 2 ;;
+    --after)  after="${2:-}"; shift 2 ;;
+    --target) target="${2:-}"; shift 2 ;;
+    --from)   from="${2:-}"; shift 2 ;;
+    --vault)  export VAULT_DIR="${2:-}"; shift 2 ;;
+    --yes)    yes=1; shift ;;
+    *) usage ;;
+  esac
+done
+
+case "$cmd" in
+  check-tasks)
+    [ -n "$before" ] && [ -f "$after" ] || usage
+    if ! gate_check_task_ids "$before" "$after"; then
+      echo "UUID rule broken, nothing was written." >&2
+      exit 1
+    fi
+    ;;
+  write-tasks)
+    [ -n "$target" ] && [ -f "$from" ] || usage
+    vault="$(gate_vault_dir)" || exit 2
+    verdict="$(gate_check_path save "$target" "$vault")" || { echo "$verdict" >&2; exit 3; }
+    regime="${verdict%% *}"
+    rel="${verdict#* }"
+    if [ "$regime" != "SYNC" ]; then
+      echo "refused: write-tasks only writes under 05-Tasks/, and $rel is not." >&2
+      exit 3
+    fi
+    if ! gate_check_task_ids "$vault/$rel" "$from"; then
+      echo "UUID rule broken, nothing was written." >&2
+      exit 1
+    fi
+    if [ -f "$vault/$rel" ] && cmp -s "$vault/$rel" "$from"; then
+      echo "No change to $rel"
+      exit 0
+    fi
+    if [ "$yes" != "1" ]; then
+      if [ -f "$vault/$rel" ]; then
+        diff -u "$vault/$rel" "$from" || true
+      else
+        cat "$from"
+      fi
+    fi
+    gate_confirm "$yes" || { echo "Nothing written."; exit 0; }
+    if [ -f "$vault/$rel" ]; then
+      gate_backup "$vault" "$rel" || { echo "Backup failed, nothing written." >&2; exit 1; }
+    fi
+    mkdir -p "$(dirname "$vault/$rel")"
+    tmp="$vault/$rel.tmp.$$"
+    cp "$from" "$tmp" && mv "$tmp" "$vault/$rel"
+    echo "Wrote $rel"
+    ;;
+  *) usage ;;
+esac
