@@ -11,10 +11,19 @@
 # prerequisite is missing. Without this parsing, skipped tests would look
 # identical to passing tests and silently hide broken coverage.
 #
+# The final line only says ALL GREEN when every test actually ran and passed.
+# A skipped test is not coverage, so any skip ends on a PARTIAL line instead.
+# Skips still exit 0 unless --strict is set, because a test that can't run yet
+# isn't a broken build, but they must never read as a clean pass.
+#
 # Flags:
 #   [filter]   — substring match against basename
 #   --strict   — promote every SKIP to FAIL (useful in CI once all skills
 #                grow runnable entrypoints)
+#
+# Env:
+#   RUN_ALL_TEST_DIR — run the test_*.sh files in this directory instead
+#                      (used by tests/test_run_all_summary.sh)
 
 set -uo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
@@ -62,7 +71,7 @@ echo "${B}2ndBrain-mogging test harness${X}"
 echo
 
 shopt -s nullglob
-for t in "$HERE"/test_*.sh; do
+for t in "${RUN_ALL_TEST_DIR:-$HERE}"/test_*.sh; do
   name="$(basename "$t")"
   [[ -n "$filter" && "$name" != *"$filter"* ]] && continue
   ((total++))
@@ -131,4 +140,8 @@ if ((pass == 0 && skip > 0)); then
   [[ $STRICT -eq 1 ]] && exit 1
 fi
 
-echo "${G}ALL GREEN${X}"
+if ((skip > 0)); then
+  echo "${Y}PARTIAL: $pass passed, $skip skipped, 0 failed. Skipped tests did not run.${X}"
+else
+  echo "${G}ALL GREEN${X}"
+fi
