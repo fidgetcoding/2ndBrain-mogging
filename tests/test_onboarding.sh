@@ -78,13 +78,13 @@ run_install() {
 # First install run.
 #
 # We capture stdout/stderr into FIRST_OUT so VERBOSE=1 runs can surface
-# installer output on failure; the || true keeps the test harness going
-# because set -e is off by design (see header). shellcheck SC2034 would flag
+# installer output on failure. set -e is off by design (see header), so a
+# failing install keeps the harness going and its exit code is read here. shellcheck SC2034 would flag
 # FIRST_OUT as unused — the reference below both satisfies the linter and
 # prints the captured output when debugging.
 # ---------------------------------------------------------------------------
-FIRST_OUT="$(run_install || true)"
-FIRST_RC=$?
+FIRST_RC=0
+FIRST_OUT="$(run_install)" || FIRST_RC=$?
 assert_eq "$FIRST_RC" "0" "install.sh exits 0 on first run"
 [[ "${VERBOSE:-0}" == "1" ]] && printf '%s\n' "$FIRST_OUT"
 
