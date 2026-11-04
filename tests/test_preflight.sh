@@ -81,6 +81,7 @@ mock_path_without() {
 PATH_NO_CLAUDE="$(mock_path_without claude)"
 set +e
 NO_CLAUDE_OUT="$(PATH="$PATH_NO_CLAUDE" HOME="$TMPROOT/home" \
+  CLAUDE_HOME="$TMPROOT/home/.claude" \
   bash "$INSTALL_SH" 2>&1)"
 NO_CLAUDE_RC=$?
 set -e 2>/dev/null || true
@@ -119,6 +120,7 @@ chmod +x "$FAKE_CLAUDE/claude"
 
 set +e
 NO_JQ_OUT="$(PATH="$FAKE_CLAUDE:$PATH_NO_JQ" HOME="$TMPROOT/home" \
+  CLAUDE_HOME="$TMPROOT/home/.claude" \
   bash "$INSTALL_SH" 2>&1)"
 NO_JQ_RC=$?
 set -e 2>/dev/null || true
@@ -142,6 +144,7 @@ fi
 # Full PATH so preflight passes; only validate_vault should fire.
 set +e
 NO_VAULT_OUT="$(HOME="$TMPROOT/home" \
+  CLAUDE_HOME="$TMPROOT/home/.claude" \
   bash "$INSTALL_SH" --apply 2>&1)"
 NO_VAULT_RC=$?
 set -e 2>/dev/null || true
@@ -160,6 +163,7 @@ DOTDOT_VAULT="$TMPROOT/parent/../parent"
 mkdir -p "$TMPROOT/parent"
 set +e
 DOTDOT_OUT="$(HOME="$TMPROOT/home" \
+  CLAUDE_HOME="$TMPROOT/home/.claude" \
   bash "$INSTALL_SH" --apply --vault "$DOTDOT_VAULT" 2>&1)"
 DOTDOT_RC=$?
 set -e 2>/dev/null || true
@@ -190,9 +194,10 @@ fi
 NOEXIST="$TMPROOT/created-by-installer-$$"
 set +e
 NOEXIST_OUT="$(HOME="$TMPROOT/home-noexist" \
+  CLAUDE_HOME="$TMPROOT/home-noexist/.claude" \
   bash "$INSTALL_SH" --apply --vault "$NOEXIST" \
     --no-launchd --no-obsidian-app --no-obsidian-mcp \
-    --no-statusline-brain --no-shell-shortcuts --skip-tests 2>&1)"
+    --no-statusline-brain --no-shell-shortcuts --no-skill-packs --skip-tests 2>&1)"
 NOEXIST_RC=$?
 set -e 2>/dev/null || true
 
@@ -227,6 +232,7 @@ printf '{}\n' > "$DRY_HOME/.claude/settings.json"
 
 set +e
 DRY_OUT="$(HOME="$DRY_HOME" \
+  CLAUDE_HOME="$DRY_HOME/.claude" \
   bash "$INSTALL_SH" 2>&1)"
 DRY_RC=$?
 set -e 2>/dev/null || true

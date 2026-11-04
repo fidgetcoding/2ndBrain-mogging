@@ -153,6 +153,18 @@ cd 2ndBrain-mogging
 
 On `--apply`, the installer, in order: validates the vault path, **seeds the 6-folder vault layout from `vault-template/` (any folder/file already in your vault is left untouched)**, backs up `~/.claude/settings.json`, jq-merges the Stop hook (never overwrites), symlinks skills + commands + agents into `~/.claude/`, symlinks `$VAULT/Claude-Memory/` to Claude Code's per-project memory dir, patches the canonical post-mogging contract block into your vault's `CLAUDE.md` (backs up the old one to `$VAULT/Claude-Memory/backups/<timestamp>/` first — idempotent marker block, never duplicates), installs the launchd plists (unless `--no-launchd`), installs the self-learning tier if `--with-intelligence` was passed, **registers the `obsidian-mcp` server with Claude Code pointed at your vault** (unless `--no-obsidian-mcp`), **installs the 5 third-party vault skill packs at a pinned upstream commit** (unless `--no-skill-packs`), **writes `~/.claude/.mogging-vault` so cli-maxxing's statusline can light up the 🧠 Brain² indicator** (unless `--no-statusline-brain`), runs the onboarding tests (unless `--skip-tests`), and finally runs `bin/doctor.sh` to sanity-check the install.
 
+### Data preservation and updates
+
+Existing `Claude-Memory` contents are copied and backed up before linking. If the vault and Claude Code already have populated memory directories, both are preserved and the installer asks you to reconcile them manually. Existing skills or launchers owned by another installation are left alone.
+
+`uninstall.sh` removes this checkout’s hooks from your **current** settings. It keeps later settings changes and all recovery backups; `--keep-backups` remains accepted for compatibility. Unmarked legacy skill packs are left for manual review. Backups live under `~/.claude/.backups/` (or `$CLAUDE_HOME/.backups/`), with note backups under `Claude-Memory/backups/`. Review a backup before restoring it; uninstall does not roll your configuration back to an old snapshot.
+
+`update.sh` updates the installed, clean `main` checkout with a fast-forward pull. It refuses dirty checkouts and other origins or branches. When no checkout is installed, it clones the complete repository into `$CLAUDE_HOME/2ndbrain-mogging` (default `~/.claude/2ndbrain-mogging`) and keeps it there so installed links remain valid.
+
+Conversation ZIP staging requires **Python 3** and a complete repository checkout. It validates archive paths, rejects symlinks and duplicate entries, and extracts each import into a separate private directory. Failed extraction removes that attempt’s partial output.
+
+See [the maintenance record](docs/MAINTENANCE-2026-11-04.md) for validation and remaining limits.
+
 ### Vault skill packs
 
 Five skills from [`kepano/obsidian-skills`](https://github.com/kepano/obsidian-skills) (MIT, by Obsidian's founder) install into `~/.claude/skills/` at a **pinned commit** — the same rug-pull defense [creativity-maxxing](https://github.com/fidgetcoding/creativity-maxxing) uses for its third-party packs. They are fetched at install time, not vendored, so upstream fixes arrive on a deliberate version bump instead of a fork.
@@ -167,7 +179,7 @@ Five skills from [`kepano/obsidian-skills`](https://github.com/kepano/obsidian-s
 
 **Why `defuddle` matters enough to be a default:** `WebFetch` runs a page through a small model and hands back a lossy summary — a 12,500-word source comes back as roughly 20 lines, and the prompt is not honored. That is exactly the failure the `02-Sources/` contract exists to prevent, since a source note is supposed to be the source of truth for what a page actually said. Defuddle strips nav/ads/clutter and returns the full body.
 
-The skill shells out to a `defuddle` binary, so the installer also runs `npm install -g defuddle`. If npm is missing or the install fails you get a warning and a manual command, not a hard failure. On uninstall the five skill directories are removed, but the `defuddle` CLI is **left in place** — it is a shared global binary you may use outside the vault, and the uninstaller tells you the command to remove it yourself.
+The skill shells out to a `defuddle` binary, so the installer also runs `npm install -g defuddle`. If npm is missing or the install fails you get a warning and a manual command, not a hard failure. Existing skill directories are preserved during install. On uninstall, only packs carrying this checkout’s ownership marker are moved into recovery backups; independently installed packs stay in place. The `defuddle` CLI is **left in place** — it is a shared global binary you may use outside the vault, and the uninstaller tells you the command to remove it yourself.
 
 To update the pin: bump `SKILLPACK_COMMIT` in `install.sh`.
 

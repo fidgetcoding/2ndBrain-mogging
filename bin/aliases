@@ -24,7 +24,9 @@ mode=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --bootstrap) mode=bootstrap; shift ;;
-    --vault) export VAULT_DIR="${2:-}"; shift 2 ;;
+    --vault)
+      [ "$#" -ge 2 ] && [ -n "${2:-}" ] || { echo "missing value for $1" >&2; exit 2; };
+      export VAULT_DIR="${2:-}"; shift 2 ;;
     *) usage ;;
   esac
 done
@@ -34,16 +36,21 @@ vault="$(gate_vault_dir)" || exit 2
 # A direct child of 01-Projects is a project. A folder one level down is a
 # sub-project only if it has an index note named after itself.
 project_entries() {
-  local top sub name subname
+  local top sub name subname qname qpath qsub qkey
   for top in "$vault"/01-Projects/*/; do
     [ -d "$top" ] || continue
     name="$(basename "$top")"
-    printf '  "%s":\n    path: "01-Projects/%s"\n    aliases: ["%s"]\n' "$name" "$name" "$name"
+    qname="$(printf '%s' "$name" | jq -Rs .)"
+    qpath="$(printf '01-Projects/%s' "$name" | jq -Rs .)"
+    printf '  %s:\n    path: %s\n    aliases: [%s]\n' "$qname" "$qpath" "$qname"
     for sub in "$top"*/; do
       [ -d "$sub" ] || continue
       subname="$(basename "$sub")"
       [ -f "$sub$subname.md" ] || continue
-      printf '  "%s/%s":\n    path: "01-Projects/%s/%s"\n    aliases: ["%s"]\n' "$name" "$subname" "$name" "$subname" "$subname"
+      qkey="$(printf '%s/%s' "$name" "$subname" | jq -Rs .)"
+      qpath="$(printf '01-Projects/%s/%s' "$name" "$subname" | jq -Rs .)"
+      qsub="$(printf '%s' "$subname" | jq -Rs .)"
+      printf '  %s:\n    path: %s\n    aliases: [%s]\n' "$qkey" "$qpath" "$qsub"
     done
   done
 }
@@ -71,8 +78,19 @@ aliases: {}
 "
 
 memory="$vault/Claude-Memory"
-mkdir -p "$memory"
+mkdir -p "$memory" || exit 1
+if [ -L "$memory/aliases.yaml" ] || [ -L "$memory/aliases-pending.md" ]; then
+  echo "refused: alias files must not be symlinks" >&2
+  exit 3
+fi
+tmp="$(mktemp "$memory/.aliases.XXXXXX")" || exit 1
+trap 'rm -f "$tmp"' EXIT
 if [ -e "$memory/aliases.yaml" ]; then
+  if [ -f "$memory/aliases-pending.md" ]; then
+    gate_backup "$vault" "Claude-Memory/aliases-pending.md" || exit 1
+    cat "$memory/aliases-pending.md" > "$tmp" || exit 1
+    printf '\n' >> "$tmp"
+  fi
   {
     echo "# aliases-pending, proposed by --bootstrap on $(date +%Y-%m-%d)"
     echo "aliases.yaml already exists, so it was left alone. Review, then run /aliases --accept."
@@ -80,9 +98,10 @@ if [ -e "$memory/aliases.yaml" ]; then
     echo '```yaml'
     printf '%s' "$scaffold"
     echo '```'
-  } > "$memory/aliases-pending.md"
+  } >> "$tmp" || exit 1
+  mv "$tmp" "$memory/aliases-pending.md" || exit 1
   echo "aliases.yaml exists and was not touched. Proposal written to Claude-Memory/aliases-pending.md"
 else
-  printf '%s' "$scaffold" > "$memory/aliases.yaml"
+  printf '%s' "$scaffold" > "$tmp" && ln "$tmp" "$memory/aliases.yaml" || exit 1
   echo "Wrote Claude-Memory/aliases.yaml"
 fi

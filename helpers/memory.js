@@ -12,27 +12,15 @@
  * Simple key-value memory for cross-session context
  */
 
-const fs = require('fs');
 const path = require('path');
 
 const MEMORY_DIR = path.join(process.cwd(), '.claude-flow', 'data');
 const MEMORY_FILE = path.join(MEMORY_DIR, 'memory.json');
 
-function loadMemory() {
-  try {
-    if (fs.existsSync(MEMORY_FILE)) {
-      return JSON.parse(fs.readFileSync(MEMORY_FILE, 'utf-8'));
-    }
-  } catch (e) {
-    // Ignore
-  }
-  return {};
-}
-
-function saveMemory(memory) {
-  fs.mkdirSync(MEMORY_DIR, { recursive: true });
-  fs.writeFileSync(MEMORY_FILE, JSON.stringify(memory, null, 2));
-}
+const { readJSON, writeJSON } = require('./atomic-json.cjs');
+const { withStateLock } = require('./state-lock.cjs');
+function loadMemory() { return readJSON(MEMORY_FILE, {}); }
+function saveMemory(memory) { writeJSON(MEMORY_FILE, memory); }
 
 const commands = {
   get: (key) => {
@@ -78,14 +66,21 @@ const commands = {
   },
 };
 
-// CLI
-const [,, command, key, ...valueParts] = process.argv;
-const value = valueParts.join(' ');
+for (const name of ['set', 'delete', 'clear']) {
+  const mutate = commands[name];
+  commands[name] = (...args) => withStateLock(MEMORY_DIR, () => mutate(...args));
+}
 
-if (command && commands[command]) {
-  commands[command](key, value);
-} else {
-  console.log('Usage: memory.js <get|set|delete|clear|keys> [key] [value]');
+// CLI (imports have no side effects).
+if (require.main === module) {
+  const [,, command, key, ...valueParts] = process.argv;
+  const value = valueParts.join(' ');
+
+  if (command && commands[command]) {
+    commands[command](key, value);
+  } else {
+    console.log('Usage: memory.js <get|set|delete|clear|keys> [key] [value]');
+  }
 }
 
 module.exports = commands;

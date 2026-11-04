@@ -68,7 +68,7 @@ mkdir -p "$VAULT/05-Tasks"
 cp "$HERE/fixtures/tasks/before.md" "$VAULT/05-Tasks/TASKS-SAMPLE.md"
 CMD="$(jq -r '[(.hooks.PreToolUse // [])[].hooks[]?.command // "" | select(contains("hooks/vault-guard.sh"))][0]' "$SETTINGS")"
 jq -n --arg f "$VAULT/05-Tasks/TASKS-SAMPLE.md" --rawfile c "$HERE/fixtures/tasks/after-rewritten.md" \
-  '{tool_name:"Write",tool_input:{file_path:$f,content:$c}}' | "$CMD" 2>/dev/null
+  '{tool_name:"Write",tool_input:{file_path:$f,content:$c}}' | bash -c "$CMD" 2>/dev/null
 assert_eq "$?" "2" "the installed hook blocks a rewritten ID"
 
 # Re-install is idempotent.

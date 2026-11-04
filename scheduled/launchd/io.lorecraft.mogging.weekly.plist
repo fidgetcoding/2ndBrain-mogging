@@ -4,13 +4,13 @@
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>io.<ORG-A>.mogging.weekly</string>
+    <string>io.lorecraft.mogging.weekly</string>
 
     <key>ProgramArguments</key>
     <array>
         <string>/bin/bash</string>
         <string>-c</string>
-        <string>export NVM_DIR="$HOME/.nvm"; [ -s "$NVM_DIR/nvm.sh" ] &amp;&amp; . "$NVM_DIR/nvm.sh"; cd "$VAULT" &amp;&amp; claude -p 'execute agents/weekly.md in audit mode'</string>
+        <string>export NVM_DIR="${HOME}/.nvm"; [ -s "$NVM_DIR/nvm.sh" ] &amp;&amp; . "$NVM_DIR/nvm.sh"; cd "${VAULT_ROOT}" &amp;&amp; claude -p "execute ${REPO_ROOT}/agents/weekly.md in audit mode"</string>
     </array>
 
     <key>EnvironmentVariables</key>

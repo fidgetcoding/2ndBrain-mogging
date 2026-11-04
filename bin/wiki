@@ -26,12 +26,24 @@ shift
 title="" body="" body_file="" target="" sot="" yes=0
 while [ $# -gt 0 ]; do
   case "$1" in
-    --title)  title="${2:-}"; shift 2 ;;
-    --body)   body="${2:-}"; shift 2 ;;
-    --body-file) body_file="${2:-}"; shift 2 ;;
-    --target) target="${2:-}"; shift 2 ;;
-    --source-of-truth) sot="${2:-}"; shift 2 ;;
-    --vault)  export VAULT_DIR="${2:-}"; shift 2 ;;
+    --title)
+      [ "$#" -ge 2 ] && [ -n "${2:-}" ] || { echo "missing value for $1" >&2; exit 2; };
+      title="${2:-}"; shift 2 ;;
+    --body)
+      [ "$#" -ge 2 ] && [ -n "${2:-}" ] || { echo "missing value for $1" >&2; exit 2; };
+      body="${2:-}"; shift 2 ;;
+    --body-file)
+      [ "$#" -ge 2 ] && [ -n "${2:-}" ] || { echo "missing value for $1" >&2; exit 2; };
+      body_file="${2:-}"; shift 2 ;;
+    --target)
+      [ "$#" -ge 2 ] && [ -n "${2:-}" ] || { echo "missing value for $1" >&2; exit 2; };
+      target="${2:-}"; shift 2 ;;
+    --source-of-truth)
+      [ "$#" -ge 2 ] && [ -n "${2:-}" ] || { echo "missing value for $1" >&2; exit 2; };
+      sot="${2:-}"; shift 2 ;;
+    --vault)
+      [ "$#" -ge 2 ] && [ -n "${2:-}" ] || { echo "missing value for $1" >&2; exit 2; };
+      export VAULT_DIR="${2:-}"; shift 2 ;;
     --yes)    yes=1; shift ;;
     *) usage ;;
   esac
@@ -59,11 +71,12 @@ case "$cmd" in
     fi
     verdict="$(gate_check_path wiki "$target" "$vault")" || { echo "$verdict" >&2; exit 3; }
     rel="${verdict#* }"
-    if [ -e "$vault/$rel" ]; then
+    if [ -e "$vault/$rel" ] || [ -L "$vault/$rel" ]; then
       echo "refused: $rel already exists, and add never overwrites." >&2
       exit 3
     fi
     if ! gate_scrub "$title
+$sot
 $body"; then
       echo "refused: the note matches the secret deny list in config/secrets.patterns." >&2
       exit 3
@@ -73,15 +86,15 @@ $body"; then
       04-[Ii]ndex/*) type=index ;;
       *) type=source ;;
     esac
-    esc_title="$(printf '%s' "$title" | sed 's/\\/\\\\/g; s/"/\\"/g')"
+    esc_title="$(printf '%s' "$title" | jq -Rs .)"
     note="---
-title: \"$esc_title\"
+title: $esc_title
 date: $today
 type: $type
 owner: wiki
 last_confirmed: $today"
     [ -n "$sot" ] && note="$note
-source_of_truth: \"$sot\""
+source_of_truth: $(printf '%s' "$sot" | jq -Rs .)"
     note="$note
 tags: []
 ---
@@ -93,8 +106,11 @@ $body
       printf '%s' "$note"
     fi
     gate_confirm "$yes" || { echo "Nothing written."; exit 0; }
-    mkdir -p "$(dirname "$vault/$rel")"
-    printf '%s' "$note" > "$vault/$rel.tmp.$$" && mv "$vault/$rel.tmp.$$" "$vault/$rel"
+    mkdir -p "$(dirname "$vault/$rel")" || exit 1
+    tmp="$(mktemp "$vault/$rel.tmp.XXXXXX")" || exit 1
+    trap 'rm -f "$tmp"' EXIT
+    # Hard-link publication fails atomically if another writer created the note.
+    printf '%s' "$note" > "$tmp" && ln "$tmp" "$vault/$rel" || exit 1
     echo "Wrote $rel"
     ;;
   *) usage ;;

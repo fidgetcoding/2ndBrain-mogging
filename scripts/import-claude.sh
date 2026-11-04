@@ -61,7 +61,7 @@ FLOW:
             (Claude.ai: data-*-batch-*.zip   ChatGPT: chatgpt*.zip).
     3. Confirm with the user (unless --yes or --dry-run).
          - If stdin is not a TTY, abort and instruct to pass --dry-run or --yes.
-    4. Extract to: <VAULT>/.import-staging/<YYYYMMDD-HHMMSS>-claude/
+    4. Extract to: <VAULT>/.import-staging/claude-<unique>/
     5. Print the handoff block pointing at /import-claude.
 
 EXIT CODES:
@@ -317,7 +317,7 @@ success "Found export: $ZIP_PATH"
 # -----------------------------------------------------------------------------
 # 3. Confirm + extract
 # -----------------------------------------------------------------------------
-STAGING="$VAULT_PATH/.import-staging/$(date +%Y%m%d-%H%M%S)-claude"
+STAGING="$VAULT_PATH/.import-staging/claude-<unique>"
 
 echo ""
 info "Planned action:"
@@ -344,12 +344,12 @@ if [ "$ASSUME_YES" -ne 1 ]; then
     esac
 fi
 
-mkdir -p "$STAGING"
+command -v python3 >/dev/null 2>&1 || fail "python3 is required to validate and stage the export safely."
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+[ -f "$SCRIPT_DIR/stage-export.py" ] || fail "Run this importer from a complete repository checkout."
+info "Validating and extracting export to a unique staging directory..."
+STAGING="$(python3 "$SCRIPT_DIR/stage-export.py" "$ZIP_PATH" "$VAULT_PATH")" || fail "Export was not staged."
 
-info "Extracting export to staging..."
-if ! unzip -qo "$ZIP_PATH" -d "$STAGING" 2>/dev/null; then
-    fail "Failed to extract $ZIP_PATH — is the zip file valid?"
-fi
 success "Extracted to: $STAGING"
 
 CONV_COUNT=$(find "$STAGING" -type f \( -name "*.json" -o -name "*.txt" -o -name "*.md" -o -name "*.html" \) 2>/dev/null | wc -l | tr -d ' ')

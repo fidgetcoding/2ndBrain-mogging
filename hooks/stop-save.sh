@@ -11,7 +11,7 @@ SESSION_ID="${SESSION_ID_RAW//[^A-Za-z0-9_-]/}"
 if [[ -z "$SESSION_ID" ]]; then
   SESSION_ID="$(date +%s)"
 fi
-MARKER="${HOME}/.claude/mogging-stop-markers/${SESSION_ID}.marker"
+MARKER="${CLAUDE_HOME:-$HOME/.claude}/mogging-stop-markers/${SESSION_ID}.marker"
 mkdir -p "$(dirname "$MARKER")"
 touch "$MARKER"
 # Pass through — do not block session end

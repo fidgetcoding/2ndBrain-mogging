@@ -21,6 +21,7 @@ gate_lower() { printf '%s' "$1" | tr '[:upper:]' '[:lower:]'; }
 # than resolved, the same call install.sh makes for --vault.
 gate_resolve() {
   local p="$1" base="$2" tail="" link n=0
+  case "$p" in *$'\n'*|*$'\r'*|*$'\t'*) return 1 ;; esac
   case "/$p/" in */../*) return 1 ;; esac
   case "$p" in /*) ;; *) p="$base/$p" ;; esac
   while [ -L "$p" ] && [ "$n" -lt 40 ]; do
@@ -31,8 +32,11 @@ gate_resolve() {
     esac
     n=$((n + 1))
   done
+  [ "$n" -lt 40 ] || return 1
   case "/$p/" in */../*) return 1 ;; esac
   while [ ! -d "$p" ]; do
+    [ ! -L "$p" ] || return 1
+    if [ -n "$tail" ] && [ -e "$p" ]; then return 1; fi
     tail="/$(basename "$p")$tail"
     p="$(dirname "$p")"
   done
@@ -180,8 +184,7 @@ gate_check_task_ids() {
   [ -f "$before" ] && gate_task_lines "$before" > "$tmp/before"
   gate_task_lines "$after" > "$tmp/after"
   out="$(LC_ALL=C awk -F '\t' '
-    FNR == 1 { file++ }
-    file == 1 {
+    FILENAME == ARGV[1] {
       if ($1 != "-") { bcount[$1]++; btext[$1] = $2; textid[$2] = $1 }
       next
     }
@@ -225,7 +228,7 @@ gate_check_task_ids() {
 gate_scrub() {
   local text="$1" pat
   # shellcheck disable=SC1091
-  . "$GATE_LIB_DIR/../../config/secrets.patterns"
+  . "$GATE_LIB_DIR/../../config/secrets.patterns" || return 1
   for pat in "${HARDBLOCK[@]}"; do
     if printf '%s' "$text" | LC_ALL=C grep -qE -e "$pat"; then
       return 1
@@ -238,8 +241,9 @@ gate_scrub() {
 gate_backup() {
   local vault="$1" rel="$2" stamp_dir dest
   stamp_dir="$vault/Claude-Memory/backups/$(date +%Y-%m-%d)"
-  dest="$stamp_dir/$(date +%H%M%S)--$(printf '%s' "$rel" | sed 's#/#--#g').bak"
-  mkdir -p "$stamp_dir" && cp -p "$vault/$rel" "$dest"
+  mkdir -p "$stamp_dir" || return 1
+  dest="$(mktemp -d "$stamp_dir/$(date +%H%M%S).XXXXXX")" || return 1
+  cp -p "$vault/$rel" "$dest/$(printf '%s' "$rel" | sed 's#/#--#g').bak"
 }
 
 # Ask before writing. $1 is 1 when --yes was passed. EOF counts as no.
@@ -258,4 +262,15 @@ gate_vault_dir() {
     return 2
   fi
   printf '%s\n' "$VAULT_DIR"
+}
+
+# Byte offset after a complete YAML frontmatter block. LC_ALL=C counts bytes,
+# allowing writers to append the original body without newline normalization.
+gate_frontmatter_bytes() {
+  LC_ALL=C awk '
+    NR == 1 && $0 !~ /^---[ \t\r]*$/ { exit 1 }
+    { bytes += length($0) + 1 }
+    NR > 1 && /^---[ \t\r]*$/ { print bytes; found = 1; exit }
+    END { if (!found) exit 1 }
+  ' "$1"
 }

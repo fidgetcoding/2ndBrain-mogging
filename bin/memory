@@ -19,7 +19,7 @@
 # owner: llm get rewritten. Everything else gets a proposal, never an edit.
 #
 # Exit codes: 0 ok, 2 bad usage, 3 refused, 4 the tier is off.
-set -u
+set -uo pipefail
 
 SELF="$0"
 while [ -L "$SELF" ]; do
@@ -38,14 +38,28 @@ shift
 note="" state="" claim="" asof="" replaces="" apply=0 today="" query=""
 while [ $# -gt 0 ]; do
   case "$1" in
-    --vault)    export VAULT_DIR="${2:-}"; shift 2 ;;
-    --today)    today="${2:-}"; shift 2 ;;
+    --vault)
+      [ "$#" -ge 2 ] && [ -n "${2:-}" ] || { echo "missing value for $1" >&2; exit 2; };
+      export VAULT_DIR="${2:-}"; shift 2 ;;
+    --today)
+      [ "$#" -ge 2 ] && [ -n "${2:-}" ] || { echo "missing value for $1" >&2; exit 2; };
+      today="${2:-}"; shift 2 ;;
     --apply)    apply=1; shift ;;
-    --state)    state="${2:-}"; shift 2 ;;
-    --note)     note="${2:-}"; shift 2 ;;
-    --claim)    claim="${2:-}"; shift 2 ;;
-    --asof)     asof="${2:-}"; shift 2 ;;
-    --replaces) replaces="${2:-}"; shift 2 ;;
+    --state)
+      [ "$#" -ge 2 ] && [ -n "${2:-}" ] || { echo "missing value for $1" >&2; exit 2; };
+      state="${2:-}"; shift 2 ;;
+    --note)
+      [ "$#" -ge 2 ] && [ -n "${2:-}" ] || { echo "missing value for $1" >&2; exit 2; };
+      note="${2:-}"; shift 2 ;;
+    --claim)
+      [ "$#" -ge 2 ] && [ -n "${2:-}" ] || { echo "missing value for $1" >&2; exit 2; };
+      claim="${2:-}"; shift 2 ;;
+    --asof)
+      [ "$#" -ge 2 ] && [ -n "${2:-}" ] || { echo "missing value for $1" >&2; exit 2; };
+      asof="${2:-}"; shift 2 ;;
+    --replaces)
+      [ "$#" -ge 2 ] && [ -n "${2:-}" ] || { echo "missing value for $1" >&2; exit 2; };
+      replaces="${2:-}"; shift 2 ;;
     -*)         usage ;;
     *)
       if [ "$cmd" = "when" ] && [ -z "$query" ]; then query="$1"
@@ -60,7 +74,15 @@ done
 vault="$(gate_vault_dir)" || exit 2
 vault="$(cd -P "$vault" && pwd -P)"
 
-is_date() { printf '%s' "$1" | grep -qE '^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$'; }
+is_date() {
+  printf '%s\n' "$1" | awk -F '-' '
+    !/^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]$/ { exit 1 }
+    { y=$1+0; m=$2+0; d=$3+0
+      split("31 28 31 30 31 30 31 31 30 31 30 31", days, " ")
+      if (y%4 == 0 && (y%100 != 0 || y%400 == 0)) days[2]=29
+      exit !(y > 0 && m >= 1 && m <= 12 && d >= 1 && d <= days[m]) }
+  '
+}
 [ -n "$today" ] || today="$(date +%Y-%m-%d)"
 is_date "$today" || die "--today must be YYYY-MM-DD"
 
@@ -84,7 +106,8 @@ PROMOTE_INBOUND="$(conf promote_inbound 3)"
 # path, type, owner, asof, seen, durability, stored state, title.
 scan_notes() {
   ( cd "$vault" && for d in 03-Concepts 04-Index; do
-      [ -d "$d" ] && find "$d" -type f -name '*.md' -exec awk '
+      [ -d "$d" ] || continue
+      find "$d" \( -type d \( -iname node_modules -o -iname .git -o -name graphify-out \) -prune \) -o -type f -name '*.md' -exec awk '
         function val(line, key) {
           line = substr(line, length(key) + 2)
           sub(/[ \t]+#.*$/, "", line)
@@ -148,8 +171,9 @@ classified_rows() { classify | tr '\t' "$FS"; }
 # Distinct notes linking to each note, by lowercase filename. Counted live, on every
 # run, because the folder is the data model and there is no index to go stale.
 inbound_counts() {
-  ( cd "$vault" && find . -type f -name '*.md' \
-      -not -path './.git/*' -not -path './node_modules/*' -not -path './.obsidian/*' -exec awk '
+  ( cd "$vault" && find . \( -type d \( -iname .git -o -iname node_modules -o -name .obsidian \
+        -o -name .claude-flow -o -name graphify-out -o -name .import-staging \
+        -o -path './Claude-Memory/backups' \) -prune \) -o -type f -name '*.md' -exec awk '
       {
         line = $0
         while (match(line, /\[\[[^]|#]+/)) {
@@ -173,27 +197,38 @@ inbound_counts() {
 # Set or delete frontmatter keys in place. The body stays byte for byte. An empty
 # value deletes the key. Args after the file are key=value.
 set_keys() {
-  local file="$1" pair key value tmp
+  local file="$1" tmp offset changes
   shift
-  gate_backup "$vault" "${file#"$vault"/}" || die "Backup failed, nothing written: $file" 1
-  for pair in "$@"; do
-    key="${pair%%=*}"
-    value="${pair#*=}"
-    tmp="$file.tmp.$$"
-    awk -v key="$key" -v value="$value" '
-      NR == 1 { print; next }
-      !done && /^---[ \t\r]*$/ {
-        if (!found && value != "") print key ": " value
-        done = 1; print; next
+  writable_note "$file" >/dev/null || return $?
+  offset="$(gate_frontmatter_bytes "$file")" || die "Incomplete frontmatter: $file" 3
+  changes="$(printf '%s\n' "$@")"
+  tmp="$(mktemp "$file.tmp.XXXXXX")" || die "Cannot create temporary note: $file" 1
+  cp -p "$file" "$tmp" || { rm -f "$tmp"; return 1; }
+  if ! CHANGES="$changes" awk '
+    BEGIN {
+      n = split(ENVIRON["CHANGES"], pairs, "\n")
+      for (i=1; i<=n; i++) {
+        at=index(pairs[i], "="); key=substr(pairs[i], 1, at-1)
+        keys[i]=key; values[key]=substr(pairs[i], at+1)
       }
-      !done && index($0, key ":") == 1 {
-        found = 1
-        if (value != "") print key ": " value
-        next
-      }
-      { print }
-    ' "$file" > "$tmp" && mv "$tmp" "$file" || die "Write failed: $file" 1
-  done
+    }
+    NR == 1 { print; next }
+    /^---[ \t\r]*$/ {
+      for (i=1; i<=n; i++) if (!(keys[i] in found) && values[keys[i]] != "") print keys[i] ": " values[keys[i]]
+      print; exit
+    }
+    { key=$0; sub(/:.*/, "", key)
+      if (key in values) {
+        if (!(key in found) && values[key] != "") print key ": " values[key]
+        found[key]=1
+      } else print
+    }
+  ' "$file" > "$tmp" || ! tail -c "+$((offset + 1))" "$file" >> "$tmp"; then
+    rm -f "$tmp"
+    die "Write failed: $file" 1
+  fi
+  gate_backup "$vault" "${file#"$vault"/}" || { rm -f "$tmp"; die "Backup failed: $file" 1; }
+  mv "$tmp" "$file" || { rm -f "$tmp"; die "Write failed: $file" 1; }
 }
 
 # Resolve NOTE to a vault-relative path and check this tier may rewrite it.
@@ -203,6 +238,7 @@ writable_note() {
   [ -f "$vault/$rel" ] || die "no such note: $rel" 2
   regime="$(gate_regime "$vault" "$rel")"
   gate_skill_allows memory "$regime" "$rel" >&2 || exit 3
+  gate_frontmatter_bytes "$vault/$rel" >/dev/null || die "refused: incomplete frontmatter in $rel" 3
   owner="$(gate_frontmatter "$vault/$rel" owner)"
   case "$owner" in
     wiki|llm) ;;
@@ -252,7 +288,7 @@ case "$cmd" in
       verb
       if [ "$st" = "fresh" ]; then
         printf '%s: seen again on %s, clear memory_state\n' "$path" "$seen"
-        [ "$apply" = "1" ] && set_keys "$vault/$path" "memory_state="
+        [ "$apply" = "1" ] && set_keys "$vault/$path" "memory_state=" "needs_review="
       else
         printf '%s: %s, last seen %s, %s days ago (%s)\n' "$path" "$st" "$seen" "$age" "$dur"
         [ "$apply" = "1" ] && set_keys "$vault/$path" "memory_state=$st" "needs_review=true"
@@ -302,7 +338,7 @@ EOF
     verb
     printf '%s: seen %s\n' "$rel" "$today"
     if [ "$apply" = "1" ]; then
-      set_keys "$vault/$rel" "seenat=$today" "last_confirmed=$today" "memory_state="
+      set_keys "$vault/$rel" "seenat=$today" "last_confirmed=$today" "memory_state=" "needs_review="
     else
       echo "Dry run. Pass --apply to write."
     fi
@@ -326,6 +362,10 @@ EOF
     printf '%s: "%s" true as of %s%s\n' "$rel" "$claim" "$asof" "${replaces:+, closing \"$replaces\"}"
     if [ "$apply" = "1" ]; then
       gate_backup "$vault" "$rel" || die "Backup failed, nothing written." 1
+      offset="$(gate_frontmatter_bytes "$vault/$rel")" || exit 3
+      tmp="$(mktemp "$vault/$rel.tmp.XXXXXX")" || exit 1
+      trap 'rm -f "$tmp"' EXIT
+      cp -p "$vault/$rel" "$tmp" || exit 1
       NEW="$new" OLD="$old" awk -v asof="$asof" -v today="$today" '
         BEGIN { new = ENVIRON["NEW"]; old = ENVIRON["OLD"] }
         function closes() {
@@ -342,7 +382,7 @@ EOF
           closes()
           if (!block) print "bi-temporal:"
           if (!added) add()
-          added = 1; done = 1; print; next
+          added = 1; done = 1; print; exit
         }
         !done && /^bi-temporal:/ { block = 1; inblock = 1; print; next }
         !done && inblock && /^  - claim: / {
@@ -359,7 +399,7 @@ EOF
           print; next
         }
         { print }
-      ' "$vault/$rel" > "$vault/$rel.tmp.$$" && mv "$vault/$rel.tmp.$$" "$vault/$rel" || die "Write failed: $rel" 1
+      ' "$vault/$rel" > "$tmp" && tail -c "+$((offset + 1))" "$vault/$rel" >> "$tmp" && mv "$tmp" "$vault/$rel" || die "Write failed: $rel" 1
     else
       echo "Dry run. Pass --apply to write."
     fi

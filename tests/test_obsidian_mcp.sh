@@ -106,6 +106,7 @@ run_install() {
   # keep the install scoped to the temp HOME.
   PATH="$MOCK_BIN:$PATH" \
   HOME="$FAKE_HOME" \
+  CLAUDE_HOME="$FAKE_HOME/.claude" \
   VAULT_DIR="$FAKE_VAULT" \
     bash "$INSTALL_SH" --vault "$FAKE_VAULT" --apply \
       --no-launchd --no-obsidian-app \

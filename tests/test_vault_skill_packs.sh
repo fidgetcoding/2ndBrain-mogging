@@ -156,6 +156,7 @@ fi
 run_install() {
   PATH="$SAFE_PATH" \
   HOME="$FAKE_HOME" \
+  CLAUDE_HOME="$FAKE_HOME/.claude" \
     bash "$INSTALL_SH" --vault "$FAKE_VAULT" --apply \
       --no-launchd --no-obsidian-app --no-obsidian-mcp \
       --no-statusline-brain --no-shell-shortcuts --skip-tests "$@" 2>&1
@@ -267,6 +268,7 @@ if [[ -f "$UNINSTALL_SH" ]]; then
   reset_skills
   run_install >/dev/null 2>&1 || true
   PATH="$SAFE_PATH" HOME="$FAKE_HOME" \
+  CLAUDE_HOME="$FAKE_HOME/.claude" \
     bash "$UNINSTALL_SH" >/dev/null 2>&1 || true
 
   left=0

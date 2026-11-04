@@ -26,11 +26,21 @@ shift
 before="" after="" target="" from="" yes=0
 while [ $# -gt 0 ]; do
   case "$1" in
-    --before) before="${2:-}"; shift 2 ;;
-    --after)  after="${2:-}"; shift 2 ;;
-    --target) target="${2:-}"; shift 2 ;;
-    --from)   from="${2:-}"; shift 2 ;;
-    --vault)  export VAULT_DIR="${2:-}"; shift 2 ;;
+    --before)
+      [ "$#" -ge 2 ] && [ -n "${2:-}" ] || { echo "missing value for $1" >&2; exit 2; };
+      before="${2:-}"; shift 2 ;;
+    --after)
+      [ "$#" -ge 2 ] && [ -n "${2:-}" ] || { echo "missing value for $1" >&2; exit 2; };
+      after="${2:-}"; shift 2 ;;
+    --target)
+      [ "$#" -ge 2 ] && [ -n "${2:-}" ] || { echo "missing value for $1" >&2; exit 2; };
+      target="${2:-}"; shift 2 ;;
+    --from)
+      [ "$#" -ge 2 ] && [ -n "${2:-}" ] || { echo "missing value for $1" >&2; exit 2; };
+      from="${2:-}"; shift 2 ;;
+    --vault)
+      [ "$#" -ge 2 ] && [ -n "${2:-}" ] || { echo "missing value for $1" >&2; exit 2; };
+      export VAULT_DIR="${2:-}"; shift 2 ;;
     --yes)    yes=1; shift ;;
     *) usage ;;
   esac
@@ -54,28 +64,48 @@ case "$cmd" in
       echo "refused: write-tasks only writes under 05-Tasks/, and $rel is not." >&2
       exit 3
     fi
-    if ! gate_check_task_ids "$vault/$rel" "$from"; then
+    work="$(mktemp -d -t mogging-save.XXXXXX)" || exit 1
+    tmp=""
+    trap 'rm -rf "$work"; [ -z "$tmp" ] || rm -f "$tmp"' EXIT
+    existed=0
+    if [ -f "$vault/$rel" ]; then
+      existed=1
+      cp -p "$vault/$rel" "$work/before" || exit 1
+    else
+      : > "$work/before"
+    fi
+    cp "$from" "$work/after" || exit 1
+    if ! gate_check_task_ids "$work/before" "$work/after"; then
       echo "UUID rule broken, nothing was written." >&2
       exit 1
     fi
-    if [ -f "$vault/$rel" ] && cmp -s "$vault/$rel" "$from"; then
+    if [ "$existed" = 1 ] && cmp -s "$work/before" "$work/after"; then
       echo "No change to $rel"
       exit 0
     fi
     if [ "$yes" != "1" ]; then
-      if [ -f "$vault/$rel" ]; then
-        diff -u "$vault/$rel" "$from" || true
-      else
-        cat "$from"
-      fi
+      diff -u "$work/before" "$work/after" || true
     fi
     gate_confirm "$yes" || { echo "Nothing written."; exit 0; }
-    if [ -f "$vault/$rel" ]; then
+    # Refuse stale previews and changed symlink routes rather than overwriting
+    # edits made while the confirmation prompt was open.
+    current="$(gate_check_path save "$target" "$vault")" || exit 3
+    [ "$current" = "$verdict" ] || { echo "Target path changed; retry." >&2; exit 3; }
+    unchanged() {
+      if [ "$existed" = 1 ]; then cmp -s "$work/before" "$vault/$rel"
+      else [ ! -e "$vault/$rel" ] && [ ! -L "$vault/$rel" ]; fi
+    }
+    unchanged || { echo "Target changed since preview; nothing written." >&2; exit 1; }
+    if [ "$existed" = 1 ]; then
       gate_backup "$vault" "$rel" || { echo "Backup failed, nothing written." >&2; exit 1; }
     fi
-    mkdir -p "$(dirname "$vault/$rel")"
-    tmp="$vault/$rel.tmp.$$"
-    cp "$from" "$tmp" && mv "$tmp" "$vault/$rel"
+    mkdir -p "$(dirname "$vault/$rel")" || exit 1
+    tmp="$(mktemp "$vault/$rel.tmp.XXXXXX")" || exit 1
+    if [ "$existed" = 1 ]; then cp -p "$work/before" "$tmp" || exit 1; fi
+    cat "$work/after" > "$tmp" || exit 1
+    unchanged || { echo "Target changed; nothing written." >&2; exit 1; }
+    if [ "$existed" = 1 ]; then mv "$tmp" "$vault/$rel" || exit 1
+    else ln "$tmp" "$vault/$rel" || exit 1; fi
     echo "Wrote $rel"
     ;;
   *) usage ;;

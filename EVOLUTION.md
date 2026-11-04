@@ -79,6 +79,11 @@ Fixed: `f4ace9c` makes any skip end on PARTIAL. `8e25fb5` puts the rules in code
 Also broke: `/save` and `wiki-schema.md` told the model to mint a UUIDv4 for new tasks, and the sync's parser ignores anything but `m-XXXXXXXX`, so those tasks stranded. Fixed in the same commit.
 Built: `--with-memory` and `bin/memory` (`79705ca`): decay, promotion, and what was true when, with frontmatter as the only data model. It's the smallest version I could stand behind. It rewrites only `owner: wiki` and `owner: llm` frontmatter, with `--apply`, after a backup. Other notes get a proposal.
 
+**Round 7: preserve existing data (11-04, local maintenance branch).**
+I tested the installer and write paths against disposable vaults. The installer could delete an existing memory directory; uninstall could restore stale settings and delete backups. I fixed preservation first, then hardened archive staging, update persistence, quoted paths, task previews, frontmatter writes, and helper JSON publication. The scheduled templates also needed valid XML and real manifest paths.
+
+The strict suite now passes 12 of 12 files: the original 357 assertions plus 35 new integration tests, with no skips. A dependency-heavy memory scan fixture went from a 2.1216-second median to 0.1812 seconds with identical output. The [maintenance record](docs/MAINTENANCE-2026-11-04.md) records the measurements, recovery behavior, and remaining integration limits. These changes are local and have not been deployed.
+
 ## Test log
 
 | Date | Check | Result |

@@ -71,7 +71,7 @@ run_install() {
   VAULT_DIR="$FAKE_VAULT" \
     bash "$INSTALL_SH" --vault "$FAKE_VAULT" --apply \
       --no-launchd --no-obsidian-app --no-obsidian-mcp \
-      --no-statusline-brain --no-shell-shortcuts --skip-tests 2>&1
+      --no-statusline-brain --no-shell-shortcuts --no-skill-packs --skip-tests 2>&1
 }
 
 # ---------------------------------------------------------------------------

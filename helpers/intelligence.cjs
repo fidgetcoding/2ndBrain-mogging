@@ -52,17 +52,10 @@ function ensureDataDir() {
   if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 }
 
-function readJSON(filePath) {
-  try {
-    if (fs.existsSync(filePath)) return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
-  } catch { /* corrupt file — start fresh */ }
-  return null;
-}
-
-function writeJSON(filePath, data) {
-  ensureDataDir();
-  fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
-}
+const { readJSON, writeJSON, commitJSONBatch } = require('./atomic-json.cjs');
+const { withStateLock } = require('./state-lock.cjs');
+const { createHash } = require('crypto');
+const CHECKPOINT_PATH = path.join(DATA_DIR, 'pending-insights-checkpoint.json');
 
 function tokenize(text) {
   if (!text) return [];
@@ -107,7 +100,7 @@ function sessionSet(key, value) {
     if (!session.context) session.context = {};
     session.context[key] = value;
     session.updatedAt = new Date().toISOString();
-    fs.writeFileSync(SESSION_FILE, JSON.stringify(session, null, 2), 'utf-8');
+    writeJSON(SESSION_FILE, session);
   } catch { /* best effort */ }
 }
 
@@ -309,7 +302,8 @@ function init() {
   let store = readJSON(STORE_PATH);
 
   // Bootstrap from MEMORY.md files if store is empty
-  if (!store || !Array.isArray(store) || store.length === 0) {
+  if (store !== null && !Array.isArray(store)) throw new Error('Memory store must be an array');
+  if (!store || store.length === 0) {
     const bootstrapped = bootstrapFromMemoryFiles();
     if (bootstrapped.length > 0) {
       store = bootstrapped;
@@ -472,7 +466,17 @@ function recordEdit(file) {
     timestamp: Date.now(),
     sessionId: sessionGet('sessionId') || null,
   });
-  fs.appendFileSync(PENDING_PATH, entry + '\n', 'utf-8');
+  const fd = fs.openSync(PENDING_PATH, 'a+', 0o600);
+  try {
+    const size = fs.fstatSync(fd).size;
+    const tail = Buffer.alloc(1);
+    if (size) fs.readSync(fd, tail, 0, 1, size - 1);
+    if (size && tail[0] !== 10) {
+      throw new Error('Pending insight log has an incomplete tail; preserve/repair it before appending');
+    }
+    fs.writeFileSync(fd, entry + '\n', 'utf8');
+    fs.fsyncSync(fd);
+  } finally { fs.closeSync(fd); }
 }
 
 /**
@@ -516,7 +520,8 @@ function boostConfidence(ids, amount) {
 }
 
 /**
- * consolidate() — Called from session-end. Budget: <500ms.
+ * consolidate() — Called from session-end. Original compute budget: <500ms.
+ * Lock waiting is separately bounded at 5s; durable publication adds I/O.
  * Processes pending insights, rebuilds edges, recomputes PageRank.
  */
 function consolidate() {
@@ -527,18 +532,21 @@ function consolidate() {
     return { entries: 0, edges: 0, newEntries: 0, message: 'No store to consolidate' };
   }
 
-  // 1. Process pending insights
+  // 1. Read unacknowledged complete records. The original bytes stay in an
+  // append-only journal, including malformed records and incomplete tails.
+  const pending = readPending();
   let newEntries = 0;
-  if (fs.existsSync(PENDING_PATH)) {
-    const lines = fs.readFileSync(PENDING_PATH, 'utf-8').trim().split('\n').filter(Boolean);
-    const editCounts = {};
-    for (const line of lines) {
+  {
+    const editCounts = Object.create(null);
+    for (const line of pending.lines) {
       try {
         const insight = JSON.parse(line);
-        if (insight.file) {
-          editCounts[insight.file] = (editCounts[insight.file] || 0) + 1;
+        if (!insight || typeof insight !== 'object' || Array.isArray(insight)
+            || (insight.file !== undefined && typeof insight.file !== 'string')) {
+          throw new Error('Invalid insight shape');
         }
-      } catch { /* skip malformed */ }
+        if (insight.file) editCounts[insight.file] = (editCounts[insight.file] || 0) + 1;
+      } catch { pending.malformedLines++; }
     }
 
     // Create entries for frequently-edited files (3+ edits)
@@ -563,8 +571,7 @@ function consolidate() {
       }
     }
 
-    // Clear pending
-    fs.writeFileSync(PENDING_PATH, '', 'utf-8');
+    // Acknowledge only with the durable store/cache transaction below.
   }
 
   // 2. Confidence decay for unaccessed entries
@@ -605,17 +612,17 @@ function consolidate() {
   // 5. Recompute PageRank
   const pageRanks = computePageRank(nodes, edges, 0.85, 30);
 
-  // 6. Write updated graph
-  writeJSON(GRAPH_PATH, {
+  // 6. Prepare updated graph without publishing partial consolidation state.
+  const nextGraph = {
     version: 1,
     updatedAt: Date.now(),
     nodeCount: Object.keys(nodes).length,
     nodes,
     edges,
     pageRanks,
-  });
+  };
 
-  // 7. Write updated ranked context
+  // 7. Prepare updated ranked context
   const rankedEntries = store.map(entry => {
     const id = entry.id;
     const content = entry.content || entry.value || '';
@@ -637,33 +644,48 @@ function consolidate() {
     return scoreB - scoreA;
   });
 
-  writeJSON(RANKED_PATH, {
-    version: 1,
-    computedAt: Date.now(),
-    entries: rankedEntries,
-  });
-
-  // 8. Persist updated store (with new insight entries)
-  if (newEntries > 0) writeJSON(STORE_PATH, store);
-
-  // 9. Save snapshot for delta tracking
-  const updatedGraph = readJSON(GRAPH_PATH);
-  const updatedRanked = readJSON(RANKED_PATH);
-  saveSnapshot(updatedGraph, updatedRanked);
-
-  return {
-    entries: store.length,
-    edges: edges.length,
-    newEntries,
-    message: 'Consolidated',
+  const nextRanked = { version: 1, computedAt: Date.now(), entries: rankedEntries };
+  const history = snapshotHistory(nextGraph, nextRanked);
+  const result = {
+    entries: store.length, edges: edges.length, newEntries,
+    malformedLines: pending.malformedLines,
+    message: pending.malformedLines ? 'Consolidated; malformed records retained in pending journal' : 'Consolidated',
   };
+  // 8/9. Prepare a durable commit decision, then publish exact outputs. The
+  // checkpoint is part of the same replayable transaction as the insights.
+  return commitJSONBatch(DATA_DIR, [
+    { name: 'auto-memory-store.json', data: store },
+    { name: 'graph-state.json', data: nextGraph },
+    { name: 'ranked-context.json', data: nextRanked },
+    { name: 'intelligence-snapshot.json', data: history },
+    { name: 'pending-insights-checkpoint.json', data: pending.checkpoint },
+  ], result);
+}
+
+// Offset validation detects unexpected external truncation/replacement. This
+// coordinates repository writers only; it cannot lock unrelated external tools.
+function readPending() {
+  let bytes;
+  try { bytes = fs.readFileSync(PENDING_PATH); } catch (error) {
+    if (error.code !== 'ENOENT') throw error;
+    bytes = Buffer.alloc(0);
+  }
+  const digest = data => createHash('sha256').update(data).digest('hex');
+  const previous = readJSON(CHECKPOINT_PATH, { offset: 0, digest: digest(Buffer.alloc(0)) });
+  if (!previous || !Number.isSafeInteger(previous.offset) || previous.offset < 0
+      || previous.offset > bytes.length || digest(bytes.subarray(0, previous.offset)) !== previous.digest) {
+    throw new Error('Pending insight journal differs from its checkpoint; preserve both for recovery');
+  }
+  const end = Math.max(previous.offset, bytes.lastIndexOf(10) + 1);
+  const lines = bytes.subarray(previous.offset, end).toString('utf8').split('\n').filter(line => line.trim());
+  return { lines, malformedLines: 0, checkpoint: { offset: end, digest: digest(bytes.subarray(0, end)) } };
 }
 
 // ── Snapshot for delta tracking ─────────────────────────────────────────────
 
 const SNAPSHOT_PATH = path.join(DATA_DIR, 'intelligence-snapshot.json');
 
-function saveSnapshot(graph, ranked) {
+function snapshotHistory(graph, ranked) {
   const snap = {
     timestamp: Date.now(),
     nodes: graph ? Object.keys(graph.nodes || {}).length : 0,
@@ -695,10 +717,11 @@ function saveSnapshot(graph, ranked) {
 
   // Keep history: append to array, cap at 50
   let history = readJSON(SNAPSHOT_PATH);
-  if (!Array.isArray(history)) history = [];
+  if (history === null) history = [];
+  if (!Array.isArray(history)) throw new Error('Snapshot history must be an array');
   history.push(snap);
   if (history.length > 50) history = history.slice(-50);
-  writeJSON(SNAPSHOT_PATH, history);
+  return history;
 }
 
 /**
@@ -709,9 +732,7 @@ function stats(outputJson) {
   const graph = readJSON(GRAPH_PATH);
   const ranked = readJSON(RANKED_PATH);
   const history = readJSON(SNAPSHOT_PATH) || [];
-  const pending = fs.existsSync(PENDING_PATH)
-    ? fs.readFileSync(PENDING_PATH, 'utf-8').trim().split('\n').filter(Boolean).length
-    : 0;
+  const pending = readPending().lines.length;
 
   // Current state
   const nodes = graph ? Object.keys(graph.nodes || {}).length : 0;
@@ -897,7 +918,16 @@ function stats(outputJson) {
   return report;
 }
 
-module.exports = { init, getContext, recordEdit, feedback, consolidate, stats };
+module.exports = {};
+for (const [name, action] of Object.entries({ init, getContext, recordEdit, feedback, consolidate, stats })) {
+  // Appenders serialize only with each other. Consolidation never rewrites
+  // their journal, so arrivals need not wait for graph computation/publication.
+  const lockDirectory = name === 'recordEdit' ? path.join(DATA_DIR, '.pending-writers') : DATA_DIR;
+  module.exports[name] = (...args) => withStateLock(lockDirectory, recovered => {
+    if (name === 'consolidate' && recovered) return recovered;
+    return action(...args);
+  });
+}
 
 // ── CLI entrypoint ──────────────────────────────────────────────────────────
 if (require.main === module) {
@@ -905,9 +935,9 @@ if (require.main === module) {
   const jsonFlag = process.argv.includes('--json');
 
   const cmds = {
-    init: () => { const r = init(); console.log(JSON.stringify(r)); },
-    stats: () => { stats(jsonFlag); },
-    consolidate: () => { const r = consolidate(); console.log(JSON.stringify(r)); },
+    init: () => { const r = module.exports.init(); console.log(JSON.stringify(r)); },
+    stats: () => { module.exports.stats(jsonFlag); },
+    consolidate: () => { const r = module.exports.consolidate(); console.log(JSON.stringify(r)); },
   };
 
   if (cmd && cmds[cmd]) {

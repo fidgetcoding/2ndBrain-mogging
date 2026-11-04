@@ -18,13 +18,12 @@
  *   node auto-memory-hook.mjs status   # Show bridge status
  */
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, readFileSync } from 'fs';
+import jsonState from './atomic-json.cjs';
+import stateLock from './state-lock.cjs';
 import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-const PROJECT_ROOT = join(__dirname, '../..');
+const PROJECT_ROOT = process.env.CLAUDE_PROJECT_DIR || process.cwd();
 const DATA_DIR = join(PROJECT_ROOT, '.claude-flow', 'data');
 const STORE_PATH = join(DATA_DIR, 'auto-memory-store.json');
 
@@ -51,64 +50,84 @@ class JsonFileBackend {
     this.entries = new Map();
   }
 
-  async initialize() {
-    if (existsSync(this.filePath)) {
-      try {
-        const data = JSON.parse(readFileSync(this.filePath, 'utf-8'));
-        if (Array.isArray(data)) {
-          for (const entry of data) this.entries.set(entry.id, entry);
-        }
-      } catch { /* start fresh */ }
-    }
+  _reload() {
+    const data = jsonState.readJSON(this.filePath, []);
+    if (!Array.isArray(data)) throw new Error('Memory store must be an array');
+    this.entries = new Map(data.map(entry => [entry.id, entry]));
   }
 
-  async shutdown() { this._persist(); }
-  async store(entry) { this.entries.set(entry.id, entry); this._persist(); }
-  async get(id) { return this.entries.get(id) ?? null; }
+  _read(action) {
+    return stateLock.withStateLock(dirname(this.filePath), () => {
+      this._reload();
+      return action();
+    });
+  }
+
+  _mutate(action) {
+    return this._read(() => {
+      const result = action();
+      jsonState.writeJSON(this.filePath, [...this.entries.values()]);
+      return result;
+    });
+  }
+
+  async initialize() { this._read(() => {}); }
+  // Every mutation is already committed. Never flush a cached stale snapshot.
+  async shutdown() {}
+  async store(entry) { this._mutate(() => this.entries.set(entry.id, entry)); }
+  async get(id) { return this._read(() => this.entries.get(id) ?? null); }
   async getByKey(key, ns) {
-    for (const e of this.entries.values()) {
-      if (e.key === key && (!ns || e.namespace === ns)) return e;
-    }
-    return null;
+    return this._read(() => {
+      for (const e of this.entries.values()) {
+        if (e.key === key && (!ns || e.namespace === ns)) return e;
+      }
+      return null;
+    });
   }
   async update(id, updates) {
-    const e = this.entries.get(id);
-    if (!e) return null;
-    if (updates.metadata) Object.assign(e.metadata, updates.metadata);
-    if (updates.content !== undefined) e.content = updates.content;
-    if (updates.tags) e.tags = updates.tags;
-    e.updatedAt = Date.now();
-    this._persist();
-    return e;
+    return this._mutate(() => {
+      const e = this.entries.get(id);
+      if (!e) return null;
+      if (updates.metadata) e.metadata = { ...e.metadata, ...updates.metadata };
+      if (updates.content !== undefined) e.content = updates.content;
+      if (updates.tags) e.tags = updates.tags;
+      e.updatedAt = Date.now();
+      return e;
+    });
   }
-  async delete(id) { return this.entries.delete(id); }
+  async delete(id) { return this._mutate(() => this.entries.delete(id)); }
   async query(opts) {
-    let results = [...this.entries.values()];
-    if (opts?.namespace) results = results.filter(e => e.namespace === opts.namespace);
-    if (opts?.type) results = results.filter(e => e.type === opts.type);
-    if (opts?.limit) results = results.slice(0, opts.limit);
-    return results;
+    return this._read(() => {
+      let results = [...this.entries.values()];
+      if (opts?.namespace) results = results.filter(e => e.namespace === opts.namespace);
+      if (opts?.type) results = results.filter(e => e.type === opts.type);
+      if (opts?.limit) results = results.slice(0, opts.limit);
+      return results;
+    });
   }
   async search() { return []; } // No vector search in JSON backend
-  async bulkInsert(entries) { for (const e of entries) this.entries.set(e.id, e); this._persist(); }
-  async bulkDelete(ids) { let n = 0; for (const id of ids) { if (this.entries.delete(id)) n++; } this._persist(); return n; }
-  async count() { return this.entries.size; }
+  async bulkInsert(entries) { this._mutate(() => { for (const e of entries) this.entries.set(e.id, e); }); }
+  async bulkDelete(ids) { return this._mutate(() => { let n = 0; for (const id of ids) { if (this.entries.delete(id)) n++; } return n; }); }
+  async count() { return this._read(() => this.entries.size); }
   async listNamespaces() {
-    const ns = new Set();
-    for (const e of this.entries.values()) ns.add(e.namespace || 'default');
-    return [...ns];
+    return this._read(() => {
+      const ns = new Set();
+      for (const e of this.entries.values()) ns.add(e.namespace || 'default');
+      return [...ns];
+    });
   }
   async clearNamespace(ns) {
-    let n = 0;
-    for (const [id, e] of this.entries) {
-      if (e.namespace === ns) { this.entries.delete(id); n++; }
-    }
-    this._persist();
-    return n;
+    return this._mutate(() => {
+      let n = 0;
+      for (const [id, e] of this.entries) {
+        if (e.namespace === ns) { this.entries.delete(id); n++; }
+      }
+      return n;
+    });
   }
   async getStats() {
     return {
-      totalEntries: this.entries.size,
+      totalEntries: await this.count(),
       entriesByNamespace: {},
       entriesByType: { semantic: 0, episodic: 0, procedural: 0, working: 0, cache: 0 },
       memoryUsage: 0, avgQueryTime: 0, avgSearchTime: 0,
@@ -126,11 +145,6 @@ class JsonFileBackend {
     };
   }
 
-  _persist() {
-    try {
-      writeFileSync(this.filePath, JSON.stringify([...this.entries.values()], null, 2), 'utf-8');
-    } catch { /* best effort */ }
-  }
 }
 
 // ============================================================================

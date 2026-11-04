@@ -44,7 +44,9 @@ LAUNCHAGENTS_DIR="$HOME/Library/LaunchAgents"
 VAULT_FLAG=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --vault)   VAULT_FLAG="${2:-}"; shift 2 ;;
+    --vault)
+      [ "$#" -ge 2 ] && [ -n "${2:-}" ] || { echo "missing value for $1" >&2; exit 2; };
+      VAULT_FLAG="${2:-}"; shift 2 ;;
     --vault=*) VAULT_FLAG="${1#*=}"; shift ;;
     *)         shift ;;
   esac

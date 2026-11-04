@@ -32,6 +32,9 @@ done
 REPO_ROOT="$(cd -P "$(dirname "$SCRIPT_PATH")" >/dev/null 2>&1 && pwd)"
 export REPO_ROOT
 
+# shellcheck source=bin/lib/settings.sh
+source "$REPO_ROOT/bin/lib/settings.sh"
+
 CLAUDE_HOME="${CLAUDE_HOME:-$HOME/.claude}"
 BACKUP_DIR_ROOT="$CLAUDE_HOME/.backups"
 SETTINGS_PATH="$CLAUDE_HOME/settings.json"
@@ -137,7 +140,9 @@ USAGE
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --vault)              VAULT="${2:-}"; shift 2 ;;
+    --vault)
+      [ "$#" -ge 2 ] && [ -n "${2:-}" ] || { echo "missing value for $1" >&2; exit 2; };
+      VAULT="${2:-}"; shift 2 ;;
     --vault=*)            VAULT="${1#*=}"; shift ;;
     --apply)              APPLY=1; shift ;;
     --dry-run)            APPLY=0; shift ;;
@@ -468,7 +473,7 @@ seed_vault_from_template() {
     [[ "$rel" == ".DS_Store" ]] && continue
     [[ "$rel" == *"/.DS_Store" ]] && continue
     local dest="$VAULT/$rel"
-    if [[ -e "$dest" ]]; then
+    if [[ -e "$dest" || -L "$dest" ]]; then
       vlog "seed skip (exists): $rel"
       skipped=$((skipped + 1))
       continue
@@ -503,7 +508,12 @@ backup_settings() {
   fi
   local ts dest
   ts="$(date +%Y-%m-%d-%H%M%S)"
-  dest="$BACKUP_DIR_ROOT/$ts"
+  if [[ "$APPLY" -eq 1 ]]; then
+    mkdir -p "$BACKUP_DIR_ROOT"
+    dest="$(mktemp -d "$BACKUP_DIR_ROOT/$ts.XXXXXX")"
+  else
+    dest="$BACKUP_DIR_ROOT/$ts.XXXXXX"
+  fi
   run mkdir -p "$dest"
   run chmod 0700 "$dest"
   run cp -p "$SETTINGS_PATH" "$dest/settings.json"
@@ -514,6 +524,7 @@ backup_settings() {
 # ---- step 5: jq-merge Stop hook ---------------------------------------------
 
 merge_stop_hook() {
+  validate_existing_settings "$SETTINGS_PATH" || exit 40
   log "step 5: merge Stop hook into settings.json"
 
   # The Stop-hook overlay is generated inline — there is intentionally no
@@ -601,9 +612,11 @@ JSON
   local overlay_resolved
   overlay_resolved="$(mktemp -t mogging-overlay.XXXXXX)"
   # shellcheck disable=SC2016
-  sed -e "s|\$REPO_ROOT|$REPO_ROOT|g" "$our_hook_src" > "$overlay_resolved"
+  local stop_command
+  printf -v stop_command '%q' "$REPO_ROOT/hooks/stop-save.sh"
+  jq --arg command "$stop_command" '.hooks.Stop[0].hooks[0].command = $command' "$our_hook_src" > "$overlay_resolved"
 
-  if ! jq empty "$overlay_resolved" >/dev/null 2>&1; then
+  if ! settings_json_valid "$overlay_resolved"; then
     err "overlay JSON is invalid; aborting merge"
     _cleanup_stop_tmps
     exit 40
@@ -613,7 +626,7 @@ JSON
   merged="$(mktemp -t mogging-merged.XXXXXX)"
   if [[ "$merge_mode" == "replace" ]]; then
     # Deep overlay; .[1] wins for scalars/arrays at the same path.
-    if ! jq -s '.[0] * .[1]' "$base" "$overlay_resolved" > "$merged" 2>/dev/null; then
+    if ! jq -s 'if length != 2 then error("expected base and overlay") else .[0] * .[1] end' "$base" "$overlay_resolved" > "$merged" 2>/dev/null; then
       err "jq replace merge failed"
       _cleanup_stop_tmps
       exit 40
@@ -627,6 +640,7 @@ JSON
     # Same bug class as the merge_intelligence_hooks() fix in CHANGELOG 0.1.x
     # (04c796e); this is the missed sibling instance.
     if ! jq -s '
+      if length != 2 then error("expected base and overlay") else . end |
       .[0] as $old
       | .[1] as $new
       | ($old * $new)
@@ -635,6 +649,7 @@ JSON
     ' "$base" "$overlay_resolved" > "$merged" 2>/dev/null; then
       # Fallback: do it in two passes (older jq)
       if ! jq -s --slurpfile o <(cat "$overlay_resolved") '
+        if length != 2 then error("expected base and overlay") else . end |
         .[0] as $a
         | .[1] as $b
         | ($a * $b) * { hooks: (($a.hooks // {}) * ($b.hooks // {}) * { Stop: ((($a.hooks.Stop) // []) + (($b.hooks.Stop) // [])) }) }
@@ -646,7 +661,7 @@ JSON
     fi
   fi
 
-  if ! jq empty "$merged" >/dev/null 2>&1; then
+  if ! settings_json_valid "$merged"; then
     err "merged settings.json is invalid JSON"
     _cleanup_stop_tmps
     exit 40
@@ -687,9 +702,13 @@ symlink_dir() {
     name="$(basename "$entry")"
     dest="$dest_root/$name"
     if [[ -e "$dest" || -L "$dest" ]]; then
-      run rm -rf "$dest"
+      if [[ -L "$dest" && "$(readlink "$dest")" == "$entry" ]]; then
+        continue
+      fi
+      warn "preserving existing $kind/$name; it is not owned by this checkout"
+      continue
     fi
-    run ln -snf "$entry" "$dest"
+    run ln -s "$entry" "$dest"
     vlog "linked $kind/$name -> $entry"
   done
   shopt -u nullglob
@@ -709,24 +728,42 @@ link_claude_memory() {
   CLAUDE_MEMORY_SRC="$CLAUDE_HOME/projects/${encoded}/memory"
   vlog "claude memory src: $CLAUDE_MEMORY_SRC"
 
-  # <ORG-D> install-call (2026-04-22): the previous behavior was "skip the
-  # symlink if the Claude-encoded project-memory dir doesn't exist yet,"
-  # which forced a 2-pass install (run cbrain once to make Claude Code mint
-  # the dir, then re-run install.sh --apply to actually link it). Eliminate
-  # the 2-pass requirement by mkdir -p'ing the source ourselves. Claude
-  # Code's first-run behavior is to mkdir -p the same path before writing,
-  # so creating it ahead of time is a no-op for Claude — we're just racing
-  # to do the work first.
-  if [[ ! -d "$CLAUDE_MEMORY_SRC" ]]; then
-    vlog "creating Claude memory source dir ahead of first cbrain: $CLAUDE_MEMORY_SRC"
-    run mkdir -p "$CLAUDE_MEMORY_SRC"
-  fi
-
   local dest="$VAULT/Claude-Memory"
-  if [[ -e "$dest" || -L "$dest" ]]; then
-    vlog "Claude-Memory link already present; refreshing"
-    run rm -rf "$dest"
+  if [[ -L "$dest" ]]; then
+    if [[ ! -d "$dest" ]]; then
+      err "Claude-Memory is a broken link; repair it before installing: $dest"
+      exit 21
+    fi
+    log "preserving existing Claude-Memory link"
+    return 0
   fi
+  if [[ -e "$dest" && ! -d "$dest" ]]; then
+    err "Claude-Memory exists and is not a directory: $dest"
+    exit 21
+  fi
+  if [[ -d "$dest" ]]; then
+    # Two live memory stores must never be merged by overwriting either side.
+    if [[ -d "$CLAUDE_MEMORY_SRC" ]] && [[ -n "$(find "$CLAUDE_MEMORY_SRC" -mindepth 1 -maxdepth 1 -print -quit)" ]]; then
+      warn "preserving both memory directories; review them before linking: $dest and $CLAUDE_MEMORY_SRC"
+      return 0
+    fi
+    if [[ "$APPLY" -eq 1 ]]; then
+      mkdir -p "$CLAUDE_MEMORY_SRC" "$BACKUP_DIR_ROOT"
+      local saved
+      saved="$(mktemp -d "$BACKUP_DIR_ROOT/mogging-memory.XXXXXX")"
+      cp -Rp "$dest/." "$CLAUDE_MEMORY_SRC/"
+      mv "$dest" "$saved/Claude-Memory"
+      ln -s "$CLAUDE_MEMORY_SRC" "$dest" || {
+        mv "$saved/Claude-Memory" "$dest"
+        return 1
+      }
+      log "memory preserved; original directory backed up at $saved/Claude-Memory"
+    else
+      log "would back up and copy existing Claude-Memory before linking"
+    fi
+    return 0
+  fi
+  run mkdir -p "$CLAUDE_MEMORY_SRC"
   run ln -s "$CLAUDE_MEMORY_SRC" "$dest"
 }
 
@@ -803,6 +840,19 @@ apply_claude_md_patch() {
     return 0
   fi
 
+  if [[ -L "$vault_claude" ]]; then
+    warn "preserving symlinked CLAUDE.md; apply the contract patch at its source manually"
+    return 0
+  fi
+  if [[ -f "$vault_claude" ]] && ! awk '
+    /^<!-- (2ndbrain-mogging|mogging):start -->$/ { if (active) bad=1; active=1 }
+    /^<!-- (2ndbrain-mogging|mogging):end -->$/ { if (!active) bad=1; active=0 }
+    END { exit (active || bad) }
+  ' "$vault_claude"; then
+    err "CLAUDE.md has unbalanced mogging markers; leaving it unchanged"
+    exit 41
+  fi
+
   local patch_block working
   patch_block="$(mktemp -t mogging-patch-block.XXXXXX)"
   working="$(mktemp -t mogging-claude-working.XXXXXX)"
@@ -863,8 +913,8 @@ apply_claude_md_patch() {
     if [[ -f "$vault_claude" ]]; then
       local ts backup_dir
       ts="$(date +%Y-%m-%d-%H%M%S)"
-      backup_dir="$VAULT/Claude-Memory/backups/$ts"
-      mkdir -p "$backup_dir"
+      mkdir -p "$VAULT/Claude-Memory/backups"
+      backup_dir="$(mktemp -d "$VAULT/Claude-Memory/backups/$ts.XXXXXX")"
       cp -p "$vault_claude" "$backup_dir/CLAUDE.md.bak"
       vlog "backed up CLAUDE.md to $backup_dir/CLAUDE.md.bak"
     fi
@@ -899,7 +949,7 @@ install_launchd() {
     warn "no launchd source dir at $src_dir — skipping"
     return 0
   fi
-  run mkdir -p "$LAUNCHAGENTS_DIR"
+  run mkdir -p "$LAUNCHAGENTS_DIR" "$HOME/Library/Logs"
 
   shopt -s nullglob
   local plist name dest tmp
@@ -908,14 +958,13 @@ install_launchd() {
     dest="$LAUNCHAGENTS_DIR/$name"
     tmp="$(mktemp -t mogging-plist.XXXXXX)"
 
-    # Placeholder substitution — uses | delimiter because paths contain /.
-    # $HOME must be substituted BEFORE $REPO_ROOT/$VAULT in case those are
-    # themselves expressed relative to $HOME in future templates.
-    # shellcheck disable=SC2016
-    sed -e "s|\$HOME|$HOME|g" \
-        -e "s|\$REPO_ROOT|$REPO_ROOT|g" \
-        -e "s|\$VAULT|${VAULT:-}|g" \
-        "$plist" > "$tmp"
+    # Substitute literal template tokens with XML-escaped values. Shell code
+    # reads runtime environment variables, never interpolated path text.
+    jq -nr --rawfile template "$plist" --arg home "$HOME" --arg repo "$REPO_ROOT" --arg vault "${VAULT:-}" '
+      $template | split("$HOME") | join($home | @html)
+      | split("$REPO_ROOT") | join($repo | @html)
+      | split("$VAULT") | join($vault | @html)
+    ' > "$tmp"
 
     if [[ "$APPLY" -eq 1 ]]; then
       # Unload first if present (ignore failure — may not be loaded).
@@ -975,9 +1024,10 @@ link_helpers() {
     name="$(basename "$entry")"
     dest="$dest_dir/$name"
 
-    # Remove any existing entry (file OR link) so link is idempotent.
     if [[ -e "$dest" || -L "$dest" ]]; then
-      run rm -f "$dest"
+      if [[ "$dest" -ef "$entry" ]]; then continue; fi
+      warn "preserving existing helper: $dest"
+      continue
     fi
 
     if [[ "$USE_SYMLINK" -eq 1 ]]; then
@@ -999,6 +1049,7 @@ link_helpers() {
 }
 
 merge_intelligence_hooks() {
+  validate_existing_settings "$SETTINGS_PATH" || exit 40
   log "step 10.5b: merge intelligence hooks into settings.json"
 
   local overlay_src="$REPO_ROOT/hooks/intelligence-hooks.json"
@@ -1029,12 +1080,18 @@ merge_intelligence_hooks() {
     return 0
   fi
 
-  local base="{}"
-  [[ -f "$SETTINGS_PATH" ]] && base="$SETTINGS_PATH"
+  local base synthesized=""
+  if [[ -f "$SETTINGS_PATH" ]]; then
+    base="$SETTINGS_PATH"
+  else
+    synthesized="$(mktemp -t mogging-intel-base.XXXXXX)"
+    printf '{}\n' > "$synthesized"
+    base="$synthesized"
+  fi
 
   # The overlay has no placeholders to substitute (paths use ${CLAUDE_PROJECT_DIR:-.}).
   # Validate overlay JSON.
-  if ! jq empty "$overlay_src" >/dev/null 2>&1; then
+  if ! settings_json_valid "$overlay_src"; then
     err "intelligence overlay JSON is invalid; aborting merge"
     exit 40
   fi
@@ -1045,6 +1102,7 @@ merge_intelligence_hooks() {
   # Deep merge, then for each of the 5 hook arrays, concat existing + overlay.
   # This preserves the Stop hook and any other user hooks untouched.
   if ! jq -s '
+    if length != 2 then error("expected base and overlay") else . end |
     .[0] as $old
     | .[1] as $new
     | ($old * $new)
@@ -1060,7 +1118,7 @@ merge_intelligence_hooks() {
     exit 40
   fi
 
-  if ! jq empty "$merged" >/dev/null 2>&1; then
+  if ! settings_json_valid "$merged"; then
     err "merged settings.json is invalid JSON after intelligence merge"
     rm -f "$merged"
     exit 40
@@ -1077,7 +1135,7 @@ merge_intelligence_hooks() {
     log "would write merged settings.json to $SETTINGS_PATH (0600)"
   fi
 
-  rm -f "$merged"
+  rm -f "$merged" "$synthesized"
 }
 
 seed_pattern_store() {
@@ -1101,6 +1159,9 @@ install_intelligence() {
   link_helpers
   merge_intelligence_hooks
   seed_pattern_store
+  if [[ "$APPLY" -eq 1 ]]; then
+    printf '%s\n' "$REPO_ROOT" > "$CLAUDE_HOME/.mogging-intelligence"
+  fi
 }
 
 # ---- step 10.55: vault guard (opt-in) ----------------------------------------
@@ -1118,6 +1179,7 @@ install_vault_guard() {
     return 0
   fi
   log "step 10.55: install vault guard"
+  validate_existing_settings "$SETTINGS_PATH" || exit 40
 
   local base="{}" merged
   [[ -f "$SETTINGS_PATH" ]] && base="$(cat "$SETTINGS_PATH")"
@@ -1128,7 +1190,9 @@ install_vault_guard() {
     log "vault guard hook already present in settings.json, skipping merge"
   else
     merged="$(mktemp -t mogging-guard-merged.XXXXXX)"
-    if ! jq --arg cmd "$REPO_ROOT/hooks/vault-guard.sh" '
+    local guard_command
+    printf -v guard_command '%q' "$REPO_ROOT/hooks/vault-guard.sh"
+    if ! jq --arg cmd "$guard_command" '
           .hooks = (.hooks // {})
           | .hooks.PreToolUse = ((.hooks.PreToolUse // []) + [{
               matcher: "Write|Edit|MultiEdit",
@@ -1136,6 +1200,11 @@ install_vault_guard() {
             }])
         ' <<<"$base" > "$merged" 2>/dev/null; then
       err "jq vault guard merge failed"
+      rm -f "$merged"
+      exit 40
+    fi
+    if ! settings_json_valid "$merged"; then
+      err "invalid settings after vault guard merge"
       rm -f "$merged"
       exit 40
     fi
@@ -1203,10 +1272,11 @@ install_memory_tier() {
 #
 # Honors non-negotiable #2 (jq-merge discipline — never naive overwrite) and
 # #1 (backup-before-mutation — snapshots settings.json to the same backup dir
-# the step-4 backup uses before writing). Validates the result with `jq empty`
-# before committing.
+# the step-4 backup uses before writing). Validates the complete settings
+# document with the shared validator before committing.
 
 repair_stale_hooks() {
+  validate_existing_settings "$SETTINGS_PATH" || exit 40
   log "step 10.6: repair stale hook paths in settings.json"
 
   if [[ ! -f "$SETTINGS_PATH" ]]; then
@@ -1264,8 +1334,8 @@ repair_stale_hooks() {
   # Backup before mutation (non-negotiable #1), reusing the step-4 backup dir.
   local ts dest
   ts="$(date +%Y-%m-%d-%H%M%S)"
-  dest="$BACKUP_DIR_ROOT/$ts"
-  mkdir -p "$dest"
+  mkdir -p "$BACKUP_DIR_ROOT"
+  dest="$(mktemp -d "$BACKUP_DIR_ROOT/$ts.XXXXXX")"
   chmod 0700 "$dest"
   cp -p "$SETTINGS_PATH" "$dest/settings.json"
   chmod 0600 "$dest/settings.json"
@@ -1296,7 +1366,7 @@ repair_stale_hooks() {
     exit 40
   fi
 
-  if ! jq empty "$merged" >/dev/null 2>&1; then
+  if ! settings_json_valid "$merged"; then
     err "settings.json invalid after stale-hook repair — aborting (backup preserved at $dest)"
     rm -f "$merged"
     exit 40
@@ -1440,8 +1510,12 @@ install_vault_skill_packs() {
     fi
     # Strip upstream VCS metadata; we manage the pin, not their history.
     # ${var:?} guards: an empty dest_root or s would make these `rm -rf /`.
-    rm -rf "${dest_root:?}/${s:?}"
+    if [[ -e "$dest_root/$s" || -L "$dest_root/$s" ]]; then
+      warn "preserving existing skill pack $s; review updates manually"
+      continue
+    fi
     cp -R "$src" "$dest_root/$s"
+    printf '%s\n' "$REPO_ROOT" > "$dest_root/$s/.mogging-owned"
     rm -rf "${dest_root:?}/${s:?}/.git"
     vlog "installed skill: $dest_root/$s"
   done
@@ -1640,10 +1714,24 @@ install_shell_shortcuts() {
     return 0
   fi
 
+  local existing
+  for existing in "$cbrain_path" "$cbraintg_path"; do
+    if [[ -e "$existing" || -L "$existing" ]]; then
+      if [[ -L "$existing" ]] || ! grep -qxF '# Managed by 2ndBrain-mogging.' "$existing"; then
+        warn "preserving existing launcher: $existing; shortcuts skipped"
+        return 0
+      fi
+      local saved
+      mkdir -p "$BACKUP_DIR_ROOT"
+      saved="$(mktemp -d "$BACKUP_DIR_ROOT/mogging-launcher.XXXXXX")"
+      cp -p "$existing" "$saved/$(basename "$existing")"
+    fi
+  done
   mkdir -p "$bin_dir"
 
   cat > "$cbrain_path" <<'CBRAIN_EOF'
 #!/usr/bin/env bash
+# Managed by 2ndBrain-mogging.
 # cbrain — Launch Claude Code inside your 2ndBrain vault with skip-permissions.
 # Reads $HOME/.claude/.mogging-vault at runtime; re-run 2ndBrain-mogging
 # install.sh --vault /new/path to relocate.
@@ -1679,6 +1767,7 @@ CBRAIN_EOF
 
   cat > "$cbraintg_path" <<'CBRAINTG_EOF'
 #!/usr/bin/env bash
+# Managed by 2ndBrain-mogging.
 # cbraintg — cbrain + Telegram channel (requires cli-maxxing Step 6 bot token).
 
 MARKER="$HOME/.claude/.mogging-vault"
@@ -1813,8 +1902,9 @@ run_doctor() {
 main() {
   mode_banner
   preflight
-  ensure_obsidian_app
+  validate_existing_settings "$SETTINGS_PATH" || exit 40
   validate_vault
+  ensure_obsidian_app
   seed_vault_from_template
   backup_settings
   merge_stop_hook

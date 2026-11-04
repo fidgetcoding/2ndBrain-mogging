@@ -49,10 +49,8 @@ function safeRequire(modulePath) {
   return null;
 }
 
-const router = safeRequire(path.join(helpersDir, 'router.js'));
-const session = safeRequire(path.join(helpersDir, 'session.js'));
-const memory = safeRequire(path.join(helpersDir, 'memory.js'));
-const intelligence = safeRequire(path.join(helpersDir, 'intelligence.cjs'));
+// Resolve modules only for the event that uses them.
+let router, session, intelligence;
 
 // Get the command from argv
 const [,, command, ...args] = process.argv;
@@ -85,9 +83,13 @@ async function main() {
     try { hookInput = JSON.parse(stdinData); } catch (e) { /* ignore parse errors */ }
   }
 
-  // Merge stdin data into prompt resolution: prefer stdin fields, then env, then argv
-  const prompt = hookInput.prompt || hookInput.command || hookInput.toolInput
+  const toolInput = hookInput.tool_input || hookInput.toolInput || {};
+  const promptValue = hookInput.prompt || hookInput.command || toolInput.command
     || process.env.PROMPT || process.env.TOOL_INPUT_command || args.join(' ') || '';
+  const prompt = typeof promptValue === 'string' ? promptValue : '';
+  if (['route', 'pre-task'].includes(command)) router = safeRequire(path.join(helpersDir, 'router.js'));
+  if (['post-edit', 'session-restore', 'session-end', 'pre-task'].includes(command)) session = safeRequire(path.join(helpersDir, 'session.js'));
+  if (['route', 'post-edit', 'session-restore', 'session-end', 'post-task', 'stats'].includes(command)) intelligence = safeRequire(path.join(helpersDir, 'intelligence.cjs'));
 
 const handlers = {
   'route': () => {
@@ -100,41 +102,7 @@ const handlers = {
     }
     if (router && router.routeTask) {
       const result = router.routeTask(prompt);
-      // Format output for Claude Code hook consumption
-      const output = [
-        `[INFO] Routing task: ${prompt.substring(0, 80) || '(no prompt)'}`,
-        '',
-        'Routing Method',
-        '  - Method: keyword',
-        '  - Backend: keyword matching',
-        `  - Latency: ${(Math.random() * 0.5 + 0.1).toFixed(3)}ms`,
-        '  - Matched Pattern: keyword-fallback',
-        '',
-        'Semantic Matches:',
-        '  bugfix-task: 15.0%',
-        '  devops-task: 14.0%',
-        '  testing-task: 13.0%',
-        '',
-        '+------------------- Primary Recommendation -------------------+',
-        `| Agent: ${result.agent.padEnd(53)}|`,
-        `| Confidence: ${(result.confidence * 100).toFixed(1)}%${' '.repeat(44)}|`,
-        `| Reason: ${result.reason.substring(0, 53).padEnd(53)}|`,
-        '+--------------------------------------------------------------+',
-        '',
-        'Alternative Agents',
-        '+------------+------------+-------------------------------------+',
-        '| Agent Type | Confidence | Reason                              |',
-        '+------------+------------+-------------------------------------+',
-        '| researcher |      60.0% | Alternative agent for researcher... |',
-        '| tester     |      50.0% | Alternative agent for tester cap... |',
-        '+------------+------------+-------------------------------------+',
-        '',
-        'Estimated Metrics',
-        '  - Success Probability: 70.0%',
-        '  - Estimated Duration: 10-30 min',
-        '  - Complexity: LOW',
-      ];
-      console.log(output.join('\n'));
+      console.log(`[INFO] Agent: ${result.agent}; rule score: ${result.confidence}; ${result.reason}`);
     } else {
       console.log('[INFO] Router not available, using default routing');
     }
@@ -142,12 +110,12 @@ const handlers = {
 
   'pre-bash': () => {
     // Basic command safety check — prefer stdin command data from Claude Code
-    const cmd = (hookInput.command || prompt).toLowerCase();
+    const cmd = prompt.toLowerCase();
     const dangerous = ['rm -rf /', 'format c:', 'del /s /q c:\\', ':(){:|:&};:'];
     for (const d of dangerous) {
       if (cmd.includes(d)) {
         console.error(`[BLOCKED] Dangerous command detected: ${d}`);
-        process.exit(1);
+        process.exit(2);
       }
     }
     console.log('[OK] Command validated');
@@ -161,7 +129,7 @@ const handlers = {
     // Record edit for intelligence consolidation — prefer stdin data from Claude Code
     if (intelligence && intelligence.recordEdit) {
       try {
-        const file = hookInput.file_path || (hookInput.toolInput && hookInput.toolInput.file_path)
+        const file = toolInput.file_path || hookInput.file_path
           || process.env.TOOL_INPUT_file_path || args[0] || '';
         intelligence.recordEdit(file);
       } catch (e) { /* non-fatal */ }
@@ -269,8 +237,7 @@ const handlers = {
   }
 }
 
-// Hooks must ALWAYS exit 0 — Claude Code treats non-zero as "hook error"
-// and skips all subsequent hooks for the event.
+// Ordinary errors stay non-blocking; explicit safety refusals exit 2 above.
 process.exitCode = 0;
 main().catch((e) => {
   try { console.log(`[WARN] Hook handler error: ${e.message}`); } catch (_) {}

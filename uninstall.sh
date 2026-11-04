@@ -5,9 +5,9 @@
 # Reverses every install step:
 #   - unloads + removes launchd plists from ~/Library/LaunchAgents
 #   - removes our symlinks from ~/.claude/{skills,commands,agents}/
-#   - restores the most recent settings.json backup (0600 perms)
+#   - removes only this checkout's hooks, preserving current settings (0600 perms)
 #   - with --hard: also removes the Claude-Memory symlink inside the vault
-#   - with --keep-backups: leaves ~/.claude/.backups/ alone
+#   - always retains backups for manual recovery
 #
 # Vault content (notes, files) is NEVER touched.
 #
@@ -22,6 +22,9 @@ while [[ -L "$SCRIPT_PATH" ]]; do
   [[ "$SCRIPT_PATH" != /* ]] && SCRIPT_PATH="$SCRIPT_DIR/$SCRIPT_PATH"
 done
 REPO_ROOT="$(cd -P "$(dirname "$SCRIPT_PATH")" >/dev/null 2>&1 && pwd)"
+
+# shellcheck source=bin/lib/settings.sh
+source "$REPO_ROOT/bin/lib/settings.sh"
 
 CLAUDE_HOME="${CLAUDE_HOME:-$HOME/.claude}"
 BACKUP_DIR_ROOT="$CLAUDE_HOME/.backups"
@@ -40,14 +43,16 @@ Usage: uninstall.sh [--vault PATH] [--hard] [--keep-backups] [--verbose]
 Options:
   --vault PATH     Path to vault (required with --hard)
   --hard           Also remove the Claude-Memory symlink inside the vault
-  --keep-backups   Do not delete ~/.claude/.backups (still restores)
+  --keep-backups   Compatibility flag; backups are always retained
   --verbose        Extra logging
 USAGE
 }
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --vault)        VAULT="${2:-}"; shift 2 ;;
+    --vault)
+      [ "$#" -ge 2 ] && [ -n "${2:-}" ] || { echo "missing value for $1" >&2; exit 2; };
+      VAULT="${2:-}"; shift 2 ;;
     --vault=*)      VAULT="${1#*=}"; shift ;;
     --hard)         HARD=1; shift ;;
     --keep-backups) KEEP_BACKUPS=1; shift ;;
@@ -68,11 +73,12 @@ uninstall_launchd() {
   local src_dir="$REPO_ROOT/scheduled/launchd"
   [[ -d "$src_dir" ]] || { vlog "no plists to remove"; return 0; }
   shopt -s nullglob
-  local plist name dest
+  local plist name dest escaped_root
+  escaped_root="$(jq -nr --arg root "$REPO_ROOT" '$root | @html')"
   for plist in "$src_dir"/*.plist; do
     name="$(basename "$plist")"
     dest="$LAUNCHAGENTS_DIR/$name"
-    if [[ -f "$dest" ]]; then
+    if [[ -f "$dest" ]] && grep -qF "$escaped_root" "$dest"; then
       launchctl unload "$dest" 2>/dev/null || true
       rm -f "$dest"
       log "removed $dest"
@@ -111,27 +117,44 @@ unlink_kind() {
   shopt -u nullglob
 }
 
-# ---- 3. restore most-recent settings.json backup -----------------------------
+# ---- 3. remove owned hooks from current settings -----------------------------
 
-restore_settings() {
-  log "restore most-recent settings.json backup"
-  if [[ ! -d "$BACKUP_DIR_ROOT" ]]; then
-    vlog "no backup root; nothing to restore"
-    return 0
+remove_settings_hooks() {
+  validate_existing_settings "$SETTINGS_PATH" || return 1
+  [[ -f "$SETTINGS_PATH" ]] || return 0
+  command -v jq >/dev/null 2>&1 || { warn "jq required to safely remove hooks"; return 1; }
+  local stop guard tmp saved intelligence='[]'
+  if [[ -f "$CLAUDE_HOME/.mogging-intelligence" ]] && [[ "$(cat "$CLAUDE_HOME/.mogging-intelligence")" == "$REPO_ROOT" ]]; then
+    intelligence="$(jq '[.hooks[][] | .hooks[].command]' "$REPO_ROOT/hooks/intelligence-hooks.json")"
   fi
-  local latest
-  # Pick the lexicographically greatest subdir with a settings.json inside.
-  latest="$(find "$BACKUP_DIR_ROOT" -mindepth 1 -maxdepth 1 -type d -name '20*' \
-            -exec test -f {}/settings.json \; -print 2>/dev/null \
-            | sort -r | head -n1)"
-  if [[ -z "$latest" ]]; then
-    warn "no viable settings.json backup found"
-    return 0
+  printf -v stop '%q' "$REPO_ROOT/hooks/stop-save.sh"
+  printf -v guard '%q' "$REPO_ROOT/hooks/vault-guard.sh"
+  tmp="$(mktemp "$CLAUDE_HOME/.mogging-settings.XXXXXX")"
+  if ! jq --arg stop "$stop" --arg guard "$guard" --argjson intelligence "$intelligence" \
+      --arg rawstop "$REPO_ROOT/hooks/stop-save.sh" --arg rawguard "$REPO_ROOT/hooks/vault-guard.sh" '
+      if .hooks then
+        .hooks |= with_entries(.value |= map(
+          (.hooks | length) as $before
+          | .hooks |= map(select(.command as $cmd | $cmd != $stop and $cmd != $guard and $cmd != $rawstop and $cmd != $rawguard and ($intelligence | index($cmd) | not)))
+          | select($before == 0 or (.hooks | length > 0))))
+      else . end
+    ' "$SETTINGS_PATH" > "$tmp"; then
+    rm -f "$tmp"
+    warn "invalid settings; leaving them untouched"
+    return 1
   fi
-  cp "$latest/settings.json" "$SETTINGS_PATH.tmp.$$"
-  chmod 0600 "$SETTINGS_PATH.tmp.$$"
-  mv "$SETTINGS_PATH.tmp.$$" "$SETTINGS_PATH"
-  log "restored settings.json from $latest"
+  if ! settings_json_valid "$tmp"; then
+    rm -f "$tmp"
+    warn "invalid settings result; leaving settings untouched"
+    return 1
+  fi
+  mkdir -p "$BACKUP_DIR_ROOT"
+  saved="$(mktemp -d "$BACKUP_DIR_ROOT/mogging-uninstall.XXXXXX")"
+  cp -p "$SETTINGS_PATH" "$saved/settings.json"
+  chmod 0600 "$saved/settings.json" "$tmp"
+  mv "$tmp" "$SETTINGS_PATH"
+  if [[ "$intelligence" != '[]' ]]; then rm -f "$CLAUDE_HOME/.mogging-intelligence"; fi
+  log "removed owned hooks; current settings backed up at $saved"
 }
 
 # ---- 4. optional: remove Claude-Memory link in vault -------------------------
@@ -143,7 +166,8 @@ remove_claude_memory_link() {
     return 0
   fi
   local dest="$VAULT/Claude-Memory"
-  if [[ -L "$dest" ]]; then
+  local encoded="${VAULT//\//-}"
+  if [[ -L "$dest" && "$(readlink "$dest")" == "$CLAUDE_HOME/projects/$encoded/memory" ]]; then
     rm -f "$dest"
     log "removed Claude-Memory symlink: $dest"
   else
@@ -154,58 +178,27 @@ remove_claude_memory_link() {
 # ---- 5. optional: purge backups ---------------------------------------------
 
 purge_backups() {
-  if [[ "$KEEP_BACKUPS" -eq 1 ]]; then
-    log "keeping backups (--keep-backups)"
-    return 0
-  fi
-  if [[ -d "$BACKUP_DIR_ROOT" ]]; then
-    rm -rf "$BACKUP_DIR_ROOT"
-    log "purged $BACKUP_DIR_ROOT"
-  fi
+  log "keeping backups for recovery (including --keep-backups=$KEEP_BACKUPS)"
 }
 
 remove_shell_shortcuts() {
-  local cbrain_path="$HOME/.local/bin/cbrain"
-  local cbraintg_path="$HOME/.local/bin/cbraintg"
-  local removed=0
-  if [[ -f "$cbrain_path" ]]; then
-    rm -f "$cbrain_path"
-    log "removed $cbrain_path"
-    removed=1
-  fi
-  if [[ -f "$cbraintg_path" ]]; then
-    rm -f "$cbraintg_path"
-    log "removed $cbraintg_path"
-    removed=1
-  fi
-  [[ "$removed" -eq 0 ]] && vlog "no cbrain/cbraintg shortcuts to remove"
-  # Leave the ~/.local/bin PATH export in ~/.zshrc / ~/.bashrc — cli-maxxing
-  # Step 1 also relies on it for its ctg script, so removing it would break
-  # unrelated tooling.
+  local name dest
+  for name in cbrain cbraintg; do
+    dest="$HOME/.local/bin/$name"
+    if [[ -f "$dest" && ! -L "$dest" ]] && grep -qxF '# Managed by 2ndBrain-mogging.' "$dest"; then
+      rm -f "$dest"
+      log "removed $dest"
+    fi
+  done
+  return 0
 }
 
-# Restoring the settings backup isn't enough here: a re-install takes its backup
-# after the hook is already in, so the backup can hold the hook too. Strip it.
 remove_vault_guard() {
   rm -f "${CLAUDE_HOME:?}/.mogging-guard"
-  [[ -f "$SETTINGS_PATH" ]] || return 0
-  command -v jq >/dev/null 2>&1 || return 0
-  local tmp="$SETTINGS_PATH.tmp.$$"
-  if jq --arg p "hooks/vault-guard.sh" '
-        if .hooks.PreToolUse then
-          .hooks.PreToolUse |= map(select(((.hooks // []) | map(.command // "") | any(contains($p))) | not))
-        else . end
-      ' "$SETTINGS_PATH" > "$tmp" 2>/dev/null; then
-    chmod 0600 "$tmp"
-    mv "$tmp" "$SETTINGS_PATH"
-    log "removed the vault guard"
-  else
-    rm -f "$tmp"
-  fi
 }
 
 remove_statusline_marker() {
-  local marker="$HOME/.claude/.mogging-vault"
+  local marker="$CLAUDE_HOME/.mogging-vault"
   if [[ -f "$marker" ]]; then
     rm -f "$marker"
     log "removed $marker"
@@ -228,9 +221,12 @@ remove_vault_skill_packs() {
     dest="$dest_root/$s"
     if [[ -L "$dest" ]]; then
       vlog "$dest is a symlink (not ours); leaving"
-    elif [[ -d "$dest" ]]; then
-      rm -rf "${dest_root:?}/${s:?}"
-      log "removed skill pack $s"
+    elif [[ -d "$dest" && -f "$dest/.mogging-owned" ]] && [[ "$(cat "$dest/.mogging-owned")" == "$REPO_ROOT" ]]; then
+      local saved
+      mkdir -p "$BACKUP_DIR_ROOT"
+      saved="$(mktemp -d "$BACKUP_DIR_ROOT/mogging-pack.XXXXXX")"
+      mv "$dest" "$saved/$s"
+      log "removed skill pack $s (preserved at $saved/$s)"
       removed=$((removed + 1))
     else
       vlog "skill pack $s not present"
@@ -248,12 +244,12 @@ remove_vault_skill_packs() {
 
 main() {
   log "starting uninstall"
+  remove_settings_hooks
   uninstall_launchd
   unlink_kind "skills"
   unlink_kind "commands"
   unlink_kind "agents"
   remove_vault_skill_packs
-  restore_settings
   remove_vault_guard
   remove_claude_memory_link
   remove_statusline_marker

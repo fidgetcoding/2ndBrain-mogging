@@ -14,13 +14,17 @@
 
 const fs = require('fs');
 const path = require('path');
+const { writeJSON } = require('./atomic-json.cjs');
+const { withStateLock } = require('./state-lock.cjs');
+const { randomUUID } = require('crypto');
+const DATA_DIR = path.join(process.cwd(), '.claude-flow', 'data');
 
 const SESSION_DIR = path.join(process.cwd(), '.claude-flow', 'sessions');
 const SESSION_FILE = path.join(SESSION_DIR, 'current.json');
 
 const commands = {
   start: () => {
-    const sessionId = `session-${Date.now()}`;
+    const sessionId = `session-${Date.now()}-${randomUUID()}`;
     const session = {
       id: sessionId,
       startedAt: new Date().toISOString(),
@@ -35,7 +39,7 @@ const commands = {
     };
 
     fs.mkdirSync(SESSION_DIR, { recursive: true });
-    fs.writeFileSync(SESSION_FILE, JSON.stringify(session, null, 2));
+    writeJSON(SESSION_FILE, session);
 
     console.log(`Session started: ${sessionId}`);
     return session;
@@ -49,7 +53,7 @@ const commands = {
 
     const session = JSON.parse(fs.readFileSync(SESSION_FILE, 'utf-8'));
     session.restoredAt = new Date().toISOString();
-    fs.writeFileSync(SESSION_FILE, JSON.stringify(session, null, 2));
+    writeJSON(SESSION_FILE, session);
 
     console.log(`Session restored: ${session.id}`);
     return session;
@@ -67,7 +71,7 @@ const commands = {
 
     // Archive session
     const archivePath = path.join(SESSION_DIR, `${session.id}.json`);
-    fs.writeFileSync(archivePath, JSON.stringify(session, null, 2));
+    writeJSON(archivePath, session);
     fs.unlinkSync(SESSION_FILE);
 
     console.log(`Session ended: ${session.id}`);
@@ -103,7 +107,7 @@ const commands = {
     const session = JSON.parse(fs.readFileSync(SESSION_FILE, 'utf-8'));
     session.context[key] = value;
     session.updatedAt = new Date().toISOString();
-    fs.writeFileSync(SESSION_FILE, JSON.stringify(session, null, 2));
+    writeJSON(SESSION_FILE, session);
 
     return session;
   },
@@ -124,20 +128,27 @@ const commands = {
     const session = JSON.parse(fs.readFileSync(SESSION_FILE, 'utf-8'));
     if (session.metrics[name] !== undefined) {
       session.metrics[name]++;
-      fs.writeFileSync(SESSION_FILE, JSON.stringify(session, null, 2));
+      writeJSON(SESSION_FILE, session);
     }
 
     return session;
   },
 };
 
-// CLI
-const [,, command, ...args] = process.argv;
+for (const name of ['start', 'restore', 'end', 'update', 'metric']) {
+  const mutate = commands[name];
+  commands[name] = (...args) => withStateLock(DATA_DIR, () => mutate(...args));
+}
 
-if (command && commands[command]) {
-  commands[command](...args);
-} else {
-  console.log('Usage: session.js <start|restore|end|status|update|metric> [args]');
+// CLI (imports have no side effects).
+if (require.main === module) {
+  const [,, command, ...args] = process.argv;
+
+  if (command && commands[command]) {
+    commands[command](...args);
+  } else {
+    console.log('Usage: session.js <start|restore|end|status|update|metric> [args]');
+  }
 }
 
 module.exports = commands;

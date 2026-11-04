@@ -39,9 +39,9 @@
     ]
   },
   "scheduled": [
-    {"name": "morning", "plist": "scheduled/launchd/io.<ORG-A>.mogging.morning.plist"},
-    {"name": "nightly", "plist": "scheduled/launchd/io.<ORG-A>.mogging.nightly.plist"},
-    {"name": "weekly", "plist": "scheduled/launchd/io.<ORG-A>.mogging.weekly.plist"},
-    {"name": "health", "plist": "scheduled/launchd/io.<ORG-A>.mogging.health.plist"}
+    {"name": "morning", "plist": "scheduled/launchd/io.lorecraft.mogging.morning.plist"},
+    {"name": "nightly", "plist": "scheduled/launchd/io.lorecraft.mogging.nightly.plist"},
+    {"name": "weekly", "plist": "scheduled/launchd/io.lorecraft.mogging.weekly.plist"},
+    {"name": "health", "plist": "scheduled/launchd/io.lorecraft.mogging.health.plist"}
   ]
 }
