@@ -158,6 +158,6 @@ Once `/import-claude` or `/import-notes` finishes, run these in order:
 
 1. `/tether` — audits bidirectional project links and fixes orphans.
 2. `/connect` — proposes `[[wikilinks]]` between notes that share concepts but don't link yet.
-3. `/wiki audit` — writes a dated audit report to `03-Index/audit-YYYY-MM-DD.md` so you can see what still needs a human pass.
+3. `/wiki audit` — writes a dated audit report to `01-Projects/VAULT/conversations/reports/audit-YYYY-MM-DD.md` so you can see what still needs a human pass.
 
 This replaces the old monolithic "wire the vault" step with three targeted skills you can run on demand.

@@ -147,7 +147,7 @@ cd 2ndBrain-mogging
 | `--with-memory` | off | Turn on the memory tier for this vault. See [Memory tier](#memory-tier-opt-in) below. |
 | `--skip-tests` | off | Skip the onboarding test suite at the end. |
 | `--merge-stop` | off | Replace the existing Stop hook instead of jq-merging onto it. |
-| `--no-seed-vault` | off | Skip seeding the 5-folder vault layout from `vault-template/`. By default the installer copies in any of `01-Projects/{example-project-1, example-project-2, example-project-3, INCUBATOR, MISC, VAULT}/`, `02-Library/{people, tools, ideas, sources}/`, `03-Index/Projects-Index.md`, `04-Tasks/`, `Claude-Memory/`, `CLAUDE.md`, `AGENTS.md`, `SOUL.md` that are missing. Existing files are never overwritten. |
+| `--no-seed-vault` | off | Skip seeding the 5-folder vault layout from `vault-template/`. By default the installer copies in any of `01-Projects/{example-project-1, example-project-2, example-project-3, INCUBATOR, MISC, VAULT}/`, `02-Library/{people, tools, ideas, sources}/`, `03-Index/{Index, Projects-Index}.md`, `04-Tasks/TASKS.md`, `Claude-Memory/`, `CLAUDE.md`, `AGENTS.md`, `SOUL.md` that are missing. Existing files are never overwritten. |
 | `--with-intelligence` | off | Install the self-learning tier. See [Self-learning tier](#self-learning-tier-opt-in) below. |
 | `--symlink` | off | With `--with-intelligence`: symlink helpers instead of hardlinking. |
 
@@ -398,7 +398,7 @@ Run these three in order (they're all quick):
 ```
 /tether        # audit and fix bidirectional project-note links
 /connect       # propose wikilinks between notes that share concepts
-/wiki audit    # write a dated audit report to 03-Index/audit-YYYY-MM-DD.md
+/wiki audit    # write a dated audit report to 01-Projects/VAULT/conversations/reports/audit-YYYY-MM-DD.md
 ```
 
 That's it. Your vault is wired.
