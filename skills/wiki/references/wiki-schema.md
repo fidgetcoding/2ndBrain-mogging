@@ -23,16 +23,33 @@ The vault follows the operator's stripped operator layout. The plugin treats eac
 
 | Folder | Role | Primary writer | Secondary writers | Constraints |
 |---|---|---|---|---|
-| `01-Projects/<PROJECT>/conversations/` (post-2026-05-08; `01-Projects/<PROJECT>/conversations/` was retired) | Conversation captures, daily notes, scheduled-agent reports, interactive `/wiki audit` output | `save` (branches 1–3), `wiki` (`audit` branch) | `agents/morning`, `agents/nightly`, `agents/weekly`, `agents/health` | Append-only per file. All audit and daily reports — interactive or scheduled — live under `01-Projects/VAULT/conversations/reports/` (`audit-YYYY-MM-DD.md`, `daily-YYYY-MM-DD.md`, `weekly-YYYY-WW.md`, `health-YYYY-MM-DD.md`). Scheduled agents write here and nowhere else. |
-| `02-Sources/` | Source-of-truth notes for external content (articles, videos, transcripts, emails) | `save` (branch 2 `--source`), `autoresearch` | `wiki` (heal only) | Each file must carry `source_url` + `source_type` + `captured` in frontmatter. Body is summary; raw fetched text lives in a `> [!source]` callout or a fenced block. |
-| `03-Concepts/` | Refined atomic concept notes | `wiki` | `save` (branch 3, type `p`), `emerge` | One concept per file. Must have ≥1 inbound from a `02-Sources/` note and ≥1 outbound to `04-Index/`. `needs_review: true` on first write; promoted by `wiki` once it has 3+ inbound links. |
-| `04-Index/` | Maps of content (MOCs), hub pages, topic indexes | `wiki`, `tether` | `emerge` (weekly only) | Never append freeform text — only link lists + terse one-liners. Must list every concept in its topic cluster; `tether` fails the graph audit if an `03-Concepts/` note has no MOC entry. |
-| `01-Projects/` | Project hubs mirroring Claude Projects | `save` (branches 1–3), `tether` | `wiki` (heal only) | Each project folder has an index note where filename matches folder name (`FOO/FOO.md`, never `FOO-Index.md`). Bidirectional links up to `04-Index/Projects-Index.md` are mandatory. |
+| `01-Projects/<PROJECT>/conversations/` (post-2026-05-08; `01-Projects/<PROJECT>/conversations/` was retired) | Conversation captures, daily notes, scheduled-agent reports, interactive `/wiki audit` output | `save` (branches 1–3), `wiki` (`audit` branch) | `agents/morning`, `agents/nightly`, `agents/weekly`, `agents/health` | Append-only per file. A conversation that belongs to no single project goes to the catch-all project's `conversations/` (the `aliases.yaml` project whose aliases include `catch-all`; `01-Projects/MISC/` when none does). Conversations never go in `02-Library/`, and the old `LIT-conversation-*` mirror in `02-Sources/` is retired. All audit and daily reports — interactive or scheduled — live under `01-Projects/VAULT/conversations/reports/` (`audit-YYYY-MM-DD.md`, `daily-YYYY-MM-DD.md`, `weekly-YYYY-WW.md`, `health-YYYY-MM-DD.md`). Scheduled agents write here and nowhere else. |
+| `01-Projects/<PROJECT>/notes/` | Everything written for one project, including sources tied to that project | `save` (branch 2 `--source`), `wiki` (`add`) | `autoresearch` | A source tied to one project lives here, not in the Library, and keeps `type: source` with the same frontmatter as `02-Library/sources/`. |
+| `02-Library/sources/` | Source-of-truth notes for external content no single project owns (articles, videos, transcripts, emails) | `save` (branch 2 `--source`), `autoresearch`, `wiki` (`add`) | `wiki` (heal only) | Cross-project only. Filename `SRC-<YYYY-MM-DD>-<slug>.md` or `LIT-<slug>.md`. Each file must carry `source_url` + `source_type` + `captured` in frontmatter. Body is summary; raw fetched text lives in a `> [!source]` callout or a fenced block. |
+| `02-Library/ideas/` | Refined atomic idea notes (what `03-Concepts/` held) | `wiki` | `save` (branch 3, type `p`), `emerge` | One idea per file, `type: concept`. Must have ≥1 inbound from a source (`02-Library/sources/` or a project's `notes/`) and ≥1 outbound to `04-Index/`. `needs_review: true` on first write; promoted by `wiki` once it has 3+ inbound links. |
+| `02-Library/people/`, `02-Library/tools/` | One note per person; one note per tool, app, service, model or library | `wiki` | `save` (branch 3), `aliases` (read only) | `type: concept` plus tag `person` or `tool`. Same link minimum as `ideas/`. Cross-project only: a person or tool that matters to one project is described in that project's notes. |
+| `04-Index/` | Maps of content (MOCs), hub pages, topic indexes | `wiki`, `tether` | `emerge` (weekly only) | Maps only: link lists + terse one-liners. Never reports, audits, logs or dailies. Must list every idea in its topic cluster; `tether` fails the graph audit if a `02-Library/ideas/` note has no MOC entry. |
+| `01-Projects/` | Project hubs mirroring Claude Projects | `save` (branches 1–3), `tether` | `wiki` (heal only) | Each project folder has an index note where filename matches folder name (`FOO/FOO.md`, never `FOO-Index.md`), plus `conversations/`, `notes/` and `assets/` (images, PDFs, media, no code) as needed. Bidirectional links up to `04-Index/Projects-Index.md` are mandatory. |
 | `05-Tasks/` | Obsidian Tasks plugin files + inline tasks | `save` (UUID-preserving edits only) | none | `/wiki` and `/autoresearch` are FORBIDDEN from writing here. `/save` is edit-safe only with strict UUID preservation (§5). No agent writes here. |
 | `Claude-Memory/` (vault root) | Plugin working state: aliases, ADRs, manifests, hot context | `aliases`, `save` (ADR branch + backfill manifest), `emerge` (hot.md) | `agents/morning` (hot.md prime) | Not user-facing notes — treat as config. `aliases.yaml` is the canonical alias source; `adr/` holds ADRs; `backfill-manifest.jsonl` is append-only. |
 | `.obsidian/` (root sidecar) | Obsidian app config | none (user-owned) | none | Forbidden path (§8). |
 | `CLAUDE.md` (vault root) | Vault instructions for Claude Code | user | `wiki` (append-only to "Updated rules" section) | Never rewritten wholesale. New rules are appended with a date heading. |
 | `README.md` (vault root) | Human-readable vault overview | user | `wiki` (heal only, edit existing sections) | Never created by a skill if absent — warn instead. |
+
+The 03 slot is empty on purpose. `04-Index/` and `05-Tasks/` keep their numbers; `05-Tasks/` because the n8n sync is wired to that path.
+
+### Retired folders (read if present, never write)
+
+`00-Inbox/`, `01-Fleeting/`, `02-Literature/`, `02-Sources/`, `03-Concepts/`, `03-Permanent/`, `04-MOC/`, `05-Templates/`, `06-Assets/` and `00-Captures/` are retired. A skill may read a retired folder that a legacy vault still has (grandfathered), and never writes there; `bin/lib/vault-gate.sh` refuses the write. Library v2 (2026-11-05) retired the last two content folders:
+
+| Legacy folder | Moves to | Notes |
+|---|---|---|
+| `02-Sources/` | `02-Library/sources/` | `LIT-conversation-*` mirrors move with the rest; no new ones are written. |
+| `03-Concepts/` | `02-Library/ideas/` | People and tools get sorted into `people/` and `tools/` later, by the user or a `/wiki heal` proposal. |
+| `02-Literature/` | `02-Library/sources/` | Older rename, same destination today. |
+| `03-Permanent/` | `02-Library/ideas/` | Older rename, same destination today. |
+
+`scripts/migrate-to-library.sh` does the `02-Sources/` and `03-Concepts/` move (dry run by default, `--apply` to act). Wikilinks are by basename, so the move breaks no links.
 
 ## 2. Three non-negotiables
 
@@ -48,8 +65,8 @@ These override every skill-local policy. A skill that skips one of these must be
 
 Graph density is the product. Each rule below exists to prevent an orphan.
 
-- **Wikilinks only.** Always `[[Note Name]]` or `[[Note Name|Alias]]`. Never raw vault paths (`02-Sources/2026-04-16-uri.md`) in body text — Obsidian renders them but they break on rename.
-- **Inbound + outbound minimum.** Every new concept page (anything written into `03-Concepts/`) needs at least one inbound wikilink from its source(s) AND at least one outbound wikilink to a `04-Index/` MOC. Zero-inbound or zero-outbound concept pages fail `/wiki audit` and get flagged in the nightly report.
+- **Wikilinks only.** Always `[[Note Name]]` or `[[Note Name|Alias]]`. Never raw vault paths (`02-Library/sources/SRC-2026-04-16-uri.md`) in body text — Obsidian renders them but they break on rename. Never write a path-style link into a retired folder.
+- **Inbound + outbound minimum.** Every new idea, person or tool page (anything written into `02-Library/ideas/`, `people/` or `tools/`) needs at least one inbound wikilink from its source(s) (in `02-Library/sources/` or a project's `notes/`) AND at least one outbound wikilink to a `04-Index/` MOC. Zero-inbound or zero-outbound pages fail `/wiki audit` and get flagged in the nightly report.
 - **50/50 ambiguity.** If alias classification scores the top two candidates within 10% of each other, the content is ambiguous. Primary file is written to the higher-confidence target with full content. Stub file is written at the secondary target with `stub_of: "[[primary]]"` in frontmatter and a one-line body: `> See [[primary-basename]] — classification was 50/50. Resolved to primary on {{date}}.` Both files carry tag `#ambiguous-routing` so they can be reviewed via query. See §9 for the full rule.
 - **Dead-link handling.** When `/wiki heal` or any audit detects a wikilink target that does not resolve (file removed, renamed without update), the link is rewritten to `~~[[orphaned-target]]~~ <!-- dead: YYYY-MM-DD -->` — strike-through in Obsidian rendering plus an HTML comment carrying the detection date. The comment lets us diff history. Never remove the link itself without flagging it for human review — removal is a human-only action.
 - **Rename propagation.** If a skill renames a note, it MUST grep the vault for all `[[old-name]]` references and update them in the same commit. An unupdated reference is a bug, not a "nice to have".
@@ -75,7 +92,7 @@ aliases: ["Alt Name 1", "Alt Name 2"]       # list, used by Obsidian link autoco
 
 ### Per-type additions
 
-**type: source** (goes to `02-Sources/`)
+**type: source** (goes to `02-Library/sources/`, or to the project's `notes/` when one project owns it)
 
 ```yaml
 source_url: "https://example.com/article"   # required; use [REDACTED] for private Slack etc.
@@ -85,7 +102,7 @@ last_confirmed: 2026-04-16                  # last date a human verified the URL
 author: "Name or @handle"                   # optional; use "unknown" if not attributable
 ```
 
-**type: concept** (goes to `03-Concepts/`)
+**type: concept** (goes to `02-Library/ideas/`; people and tools go to `02-Library/people/` and `02-Library/tools/` with tag `person` or `tool`)
 
 ```yaml
 last_confirmed: 2026-04-16                  # required; used by /wiki audit staleness check
@@ -109,7 +126,7 @@ bi-temporal:                     # dated claims, written by `memory record`, ans
 
 These apply to `type: concept` and `type: synthesis` only, the same two types `source_of_truth` applies to. Decay is a date rule and no more; `PHILOSOPHY.md` has the full list of what it doesn't do.
 
-**type: synthesis** (cross-concept rollups, also in `03-Concepts/` or `04-Index/`)
+**type: synthesis** (cross-concept rollups, also in `02-Library/ideas/` or `04-Index/`)
 
 ```yaml
 answers_question: "What is the cheapest path from X to Y?"    # the question this note resolves
@@ -262,6 +279,6 @@ When alias scoring produces two top candidates within 10% of each other, the con
 - Frontmatter includes `stub_of: "[[primary-basename]]"` plus the same `#ambiguous-routing` tag.
 - No further content. No auto-promotion. Stub stays stub until a human upgrades it with `/save` branch 2 + explicit destination.
 
-Both files are surfaced in the dry-run preview table so the user can override with `edit` before writing. If the secondary candidate scores below 30% confidence, the 50/50 rule does NOT fire — instead, the skill routes to `02-Sources/` with a TODO (the pre-mogging `00-Inbox/` was killed on 2026-04-16). Stubbing random weak candidates adds noise, not signal.
+Both files are surfaced in the dry-run preview table so the user can override with `edit` before writing. If the secondary candidate scores below 30% confidence, the 50/50 rule does NOT fire — instead, the skill routes to the catch-all project (`01-Projects/MISC/` unless `aliases.yaml` names another) with a TODO, never to `02-Library/` (the pre-mogging `00-Inbox/` was killed on 2026-04-16). Stubbing random weak candidates adds noise, not signal.
 
 End of `wiki-schema.md`. Any skill contradicting this file is the bug; fix the skill.

@@ -9,7 +9,8 @@ writes:
 reads:
   - 01-Projects/VAULT/conversations/reports/audit-*.md
   - 01-Projects/VAULT/conversations/reports/daily-*.md
-  - 03-Concepts/**/*.md
+  - 02-Library/**/*.md
+  - 03-Concepts/**/*.md  # legacy, read-only, only while a vault still has it
   - 04-Index/**/*.md
   - Claude-Memory/lint-counter.json
 ---
@@ -31,7 +32,7 @@ Collect the past 7 days of signal:
 
 Invoke the `emerge` skill in audit-only mode (no writes to concept notes — weekly agent is still read-only to the knowledge graph). `emerge` produces:
 
-- **New concepts** committed this week with their inbound/outbound counts.
+- **New concepts** committed this week to `02-Library/` (`ideas/`, `people/`, `tools/`) with their inbound/outbound counts.
 - **Killed ideas** — notes marked `status: archived` or deleted (detected via `git log --diff-filter=D`).
 - **Contradictions surfaced** — pairs of concepts whose bodies disagree on a fact, detected by the `challenge` skill's contradiction index.
 - **Rising topics** — tags that appeared ≥3 times this week vs. ≤1 time the prior week.

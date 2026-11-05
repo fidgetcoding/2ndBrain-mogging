@@ -57,7 +57,7 @@ All writes emit valid JSON Canvas 1.0:
 {
   "nodes": [
     { "id": "text-note-1712345678", "type": "text", "x": 0, "y": 0, "width": 300, "height": 120, "text": "...", "color": "4" },
-    { "id": "file-concept-1712345679", "type": "file", "x": 340, "y": 0, "width": 300, "height": 100, "file": "03-Concepts/concept.md" },
+    { "id": "file-concept-1712345679", "type": "file", "x": 340, "y": 0, "width": 300, "height": 100, "file": "02-Library/ideas/concept.md" },
     { "id": "group-zone-1712345680", "type": "group", "x": -20, "y": -40, "width": 1000, "height": 400, "label": "Research", "color": "3" }
   ],
   "edges": [

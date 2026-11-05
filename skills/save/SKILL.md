@@ -55,6 +55,7 @@ Classification procedure:
 2. Score each alias by (a) exact-name hit, (b) substring hit, (c) frontmatter-tag overlap, (d) co-occurrence with already-confirmed keys in the same chunk.
 3. Weight with `confidence_boost`.
 4. Return the top candidate plus any candidate with score within 10% of the top — these become the ambiguity set.
+5. If nothing scores, the destination is the catch-all project: the `Claude-Memory/aliases.yaml` project entry whose `aliases` list includes "catch-all"; if no entry has it, `01-Projects/MISC/`. Content never falls through to `02-Library/`, which holds cross-project reference only.
 
 ### The 50/50 wikilink rule
 
@@ -117,10 +118,11 @@ Behavior:
 3. Auto-commit if no flags fire (§3 auto-commit rule); else prompt `y/n/edit`.
 4. On write — choose path by classification (post-2026-05-08 conversations-into-projects restructure):
    - **Project-tied** (alias resolves to a single `01-Projects/<PROJECT>/`): write the full transcript to `01-Projects/<PROJECT>/conversations/[<sub>/]<YYYY-MM-DD>-<slug>.md`. **No pointer, no LIT mirror** — the project folder is the sole source of truth. If the project has substructure (e.g. `<ORG-B>/<PROJECT-A>/`, `<ORG-A>/career/`), mirror it under `conversations/` (Pattern A flat).
-   - **Cross-cutting** (no single project owner — multi-project strategy threads, generic dictation, vault-spanning topics): write to `02-Sources/LIT-conversation-<slug>-<date>.md`. LIT is reserved for cross-cutting captures only.
+   - **Cross-cutting** (no single project owner — multi-project strategy threads, generic dictation, vault-spanning topics): write to the catch-all project's `conversations/[<sub>/]<YYYY-MM-DD>-<slug>.md`. The catch-all is the `Claude-Memory/aliases.yaml` project entry whose `aliases` list includes "catch-all"; if no entry has it, `01-Projects/MISC/` (so `01-Projects/MISC/conversations/` by default). Conversations never go in `02-Library/`.
    - **Vault-meta** (vault architecture sessions, graph repairs, mogging-pack-dev work, scheduled-agent reports): write to `01-Projects/VAULT/conversations/[<sub>/]<YYYY-MM-DD>-<slug>.md`. Subfolders: `architecture-sessions/`, `graph-repairs/`, `mogging-pack-dev/`, `reports/`.
    - **Meeting-style captures** (Granola transcripts, multi-stakeholder calls): optionally route under `<PROJECT>/conversations/meetings/` for tighter organization.
    - The pre-2026-05-08 dual-write pattern (full transcript in LIT + pointer stub in `01-Conversations/`) is retired. `01-Conversations/` no longer exists.
+   - The `02-Sources/LIT-conversation-*` mirror for cross-cutting captures is retired too (Library v2, 2026-11-05). Write no new mirrors. Existing ones are grandfathered and move to `02-Library/sources/` with the rest of `02-Sources/` when `scripts/migrate-to-library.sh` runs.
 
 **Q&A tree (only on `/save 1 --ask`):**
 
@@ -151,7 +153,12 @@ related: [[<alias destinations as wikilinks>]]
 ## 6. Branch 3 — Dictated note
 
 1. "Is this a fleeting thought, a source-style capture, or a permanent atomic note? (f/l/p)"
-2. Based on answer, route to `02-Sources/` (for `f` and `l`) or `03-Concepts/` (for `p`) with the corresponding filename convention from `CLAUDE.md` (never the root). The pre-mogging `01-Fleeting/` and `03-Permanent/` folders were killed during the 2026-04-16 mogging refactor — fleeting thoughts now land in `02-Sources/` alongside other source notes. Source captures use `type: source`; concept captures use `type: concept` (per `docs/PARSING-GUIDE.md` decision table — the canonical type set is `source | concept | index | conversation | adr | synthesis`).
+2. Based on answer, route with the corresponding filename convention from `CLAUDE.md` (never the root):
+   - `f` (fleeting thought) → the classified project's `01-Projects/<PROJECT>/notes/`, or the catch-all project's `notes/` when nothing matches.
+   - `l` (source-style capture) → the project's `notes/` when the source is tied to one project, else `02-Library/sources/`.
+   - `p` (permanent atomic note) → `02-Library/ideas/` (`02-Library/people/` or `tools/` when it is about one person or one tool, tagged `person` / `tool`).
+
+   The pre-mogging `01-Fleeting/` and `03-Permanent/` folders were killed during the 2026-04-16 mogging refactor. On 2026-11-05 `02-Sources/` and `03-Concepts/` merged into `02-Library/` (Library v2); never write into either. Source captures use `type: source`; concept captures use `type: concept` (per `docs/PARSING-GUIDE.md` decision table — the canonical type set is `source | concept | index | conversation | adr | synthesis`).
 3. Still run alias classification on the content to propose `related: []` wikilinks in frontmatter. Show them in the preview so the user can accept/edit.
 
 ## 7. Branch 4 — ADR
@@ -272,13 +279,14 @@ Backfill commits use `[bot:save --backfill]` as the prefix so they're still W1-t
 | Failure                                                | Detection                                | Recovery                                                                 |
 |--------------------------------------------------------|------------------------------------------|--------------------------------------------------------------------------|
 | `aliases.yaml` missing or malformed                    | YAML parse error, file not found         | Abort before any write; print path + parse error; suggest `/wiki add` to create initial alias set. |
-| Destination file exists but is owned by a human (frontmatter `owner: human`) | Read frontmatter before write | Skip write, route to `02-Sources/save-blocked-2026-04-16-<slug>.md` instead (the pre-mogging `00-Inbox/` was killed), and note the block in the commit. |
+| Destination file exists but is owned by a human (frontmatter `owner: human`) | Read frontmatter before write | Skip write, route to the catch-all project's `notes/save-blocked-2026-04-16-<slug>.md` instead (default `01-Projects/MISC/notes/`; the pre-mogging `00-Inbox/` was killed), and note the block in the commit. |
 | Secret detected in content                             | Regex panel §9                           | Redact inline, add warning row in preview, continue.                     |
 | Secret detected in commit message                      | Regex panel §9                           | Redact in message, print a warning, continue.                            |
 | UUID missing on an existing task                       | Task regex with no `🆔` token            | Leave it off. W1 mints one on its next sync. |
 | User picks `n` at the preview                          | Explicit abort                           | Exit cleanly; no partial writes; no commit.                              |
 | Write to forbidden path (`.env`, `.git/`, `node_modules`, root `CLAUDE.md`) | Path allowlist check | Hard-refuse, print the blocked path, suggest a legal sibling.            |
-| 50/50 ambiguity with NO second candidate above 30% confidence | Score threshold | Fall through to `02-Sources/` with a TODO note (the pre-mogging `00-Inbox/` was killed); do NOT stub a random second file. |
+| Write into a retired folder (`02-Sources/`, `03-Concepts/`, or the older killed list) | Path check (the gate exits 3) | Hard-refuse; the `02-Library/` subfolder or project `notes/` is the legal sibling. Point the operator at `scripts/migrate-to-library.sh` if legacy folders still exist. |
+| 50/50 ambiguity with NO second candidate above 30% confidence | Score threshold | Fall through to the catch-all project (default `01-Projects/MISC/`) with a TODO note, never `02-Library/` (the pre-mogging `00-Inbox/` was killed); do NOT stub a random second file. |
 | Backfill manifest corrupt                              | JSONL parse fail on `--resume`          | Move corrupt manifest to `.bak`, refuse to proceed without explicit `--force-reindex`. |
 
 ## 14. Non-goals (explicitly out of scope)

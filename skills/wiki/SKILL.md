@@ -1,6 +1,6 @@
 ---
 name: wiki
-description: Add, audit, heal, and find across the 2ndBrain Obsidian vault. Single skill with four branches — ADD ingests sources (URL/file/paste/YouTube/PDF) into the 02-Sources → 03-Concepts → 04-Index pipeline with discuss-before-write; AUDIT is read-only integrity scan; HEAL applies safe repairs on a dry-run branch; FIND is semantic retrieval with wikilink-cited synthesis. Never writes owner:human files, never touches 01-Projects/*/index or 05-Tasks/.
+description: Add, audit, heal, and find across the 2ndBrain Obsidian vault. Single skill with four branches — ADD ingests sources (URL/file/paste/YouTube/PDF) into the 02-Library (sources → ideas/people/tools) → 04-Index pipeline with discuss-before-write; AUDIT is read-only integrity scan; HEAL applies safe repairs on a dry-run branch; FIND is semantic retrieval with wikilink-cited synthesis. Never writes owner:human files, never touches 01-Projects/*/index or 05-Tasks/.
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash
 hooks:
   PreToolUse:
@@ -55,7 +55,7 @@ Intake accepts any of: a URL, a local file path, a pasted blob, a YouTube URL, a
    - YouTube → `mcp__yt-dlp__ytdlp_download_transcript` + `mcp__yt-dlp__ytdlp_get_video_metadata`.
    - PDF → `Read` with `pages:` if >10 pages, else single read.
    - Pasted blob → use as-is.
-2. **Save to `02-Sources/`** with filename `SRC-<YYYY-MM-DD>-<slug>.md`. Frontmatter:
+2. **Save the source page** with filename `SRC-<YYYY-MM-DD>-<slug>.md`. A source that belongs to no single project goes to `02-Library/sources/` (the `bin/wiki add` default). A source tied to one project goes to that project's `01-Projects/<PROJECT>/notes/` and keeps `type: source`. Never write into the retired `02-Sources/` or `03-Concepts/`; the gate refuses them with exit 3. Frontmatter:
    ```yaml
    ---
    title: "<original title>"
@@ -74,7 +74,7 @@ Intake accepts any of: a URL, a local file path, a pasted blob, a YouTube URL, a
    - Entities (named things: people, companies, products). Use regex + heuristics for proper nouns; cross-check against `Claude-Memory/aliases.yaml`.
    - Concepts (ideas, techniques, frameworks). Maintain an internal scorer: multi-word noun phrases that repeat ≥ 2× inside the source.
    - Claims (testable assertions). Each claim = `{text, confidence, supports_or_refutes: <existing_claim_id?>}`.
-4. **Cross-reference `03-Concepts/`.** `Glob` for existing concept pages; match by frontmatter `aliases:` list before filename slug. This is CRITICAL — re-creating a slightly-differently-named page is the #1 graph-pollution failure.
+4. **Cross-reference `02-Library/ideas/`, `people/` and `tools/`.** `Glob` for existing concept pages; match by frontmatter `aliases:` list before filename slug. In a legacy vault that still has `03-Concepts/`, read it too (grandfathered, read-only) and point the operator at `scripts/migrate-to-library.sh`. This is CRITICAL — re-creating a slightly-differently-named page is the #1 graph-pollution failure.
 5. **DISCUSS BEFORE WRITE.** This is the defining ADD-branch rule. Before any preview table, print:
    ```
    I read this source. Here are the 3–5 takeaways I'd encode:
@@ -89,16 +89,16 @@ Intake accepts any of: a URL, a local file path, a pasted blob, a YouTube URL, a
    The skill then WAITS. This is not optional. If the user says "skip 3", that takeaway does NOT become a concept page update. If the user says "emphasize 2", that takeaway's concept page gets a prominent lede block instead of a buried bullet.
 6. **Dry-run preview table.** After the user types `ok`, print the standard preview:
    ```
-   ┌────────────────────────────────────────────┬──────────────────────────────────────────────────────┬─────────┐
-   │ Write                                      │ Path                                                 │ Op      │
-   ├────────────────────────────────────────────┼──────────────────────────────────────────────────────┼─────────┤
-   │ Source page                                │ 02-Sources/SRC-2026-04-16-<person-e>-morgen-mcp.md   │ create  │
-   │ Concept: "first-party MCP"                 │ 03-Concepts/first-party-mcp.md                       │ update  │
-   │ Concept: "rate limit 300/15min"            │ 03-Concepts/morgen-rate-limit.md                     │ create  │
-   │ Entity: "<PERSON-E>"                       │ 03-Concepts/<person-e>.md                            │ create  │
-   │ Index update                               │ 04-Index/Index.md                                    │ append  │
-   │ Log entry                                  │ 04-Index/log.md                                      │ append  │
-   └────────────────────────────────────────────┴──────────────────────────────────────────────────────┴─────────┘
+   ┌────────────────────────────────────────────┬────────────────────────────────────────────────────────────┬─────────┐
+   │ Write                                      │ Path                                                       │ Op      │
+   ├────────────────────────────────────────────┼────────────────────────────────────────────────────────────┼─────────┤
+   │ Source page                                │ 02-Library/sources/SRC-2026-04-16-<person-e>-morgen-mcp.md │ create  │
+   │ Concept: "first-party MCP"                 │ 02-Library/ideas/first-party-mcp.md                        │ update  │
+   │ Concept: "rate limit 300/15min"            │ 02-Library/ideas/morgen-rate-limit.md                      │ create  │
+   │ Entity: "<PERSON-E>"                       │ 02-Library/people/<person-e>.md                            │ create  │
+   │ Index update                               │ 04-Index/Index.md                                          │ append  │
+   │ Log entry                                  │ log.md                                                     │ append  │
+   └────────────────────────────────────────────┴────────────────────────────────────────────────────────────┴─────────┘
 
    Git branch: wiki-add/2026-04-16-<person-e>-morgen-mcp
    Expected touch count: 10–15 pages
@@ -108,7 +108,7 @@ Intake accepts any of: a URL, a local file path, a pasted blob, a YouTube URL, a
 
 ### 3.2 Source page shape (factual-only)
 
-Source pages (`02-Sources/`) are strictly evidence. No interpretation, no opinion, no synthesis. The shape is fixed:
+Source pages (`02-Library/sources/`, or a project's `notes/`) are strictly evidence. No interpretation, no opinion, no synthesis. The shape is fixed:
 
 ```markdown
 ---
@@ -138,7 +138,9 @@ Source pages (`02-Sources/`) are strictly evidence. No interpretation, no opinio
 <optional: bullet dump of other notable quotes or data points>
 ```
 
-Interpretation, synthesis, and the operator-voice live in concept pages (`03-Concepts/`). Source pages are the audit trail. (The pre-mogging `03-Permanent/` folder was collapsed into `03-Concepts/` during the 2026-04-16 refactor.)
+Interpretation, synthesis, and the operator-voice live in concept pages (`02-Library/ideas/`, plus `people/` and `tools/` for entities). Source pages are the audit trail. (The pre-mogging `03-Permanent/` folder was collapsed into `03-Concepts/` during the 2026-04-16 refactor. On 2026-11-05 `02-Sources/` and `03-Concepts/` merged into `02-Library/` (Library v2).)
+
+Where an entity page goes: a person → `02-Library/people/` with tag `person`; a tool, app, service, model or library → `02-Library/tools/` with tag `tool`; anything else → `02-Library/ideas/`. All three are `type: concept`. A new page in any of the three needs at least one inbound wikilink from a source (in `02-Library/sources/` or a project's `notes/`) and at least one outbound wikilink to a `04-Index/` map.
 
 ### 3.3 Concept page updates (prefer update)
 
@@ -156,7 +158,7 @@ If `Claude-Memory/memory-tier.yaml` exists, the vault has the memory tier on. Be
 ### 3.4 Index + log
 
 - `04-Index/Index.md` gets one new line per new concept or entity page, sorted into its topical section.
-- `04-Index/log.md` gets an append-only entry:
+- The vault-root `log.md` gets an append-only entry (`04-Index/` holds maps only, never logs):
   ```
   2026-04-16 ADD source=SRC-2026-04-16-<person-e>-morgen-mcp created=2 updated=3 branch=wiki-add/2026-04-16-<person-e>-morgen-mcp
   ```
@@ -171,8 +173,10 @@ AUDIT never writes except to a timestamped report. It scans:
 |-----------------------------|--------------------------------------------------------------------------------------------------------|
 | Contradictions              | Concept pages containing `## Contradictions` sections, or two pages making opposite claims about the same entity. |
 | Stale claims                | Any page whose `last_confirmed:` is older than 180 days.                                               |
-| Orphan pages                | Pages in `02-Sources/` or `03-Concepts/` with zero inbound wikilinks from elsewhere in the vault.      |
-| Missing concept pages       | Entities mentioned ≥ 3 times across `02-Sources/` with no page in `03-Concepts/`.                      |
+| Orphan pages                | Pages in `02-Library/` (any subfolder) with zero inbound wikilinks from elsewhere in the vault.        |
+| Missing concept pages       | Entities mentioned ≥ 3 times across `02-Library/sources/` and project `notes/` with no page in `02-Library/ideas/`, `people/` or `tools/`. |
+| Unmigrated legacy folders   | `02-Sources/` or `03-Concepts/` still exists. Read them as part of the scan (grandfathered, read-only) and flag: "run scripts/migrate-to-library.sh". |
+| Maps folder holds a report  | A file under `04-Index/` that is an audit, report, log or daily. Flag it; `04-Index/` is maps only. |
 | Dead wikilinks              | `[[foo]]` where no file `foo.md` (or alias-resolved target) exists.                                    |
 | Missing cross-refs          | Concept A references Concept B, but Concept B has no reverse mention of A.                             |
 | Index consistency           | `04-Index/Index.md` lists a page that no longer exists, or a page that exists but isn't in the index.  |
@@ -183,7 +187,7 @@ AUDIT never writes except to a timestamped report. It scans:
 Use `Glob` to enumerate files. Use `Grep` for wikilink/frontmatter extraction (multiline where needed for frontmatter). Do not instantiate an LLM call for any of the above — the detectors are deterministic regex + set-arithmetic on the link graph.
 
 Build two in-memory sets:
-- `pages = { basename → path, frontmatter, wikilinks_out }` for everything under `02-Sources/`, `03-Concepts/`, `04-Index/`.
+- `pages = { basename → path, frontmatter, wikilinks_out }` for everything under `02-Library/`, `04-Index/`, and project `notes/` folders (plus the legacy `02-Sources/` and `03-Concepts/` when they still exist).
 - `inbound = { basename → [paths that link to it] }` via inversion.
 
 ### 4.2 Output
@@ -230,6 +234,7 @@ HEAL is the only branch that mutates the graph outside ADD. It operates in dry-r
 | Create stub concept page                           | Entity mentioned ≥ 3× with no page                                         | Low   |
 | Wrap bare concept name in `[[wikilinks]]`          | Concept name appears unlinked in a page where the concept page exists      | Low   |
 | Mark page with `needs_review: true` in frontmatter | `last_confirmed:` older than 180 days                                      | None  |
+| Propose moving an `ideas/` note into `people/` or `tools/` | The note is tagged `person` or `tool`. Listed in the heal plan as a proposal; the `git mv` happens on the heal branch only, and wikilinks are by basename so nothing breaks | Low   |
 | Strike through dead wikilink text                  | `[[foo]]` where foo has no target                                          | Low   |
 | HTML-comment annotation on dead links              | Add `<!-- wiki: unresolved 2026-04-16 -->` adjacent to the struck link     | None  |
 
@@ -240,10 +245,11 @@ HEAL is the only branch that mutates the graph outside ADD. It operates in dry-r
 - Renaming pages (breaks every wikilink pointing at them; must be a deliberate human action).
 - Changing `owner: human` frontmatter.
 - Touching `01-Projects/*/<index>.md` or `05-Tasks/**`.
+- Writing into a retired folder (`02-Sources/`, `03-Concepts/`, or the older killed list). Moving legacy notes out is `scripts/migrate-to-library.sh`'s job, not HEAL's.
 
 ### 5.3 Stub pages
 
-A stub created by HEAL has the shape:
+A stub created by HEAL lands in `02-Library/ideas/` (or `people/` / `tools/` when the entity is clearly a person or a tool) and has the shape:
 
 ```markdown
 ---
@@ -312,7 +318,7 @@ FIND is semantic retrieval with transparent reasoning.
 5. **Offer to save.** Print:
    ```
    Save this synthesis as a permanent note? (y/n)
-   Default path: 03-Concepts/synth-<slug>-2026-04-16.md
+   Default path: 02-Library/ideas/synth-<slug>-2026-04-16.md
    ```
    If `y`, hand off to `/save` branch 3 (dictated note, type=permanent) with the synthesis pre-filled.
 
@@ -326,14 +332,14 @@ A critical FIND rule: the skill MUST NOT emit a `[[wikilink]]` to a page that is
 
 | Failure                                                | Detection                                | Recovery                                                                 |
 |--------------------------------------------------------|------------------------------------------|--------------------------------------------------------------------------|
-| Source URL returns 404 / paywalled                     | HTTP status                              | Record failure in `04-Index/log.md`, save captured paste/prompt text only, tag `source_status: unreachable`. |
+| Source URL returns 404 / paywalled                     | HTTP status                              | Record failure in the vault-root `log.md`, save captured paste/prompt text only, tag `source_status: unreachable`. |
 | Source is a YouTube URL with no transcript available   | yt-dlp returns empty                     | Offer to run whisper-mcp on the audio as fallback; require explicit `y`. |
 | Target concept page has `owner: human`                 | Frontmatter check before Edit            | Skip the Edit, write a sibling `-wiki.md` file, and link it from Evidence. |
 | `aliases.yaml` missing or malformed                    | YAML parse                                | Abort with clear error; suggest running ADD on a high-level alias source.|
 | ADD proposes > 20 touches                              | Preview count                            | Pause, ask user to confirm — likely a missed alias match.                 |
 | FIND embedding index stale (> 7d) or missing           | Mtime check / file absent                | Offer to rebuild; require explicit `y`; skip otherwise with WARN.        |
 | HEAL branch has unmerged predecessor                   | `git branch --list wiki-heal/*`          | Refuse to create a new HEAL branch until the old one is merged or deleted. |
-| AUDIT on a vault > 10k pages                           | Page count                                | Warn about runtime; offer to scope to `03-Concepts/` only by default.    |
+| AUDIT on a vault > 10k pages                           | Page count                                | Warn about runtime; offer to scope to `02-Library/ideas/` only by default. |
 | Source page write collides with an existing SRC file   | `Glob` match on slug                      | Append `-v2`, `-v3`, etc., and record the collision in log.              |
 | Dead link has a HEAL comment from > 30 days ago        | Regex on HTML comments                   | Escalate in next AUDIT as "long-unresolved"; flag for human review. Never remove the link without explicit human approval.|
 

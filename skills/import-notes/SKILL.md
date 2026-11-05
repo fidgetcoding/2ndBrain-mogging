@@ -1,6 +1,6 @@
 ---
 name: import-notes
-description: One-shot import of existing notes from Apple Notes, OneNote, Notion, Evernote, or raw files (docx/pptx/xlsx/html/rtf/md/txt) into the 2ndBrain-mogging vault. Converts non-markdown via pandoc + xlsx2csv, validates each file, classifies each note against the 7-folder layout, writes factual content to 02-Sources/, splits atomic ideas into 03-Concepts/, and tethers project-tied material into 01-Projects/. Alias-classified, dry-run-previewed.
+description: One-shot import of existing notes from Apple Notes, OneNote, Notion, Evernote, or raw files (docx/pptx/xlsx/html/rtf/md/txt) into the 2ndBrain-mogging vault. Converts non-markdown via pandoc + xlsx2csv, validates each file, classifies each note against the folder layout, writes cross-project sources to 02-Library/sources/, splits atomic ideas into 02-Library/ideas/, and tethers project-tied material into 01-Projects/<project>/notes/. Alias-classified, dry-run-previewed.
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash
 ---
 
@@ -20,7 +20,7 @@ One-shot ingest of a folder full of exported notes. Designed to run once per exp
 
 ## Pre-requisites
 
-1. A mogged vault (has `02-Sources/`, `03-Concepts/`, `01-Projects/`, and `CLAUDE.md` at its root).
+1. A mogged vault (has `01-Projects/`, `02-Library/`, and `CLAUDE.md` at its root). A legacy vault that still has `02-Sources/` and `03-Concepts/` should run `scripts/migrate-to-library.sh` first; this skill never writes into those retired folders.
 2. The notes already exported to a folder on disk.
 3. Helpers installed:
    - `pandoc` — converts `.docx` / `.pptx` / `.html` / `.rtf` / `.epub` → markdown
@@ -84,19 +84,19 @@ Each skip is logged with a reason.
 
 Apply the same alias lookup `/save` uses. Read `Claude-Memory/aliases.yaml`; for each note:
 
-- Title / body matches a known project alias → route to that project's folder in `01-Projects/<project>/<subfolder>/` or to `02-Sources/` with `related: [[<project>]]`.
-- Title / body matches a known person alias → store in `02-Sources/` with `related: [[<person>]]`.
-- No match → `02-Sources/` with `tags: [imported, review]` flagged for human triage.
+- Title / body matches a known project alias → route to that project's `01-Projects/<project>/notes/` (or an existing project subfolder) with `related: [[<project>]]`.
+- Title / body matches a known person alias → store in the person's home project `notes/` with `related: [[<person>]]`, or in `02-Library/sources/` when the person has no single home project. A note that is a profile of the person themselves goes to `02-Library/people/`.
+- No match → the catch-all project's `notes/` with `tags: [imported, review]` flagged for human triage. The catch-all is the `Claude-Memory/aliases.yaml` project entry whose `aliases` list includes "catch-all"; if no entry has it, `01-Projects/MISC/`. Never the Library.
 
 ### 5. Decide destination folder
 
 | If the note is… | Write it to… |
 |---|---|
-| A summary of an article, video, podcast, or external read | `02-Sources/SRC-<date>-<slug>.md` with `type: source` |
-| A summary of a conversation (including Claude / ChatGPT one-offs) | `02-Sources/LIT-conversation-<slug>-<date>.md` |
-| A refined, atomic idea in the user's voice | `03-Concepts/<slug>.md` with `owner: wiki` + `type: concept` |
-| Tied to a specific active project | `01-Projects/<project>/<subfolder>/<slug>.md` (NOT the project index file) |
-| Meeting notes, raw dumps, partially-formed | `02-Sources/SRC-<date>-<slug>.md` with `tags: [raw, triage]` |
+| A summary of an article, video, podcast, or external read | `02-Library/sources/SRC-<date>-<slug>.md` with `type: source`, or the project's `notes/` when it is tied to one project |
+| A summary of a conversation (including Claude / ChatGPT one-offs) | `01-Projects/<project>/conversations/<date>-<slug>.md`, or the catch-all project's `conversations/` when it spans projects. Never the Library; the old `LIT-conversation-*` mirror is retired |
+| A refined, atomic idea in the user's voice | `02-Library/ideas/<slug>.md` with `owner: wiki` + `type: concept` (`02-Library/people/` or `tools/` for a note about one person or one tool, tagged `person` / `tool`) |
+| Tied to a specific active project | `01-Projects/<project>/notes/<slug>.md` (NOT the project index file) |
+| Meeting notes, raw dumps, partially-formed | the matching project's `notes/` (catch-all project when nothing matches) with `tags: [raw, triage]` |
 | A task / todo | **Refuse to auto-write** — point the user at `05-Tasks/` and the Tasks-plugin UUID format |
 
 Never invent a folder that doesn't exist in `01-Projects/` without asking first.
@@ -122,7 +122,7 @@ Then the body — copy as-is for markdown sources, best-effort clean-up for pand
 
 ### 7. Spawn concept stubs
 
-For each kept note, look for 1-3 atomic ideas that could promote to `03-Concepts/`. Same rules as `/import-claude`:
+For each kept note, look for 1-3 atomic ideas that could promote to `02-Library/ideas/`. Same rules as `/import-claude`:
 
 - existing concept → append a reference, don't mutate
 - new concept → `owner: wiki` stub in the user's voice
@@ -141,11 +141,11 @@ Record each processed file path in `Claude-Memory/import-notes-state.json`. `--r
 
 Emit:
 
-- `N source notes written to 02-Sources/`
-- `M concept stubs created in 03-Concepts/`
-- `K project-tied notes written to 01-Projects/<project>/`
+- `N source notes written to 02-Library/sources/`
+- `M concept stubs created in 02-Library/ideas/`
+- `K project-tied notes written to 01-Projects/<project>/notes/`
 - `S concept references appended`
-- `R notes flagged for review (under 02-Sources/ with tags:[imported, review])`
+- `R notes flagged for review (under the catch-all project's notes/ with tags:[imported, review])`
 - `F files skipped` (empty, unreadable, over-size) — with reasons
 
 Tell the user to run `/tether` next so bidirectional project-note links settle, and `/connect` to surface any cross-concept wikilinks the import couldn't see.
@@ -154,6 +154,7 @@ Tell the user to run `/tether` next so bidirectional project-note links settle, 
 
 - **Never** overwrite an existing `owner: human` file.
 - **Never** write inside `01-Projects/<project>/<project>.md` directly.
+- **Never** write into a retired folder (`02-Sources/`, `03-Concepts/`, or the older killed list).
 - **Never** auto-create task files — tasks belong in `05-Tasks/` with the Obsidian Tasks plugin UUID format (see CLAUDE.md).
 - **Always** dry-run first. Require explicit `yes` before `--apply`.
 - **Always** scrub secrets before writing.

@@ -34,7 +34,7 @@ Do NOT auto-run `/emerge` inside another skill's pipeline except the scheduled a
 | `--scope <path>` | whole vault | Restrict to a single folder (e.g. `01-Projects/<ORG-E>`). |
 | `--min-cluster N` | 3 | Minimum file count for a cluster to be reported. Below this, treated as noise. |
 | `--audit` | off | Non-interactive mode for the scheduled weekly agent. Writes directly to the reports folder, no prompts. |
-| `--promote <pattern-id>` | — | Skip mining. Take a previously-identified cluster and promote it to a full `03-Concepts/<slug>.md` note. |
+| `--promote <pattern-id>` | — | Skip mining. Take a previously-identified cluster and promote it to a full `02-Library/ideas/<slug>.md` note. |
 
 ## Pipeline
 
@@ -122,7 +122,7 @@ Recency: median 4 days ago
 
 ### 7. Cross-reference existing concepts
 
-Before emitting a cluster, check `03-Concepts/` for overlapping notes (the pre-mogging `03-Permanent/` folder was collapsed into `03-Concepts/` on 2026-04-16). If a proposed pattern overlaps ≥70% with an existing concept:
+Before emitting a cluster, check `02-Library/ideas/`, `people/` and `tools/` for overlapping notes (the pre-mogging `03-Permanent/` folder was collapsed into `03-Concepts/` on 2026-04-16, and `03-Concepts/` merged into `02-Library/ideas/` on 2026-11-05; in a legacy vault that still has `03-Concepts/`, read it too). If a proposed pattern overlaps ≥70% with an existing concept:
 - Do NOT propose a new note.
 - Instead, label the cluster `[MERGE-CANDIDATE]` and suggest updating the existing note with the new sources.
 
@@ -130,7 +130,7 @@ Before emitting a cluster, check `03-Concepts/` for overlapping notes (the pre-m
 
 `/emerge --promote cluster-3` from the last run:
 - Read cached cluster data from `01-Projects/VAULT/conversations/reports/emerge-YYYY-WW.md`.
-- Create `03-Concepts/<slug>.md` with frontmatter:
+- Create `02-Library/ideas/<slug>.md` with frontmatter (never in the retired `03-Concepts/`):
   ```yaml
   ---
   title: "<primary name>"

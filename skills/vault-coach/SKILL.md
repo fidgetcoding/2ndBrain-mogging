@@ -64,7 +64,7 @@ Pulled from the vault contract (`../../vault-template/CLAUDE.md`). Surface the r
 - **Bidirectional tethering** — every `[[wikilink]]` needs a sensible reverse link. (Non-negotiable #1.)
 - **/save daily, /wiki weekly** — capture at the end of every thread, audit/heal once a week.
 - **Markdown over PDF** — when importing material, prefer `.md`; PDFs are opaque to the graph. (`/import-notes` converts via pandoc.)
-- **Folder roles:** `02-Sources/` = external literature (one note per source, with URL); `03-Concepts/` = atomic concepts (one idea per file); `04-Index/` = navigation/MOCs only, link lists not prose; `05-Tasks/` = optional, calendar-synced via the Obsidian Tasks plugin (never auto-create tasks from chat).
+- **Folder roles:** `01-Projects/<P>/` = the project's hub note plus `conversations/`, `notes/` (including sources tied to that project) and `assets/`; `02-Library/` = cross-project reference only, in `people/`, `tools/`, `ideas/` (one idea per file) and `sources/` (one note per outside source, with URL); `04-Index/` = maps of content only, link lists not prose, never reports or logs; `05-Tasks/` = optional, calendar-synced via the Obsidian Tasks plugin (never auto-create tasks from chat). The 03 slot is empty on purpose. A vault that still has `02-Sources/` or `03-Concepts/` should run `scripts/migrate-to-library.sh` (dry run first).
 - **Migrating Claude.ai / ChatGPT data?** Hand off to `/import-claude` (export zip) or `/import-notes` (Apple Notes, Notion, Evernote, raw files). Both are alias-classified and dry-run-previewed.
 
 ## Invariants

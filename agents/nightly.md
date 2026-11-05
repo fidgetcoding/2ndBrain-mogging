@@ -1,6 +1,6 @@
 ---
 name: nightly
-description: Nightly 10:00 PM ET vault audit — AUDIT-ONLY, no writes to concept or source notes. Runs /wiki audit scoped to 02-Sources, 03-Concepts, and 04-Index. Appends the report to the daily audit log and increments the lint counter.
+description: Nightly 10:00 PM ET vault audit — AUDIT-ONLY, no writes to concept or source notes. Runs /wiki audit scoped to 02-Library and 04-Index. Appends the report to the daily audit log and increments the lint counter.
 schedule: "0 22 * * * America/New_York"
 plist: scheduled/launchd/io.<ORG-A>.mogging.nightly.plist
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash
@@ -8,29 +8,32 @@ writes:
   - 01-Projects/VAULT/conversations/reports/audit-YYYY-MM-DD.md
   - Claude-Memory/lint-counter.json
 reads:
-  - 02-Sources/**/*.md
-  - 03-Concepts/**/*.md
+  - 02-Library/**/*.md
   - 04-Index/**/*.md
+  - 02-Sources/**/*.md   # legacy, read-only, only while a vault still has it
+  - 03-Concepts/**/*.md  # legacy, read-only, only while a vault still has it
 ---
 
 # nightly — audit-only report at 10pm ET
 
-Triggered by `scheduled/launchd/io.<ORG-A>.mogging.nightly.plist` at 22:00 America/New_York. The hard contract: **no writes to any note under 02-Sources, 03-Concepts, or 04-Index.** The only writes are the audit report itself and the lint-counter. This separation is the reason the agent is safe to schedule unattended.
+Triggered by `scheduled/launchd/io.<ORG-A>.mogging.nightly.plist` at 22:00 America/New_York. The hard contract: **no writes to any note under 02-Library or 04-Index** (or the legacy 02-Sources and 03-Concepts, if a vault still has them). The only writes are the audit report itself and the lint-counter, and the report never goes in `04-Index/`. This separation is the reason the agent is safe to schedule unattended.
 
 ## 1. Scope
 
-Audit surface is exactly three folders: `02-Sources/`, `03-Concepts/`, `04-Index/`. Everything else is out of scope — conversations, projects, tasks, and Claude-Memory are audited by other agents or by `/health` on Sundays.
+Audit surface is exactly two folders: `02-Library/` (all four subfolders: `people/`, `tools/`, `ideas/`, `sources/`) and `04-Index/`. Everything else is out of scope — conversations, projects, tasks, and Claude-Memory are audited by other agents or by `/health` on Sundays.
 
-Audit is the same inspection logic as `/wiki audit` — call the `wiki` skill with `--audit --no-fix --scope=02-03-04`. The skill MUST NOT enter its write paths.
+If a legacy vault still has `02-Sources/` or `03-Concepts/` (retired 2026-11-05), read them and run the same checks on them, read-only. Add a `Legacy folders` section to the report naming each one with its note count and the fix: `scripts/migrate-to-library.sh` moves them into `02-Library/sources/` and `02-Library/ideas/` (dry run first, `--apply` to act).
+
+Audit is the same inspection logic as `/wiki audit` — call the `wiki` skill with `--audit --no-fix --scope=02-04`. The skill MUST NOT enter its write paths.
 
 ## 2. Checks performed
 
 Per `references/wiki-schema.md` §3 and §4:
 
 1. **Dead wikilinks.** Any `[[target]]` whose target file does not exist in the vault.
-2. **Orphan concepts.** Any note in `03-Concepts/` with zero inbound links from `02-Sources/` OR zero outbound links to `04-Index/`.
+2. **Orphan concepts.** Any note in `02-Library/ideas/`, `people/` or `tools/` with zero inbound links from a source (in `02-Library/sources/` or a project's `notes/`) OR zero outbound links to `04-Index/`.
 3. **Missing frontmatter.** Any file missing the universal 5 keys (title, date, type, tags, aliases) or the per-type required fields.
-4. **Stale concepts.** Any `03-Concepts/` note where `last_confirmed` is > 180 days ago AND `owner: llm`. Human-owned stale notes are informational-only; LLM-owned stale notes are auto-flagged for re-confirmation.
+4. **Stale concepts.** Any `type: concept` note in `02-Library/` where `last_confirmed` is > 180 days ago AND `owner: llm`. Human-owned stale notes are informational-only; LLM-owned stale notes are auto-flagged for re-confirmation.
 5. **MOC coverage.** Any concept not listed in at least one `04-Index/MOC-*.md`.
 6. **Ambiguous-routing unresolved.** Any file tagged `#ambiguous-routing` older than 30 days where the stub still exists — prompts human to resolve the 50/50.
 

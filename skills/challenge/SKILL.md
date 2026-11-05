@@ -34,7 +34,7 @@ If invoked with no argument, prompt the user once: `What idea should I stress-te
 |---|---|
 | `--scope <project>` | Restrict evidence search to a single project folder under `01-Projects/` (e.g. `--scope <ORG-E>`). Defaults to whole vault. |
 | `--days N` | Only weigh evidence newer than N days. Default: no time filter, but recency always boosts ranking. |
-| `--save` | Write the full report to `03-Concepts/challenges/YYYY-MM-DD-<slug>.md` and link it into `MOC-Challenges.md` if it exists. Without this flag, output is terminal-only. |
+| `--save` | Write the full report to `02-Library/ideas/challenges/YYYY-MM-DD-<slug>.md` (or `01-Projects/<project>/notes/challenges/` with `--scope <project>`) and link it into `MOC-Challenges.md` if it exists. Without this flag, output is terminal-only. |
 | `--source` | Verbose citation mode — every claim gets file path + line number + quoted excerpt, not just the filename. |
 
 ## Pipeline (run in order)
@@ -48,7 +48,7 @@ Parse the idea string into (a) a one-line proposition and (b) 3-6 keyword anchor
 If `--scope` given, restrict to that folder. Otherwise search the full vault. Always include:
 - `~/.claude/projects/-2ndBrain/memory/MEMORY.md` (Claude-Memory auto-memory)
 - `~/.claude/projects/-2ndBrain/memory/` individual `feedback_*.md` and `project_*.md` files
-- `03-Concepts/` (refined positions; pre-mogging `03-Permanent/` was collapsed into this folder on 2026-04-16)
+- `02-Library/` (refined positions in `ideas/`, plus `people/`, `tools/` and `sources/`; pre-mogging `03-Permanent/` was collapsed into `03-Concepts/` on 2026-04-16, which merged into `02-Library/ideas/` on 2026-11-05. Read a legacy `03-Concepts/` too if it still exists)
 - `01-Projects/<scoped>/` (project-local decisions)
 
 ### 3. Gather evidence
@@ -130,7 +130,7 @@ Analytical, not confrontational. Write like a research memo. No sarcasm, no "got
 
 ## Save Behavior (--save only)
 
-Write to `03-Concepts/challenges/YYYY-MM-DD-<slug>.md` with frontmatter:
+Write to `02-Library/ideas/challenges/YYYY-MM-DD-<slug>.md` with frontmatter (with `--scope <project>`, write to `01-Projects/<project>/notes/challenges/YYYY-MM-DD-<slug>.md` instead; never the retired `03-Concepts/`):
 
 ```yaml
 ---

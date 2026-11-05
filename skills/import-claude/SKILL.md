@@ -1,6 +1,6 @@
 ---
 name: import-claude
-description: Walk the user through a one-shot import of their full Claude.ai (or ChatGPT) data export into the 2ndBrain-mogging vault. Unzip → inspect → bucket conversations by source project/topic → write full-fidelity captures to 01-Projects/<PROJECT>/conversations/<sub>/, factual LIT-* mirrors to 02-Sources/, and linked concept stubs to 03-Concepts/. Alias-classified, dry-run-previewed, append-only.
+description: Walk the user through a one-shot import of their full Claude.ai (or ChatGPT) data export into the 2ndBrain-mogging vault. Unzip → inspect → bucket conversations by source project/topic → write full-fidelity captures to 01-Projects/<PROJECT>/conversations/<sub>/ (cross-cutting ones to the catch-all project's conversations/) and linked concept stubs to 02-Library/ideas/. Alias-classified, dry-run-previewed, append-only.
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash
 ---
 
@@ -21,7 +21,7 @@ One-shot ingest of a conversational AI data export. Designed to run once per exp
 
 ## Pre-requisites
 
-1. A mogged vault (has `02-Sources/`, `03-Concepts/`, `01-Projects/`, and `CLAUDE.md` at its root).
+1. A mogged vault (has `01-Projects/`, `02-Library/`, and `CLAUDE.md` at its root). A legacy vault that still has `02-Sources/` and `03-Concepts/` should run `scripts/migrate-to-library.sh` first; this skill never writes into those retired folders.
 2. The export zip on disk. Easiest path: drop it in `~/Downloads/`.
 3. The helper script has already staged the zip: `bash scripts/import-claude.sh` unzips it to `<vault>/.import-staging/<timestamp>-claude/`. If the user hasn't run it yet, point them at it first.
 
@@ -80,7 +80,7 @@ Emit a summary: `N conversations, grouped into P projects / folders, Q with no p
 Apply the same alias lookup `/save` uses. Read `Claude-Memory/aliases.yaml`; for each conversation:
 
 - If the title, earliest system prompt, or project name matches an alias → route to that project's folder in `01-Projects/<PROJECT>/conversations/<sub>/`.
-- If no alias match → route to `01-Projects/INCUBATOR/conversations/UNCATEGORIZED/` and flag for user review.
+- If no alias match, or the conversation spans several projects → route to the catch-all project's `conversations/UNCATEGORIZED/` and flag for user review. The catch-all is the `Claude-Memory/aliases.yaml` project entry whose `aliases` list includes "catch-all"; if no entry has it, use `01-Projects/MISC/`. Conversations never go in `02-Library/`.
 
 Never invent a project folder that doesn't exist in `01-Projects/` without asking first.
 
@@ -105,15 +105,13 @@ related: [[<project-index>]]
 
 Then the full-fidelity conversation (user turns + assistant turns interleaved, no truncation). `owner: human` blocks future auto-mutation.
 
-**Mirror (`02-Sources/LIT-conversation-<slug>-<date>.md`):**
-
-A factual-only summary — what was discussed, what was decided, what was asked about. No interpretation. Same frontmatter, `type: source`.
+The capture is the only record. The old factual mirror at `02-Sources/LIT-conversation-<slug>-<date>.md` is retired (Library v2, 2026-11-05): write no mirrors, and never put a conversation in `02-Library/`.
 
 ### 5. Spawn concept stubs (cautiously)
 
 For each conversation, extract 1-3 atomic ideas that could become concept notes. For each:
 
-- Check if a `03-Concepts/<slug>.md` already exists.
+- Check if a `02-Library/ideas/<slug>.md` already exists (or `02-Library/people/` / `tools/` when the idea is about one person or one tool).
 - If yes → append a reference line under `## Mentions`; don't mutate the body (respect `owner: human`).
 - If no → create a stub with `owner: wiki`, `type: concept`, and a single paragraph in the user's voice.
 
@@ -131,7 +129,6 @@ After each conversation successfully written, record its UUID in `Claude-Memory/
 Emit:
 
 - `N conversations written`
-- `M LIT-* mirrors written`
 - `K concept stubs created`
 - `S concept references appended`
 - `U conversations flagged UNCATEGORIZED for review`
@@ -142,6 +139,7 @@ Tell the user to run `/tether` next — it fixes any missed backlinks.
 
 - **Never** overwrite an existing `owner: human` file. If a collision happens, write the new capture under a `-<timestamp>` suffix and flag it.
 - **Never** write inside `01-Projects/<project>/<project>.md` directly (that file is human-owned by CLAUDE.md contract).
+- **Never** write into a retired folder (`02-Sources/`, `03-Concepts/`, or the older killed list).
 - **Always** dry-run first. Require explicit `yes` before `--apply`.
 - **Always** scrub secrets: apply the same regex set as `/save` (API keys, tokens, .env content) before committing the conversation text to disk.
 - Commits use the `[bot:import-claude]` prefix.
