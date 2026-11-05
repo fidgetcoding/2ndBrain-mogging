@@ -16,6 +16,7 @@ vulnerabilities.
   choose **Report a vulnerability**, or go straight to
   <https://github.com/fidgetcoding/2ndBrain-mogging/security/advisories/new>.
   Only the maintainer sees the report.
+- Or email **nate@lorecraft.io**.
 - Expected first response: within **72 hours** on weekdays
 - Please include:
   - A description of the issue and its impact
