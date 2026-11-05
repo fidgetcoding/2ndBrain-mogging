@@ -192,7 +192,7 @@ Build two in-memory sets:
 
 ### 4.2 Output
 
-Write the report to `01-Projects/VAULT/conversations/reports/audit-YYYY-MM-DD.md` (the canonical scheduled-agent reports location per `docs/CLAUDE-MD-PATCH.md §scheduled-agents`; this matches the nightly agent's output path so AUDIT reports live beside nightly-agent outputs and aren't second-sourced under `03-Index/`). Shape:
+Write the report to `01-Projects/VAULT/REPORTS/audit-YYYY-MM-DD.md` (the canonical scheduled-agent reports location per `docs/CLAUDE-MD-PATCH.md §scheduled-agents`; this matches the nightly agent's output path so AUDIT reports live beside nightly-agent outputs and aren't second-sourced under `03-Index/`). Shape:
 
 ```markdown
 ---
@@ -289,7 +289,7 @@ Strikethrough preserves reader intent ("there was supposed to be a link here") w
 
 1. Create branch: `git checkout -b wiki-heal/2026-04-16` (if vault is a git repo; else skip and operate in-place with a WARN).
 2. Apply all HEAL edits.
-3. Write `01-Projects/VAULT/conversations/reports/heal-plan-2026-04-16.md` summarizing every change (same reports folder as the audit output — never `03-Index/`).
+3. Write `01-Projects/VAULT/REPORTS/heal-plan-2026-04-16.md` summarizing every change (same reports folder as the audit output — never `03-Index/`).
 4. Commit each category as a separate commit for reviewability:
    - `wiki-heal: stub pages for N missing concepts`
    - `wiki-heal: wrap unlinked concept names`

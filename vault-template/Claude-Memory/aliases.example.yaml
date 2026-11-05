@@ -32,7 +32,7 @@ projects:
     path: 01-Projects/INCUBATOR
     aliases: ["incubator", "staging", "idea bucket"]
   # Catch-all: content that matches no other project routes here, including
-  # cross-cutting conversations (they go to its conversations/, never to
+  # cross-cutting conversations (they go to its !!conversations/, never to
   # 02-Library/). Skills find it by the "catch-all" alias. Keep exactly one
   # entry with that alias so /save always has a valid fallback destination;
   # with none, they fall back to 01-Projects/MISC/.

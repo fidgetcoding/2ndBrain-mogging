@@ -374,7 +374,7 @@ echo "    /import-claude"
 echo ""
 echo "  …and point it at the staging path above. The skill will:"
 echo "    - Sort conversations by their source Claude Project (or topic)"
-echo "    - Route each into 01-Projects/<PROJECT>/conversations/<sub>/ as full-fidelity captures"
+echo '    - Route each into 01-Projects/<PROJECT>/!!conversations/<sub>/ as full-fidelity captures'
 echo "    - Send cross-cutting chats to the catch-all project (01-Projects/MISC/ by default)"
 echo "    - Spawn linked idea stubs in 02-Library/ideas/ where ideas repeat"
 echo "    - Update 03-Index/ + 01-Projects/<project>/ backlinks"

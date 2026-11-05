@@ -126,7 +126,7 @@ Dry-run output is a grouped violation list:
 - ...
 
 ### Unlinked mention candidates (12)
-- 01-Projects/<PROJECT>/conversations/2026-04-13-misc.md:42 — "<project-a>" (not linked to [[<ORG-B>/<PROJECT-A>]])
+- 01-Projects/<PROJECT>/!!conversations/2026-04-13-misc.md:42 — "<project-a>" (not linked to [[<ORG-B>/<PROJECT-A>]])
 - ...
 
 ## Summary

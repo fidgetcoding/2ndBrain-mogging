@@ -1,6 +1,6 @@
 # Claude Projects → Vault Sync Guide
 
-How to route the contents of a single Claude.ai Project (or ChatGPT folder) into a matching project folder inside your mogged vault. The per-project subfolder pattern (`conversations/` + `knowledge/` + `assets/`) is the same one `/import-claude` uses when it writes; this doc is here so you can replicate the layout manually or understand what the skill is doing under the hood.
+How to route the contents of a single Claude.ai Project (or ChatGPT folder) into a matching project folder inside your mogged vault. The per-project subfolder pattern (`!!conversations/` + `knowledge/` + `assets/`) is the same one `/import-claude` uses when it writes; this doc is here so you can replicate the layout manually or understand what the skill is doing under the hood.
 
 ---
 
@@ -10,7 +10,7 @@ How to route the contents of a single Claude.ai Project (or ChatGPT folder) into
 01-Projects/
   PROJECT-NAME/
     PROJECT-NAME.md      ← index note (knowledge base + conversation log + related links)
-    conversations/       ← all conversation markdown files for this project
+    !!conversations/       ← all conversation markdown files for this project
     knowledge/           ← all text-based knowledge (md, txt, jsx, html, sh) + converted docx/pptx/xlsx
     assets/              ← real binaries only (PDFs, zips — things that can't be markdown)
 ```
@@ -23,7 +23,7 @@ The index filename **must match the folder name exactly** — `<ORG-B>/<ORG-B>.m
 
 | From the export | Extension | Goes to | Action |
 |---|---|---|---|
-| conversations | `.md` | `conversations/` | Copy as-is |
+| conversations | `.md` | `!!conversations/` | Copy as-is |
 | knowledge | `.md`, `.txt`, `.jsx`, `.html`, `.sh` | `knowledge/` | Copy as-is |
 | knowledge | `.docx` | `knowledge/` | Convert via `pandoc`, delete the `.docx` |
 | knowledge | `.pptx` | `knowledge/` | Convert via `pandoc`, delete the `.pptx` |

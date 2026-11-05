@@ -23,7 +23,7 @@ Structured web research for the 2ndBrain vault. Decomposes a topic into angles, 
 - `topic` — required string; the research question or concept.
 - `--rounds` — max rounds 1-3 (default 3). Round 3 only runs if Round 2 still has unresolved contradictions.
 - `--depth` — `shallow` (1 search per angle, 1 fetch), `standard` (2-3 searches, 2 fetches, default), `deep` (3 searches, 3 fetches + Round 3 auto-on).
-- `--existing-check` — force Round 0 even if `01-Projects/VAULT/conversations/reports/autoresearch-log.md` shows recent coverage.
+- `--existing-check` — force Round 0 even if `01-Projects/VAULT/REPORTS/autoresearch-log.md` shows recent coverage.
 
 ## Pipeline
 
@@ -120,7 +120,7 @@ Master synthesis → `02-Library/ideas/{topic-slug}.md`:
 - The narrative answer to the original question.
 - Cites every `SRC-*` source note used.
 - Ends with a `## Open Questions` section and any `> [!gap]` callouts lifted from Round 2/3.
-- Links back to the relevant `03-Index/<Topic>-Index.md` and prepends a line to `01-Projects/VAULT/conversations/reports/autoresearch-log.md` (`03-Index/` holds maps only, never logs).
+- Links back to the relevant `03-Index/<Topic>-Index.md` and prepends a line to `01-Projects/VAULT/REPORTS/autoresearch-log.md` (`03-Index/` holds maps only, never logs).
 - Lands flat in `02-Library/ideas/` — do NOT write to `02-Library/ideas/synthesis/`, which is not part of the folder contract.
 
 ## Writing Rules
@@ -134,7 +134,7 @@ Master synthesis → `02-Library/ideas/{topic-slug}.md`:
 ## Post-Loop Housekeeping
 
 1. Update `03-Index/Index.md` — add the synthesis note under the topic's taxonomy branch, create a new branch if needed.
-2. Prepend a one-line entry to `01-Projects/VAULT/conversations/reports/autoresearch-log.md`: `{date} {topic-slug} — N sources, M concepts, {gap-count} gaps`.
+2. Prepend a one-line entry to `01-Projects/VAULT/REPORTS/autoresearch-log.md`: `{date} {topic-slug} — N sources, M concepts, {gap-count} gaps`.
 3. If `Claude-Memory/hot.md` exists, refresh its cache block for this topic (most-recent 5 concepts + synthesis link).
 4. If the topic touches an existing project, link the synthesis from the project index's **Related** section.
 

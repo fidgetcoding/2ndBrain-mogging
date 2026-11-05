@@ -17,7 +17,7 @@ When the user just installed, or says "set up my brain" / "help me get started":
 1. Greet briefly and point them at `docs/MAINTAINING-YOUR-BRAIN.md` for the full reference.
 2. Give the 30-second mental model, verbatim in spirit:
    - **01-Projects/** holds your work. Each project is a folder with an index note named after the folder.
-   - Each project's **conversations/** folder holds saved chats. Run **/save** at the end of every thread to capture it.
+   - Each project's **!!conversations/** folder holds saved chats. Run **/save** at the end of every thread to capture it.
    - **/wiki** once a week to ingest sources, audit the graph, and heal broken links.
    - **Every folder needs an index `.md` or routing breaks** — a folder with no index is invisible to the graph.
 3. Offer the next move: "Want to create your first project? Tell me what you're working on."
@@ -30,7 +30,7 @@ Trigger: "I added a folder", "I made a new project", "I'm starting X". **Do NOT 
 2. **The index MD must explain** what the folder is, how it functions, what goes in it, and its subfolders — then link **UP** (to `03-Index/Projects-Index.md` and any parent/org hub) AND **DOWN** (to subfolders and key notes). One-way links make islands.
 3. **Register it:** add `[[PROJECT]]` to `03-Index/Projects-Index.md` under the right section (Active / Incubating / Archived). A project not in Projects-Index is orphaned even if its index is perfect.
 4. **If it's a subfolder:** open the PARENT folder's index MD and add the sub-project to its DOWN section, with a back-link from the child UP to the parent.
-5. **Confirm routing:** tell the user `/save` can now classify chats into `01-Projects/<PROJECT>/conversations/`.
+5. **Confirm routing:** tell the user `/save` can now classify chats into `01-Projects/<PROJECT>/!!conversations/`.
 
 Questions to fill the MD (ask in this order, one at a time):
 - "What is this project — one line?"
@@ -64,7 +64,7 @@ Pulled from the vault contract (`../../vault-template/CLAUDE.md`). Surface the r
 - **Bidirectional tethering** — every `[[wikilink]]` needs a sensible reverse link. (Non-negotiable #1.)
 - **/save daily, /wiki weekly** — capture at the end of every thread, audit/heal once a week.
 - **Markdown over PDF** — when importing material, prefer `.md`; PDFs are opaque to the graph. (`/import-notes` converts via pandoc.)
-- **Folder roles:** `01-Projects/<P>/` = the project's hub note plus `conversations/`, `notes/` (including sources tied to that project) and `assets/`; `02-Library/` = cross-project reference only, in `people/`, `tools/`, `ideas/` (one idea per file) and `sources/` (one note per outside source, with URL); `03-Index/` = maps of content only, link lists not prose, never reports or logs; `04-Tasks/` = optional, calendar-synced via the Obsidian Tasks plugin (never auto-create tasks from chat). The numbers run 01 to 04 with no gaps. A vault that still has `02-Sources/`, `03-Concepts/`, `04-Index/` or `05-Tasks/` should run `scripts/migrate-to-library.sh` (dry run first).
+- **Folder roles:** `01-Projects/<P>/` = the project's hub note plus `!!conversations/`, `notes/` (including sources tied to that project) and `assets/`; `02-Library/` = cross-project reference only, in `people/`, `tools/`, `ideas/` (one idea per file) and `sources/` (one note per outside source, with URL); `03-Index/` = maps of content only, link lists not prose, never reports or logs; `04-Tasks/` = optional, calendar-synced via the Obsidian Tasks plugin (never auto-create tasks from chat). The numbers run 01 to 04 with no gaps. A vault that still has `02-Sources/`, `03-Concepts/`, `04-Index/` or `05-Tasks/` should run `scripts/migrate-to-library.sh` (dry run first).
 - **Migrating Claude.ai / ChatGPT data?** Hand off to `/import-claude` (export zip) or `/import-notes` (Apple Notes, Notion, Evernote, raw files). Both are alias-classified and dry-run-previewed.
 
 ## Invariants

@@ -259,7 +259,7 @@ The post-mogging 5-folder layout ("Library", since 2026-11-05). This is what the
 
 ```
 BRAIN/
-├── 01-Projects/         # Active work. One folder per project. /save output now lives in `<PROJECT>/conversations/` (post-2026-05-08 restructure absorbed the old top-level `01-Conversations/`).
+├── 01-Projects/         # Active work. One folder per project. /save output now lives in `<PROJECT>/!!conversations/` (post-2026-05-08 restructure absorbed the old top-level `01-Conversations/`).
 ├── 02-Library/          # Cross-project reference only: things that belong to no single project
 │   ├── people/          #   one note per person
 │   ├── tools/           #   one note per tool, app, service, model, library
@@ -280,7 +280,7 @@ Each project gets its own folder. The folder name **equals** the index filename 
 01-Projects/
 ├── example-project-1/
 │   ├── example-project-1.md    ← index note (filename = folder name)
-│   ├── conversations/           ← /save captures about this project
+│   ├── !!conversations/           ← /save captures about this project
 │   ├── notes/                   ← everything written for it, incl. its own sources
 │   ├── content/                 ← write-ups, specs, decks, session logs
 │   ├── misc-building/           ← experiments, tools, plugins built for this project
@@ -300,7 +300,7 @@ Each project gets its own folder. The folder name **equals** the index filename 
 └── VAULT/                       ← work about the vault: log.md and the agents' reports
 ```
 
-The subfolders inside each project are **up to you**. Use whatever makes sense — the skills only write to `conversations/` and `notes/` below the project's index note. The `content/` + `misc-building/` + `GITHUB/` pattern is what I use personally; yours might be `research/` + `drafts/` + `deliverables/`. Whatever works.
+The subfolders inside each project are **up to you**. Use whatever makes sense — the skills only write to `!!conversations/` and `notes/` below the project's index note. The `content/` + `misc-building/` + `GITHUB/` pattern is what I use personally; yours might be `research/` + `drafts/` + `deliverables/`. Whatever works.
 
 ### What the retired folders were
 
@@ -311,6 +311,7 @@ If you're coming from an older second-brain kit, you'll notice these are gone:
 - `05-Templates/` → retired. Templates belong in the plugin layer, not in your graph. The `2ndbrain-mogging` skills carry them now.
 - `06-Assets/` → retired. Obsidian's attachment defaults handle assets in place; a centralized assets folder exists mostly to make your graph view lie to you about which notes are "connected."
 - `02-Sources/` + `03-Concepts/` → merged into `02-Library/` (people, tools, ideas, sources) on 2026-11-05. The same day `04-Index/` became `03-Index/` and `05-Tasks/` became `04-Tasks/`, so the numbers run with no gaps. Already have the old folders? `bash scripts/migrate-to-library.sh --vault ~/MyVault` shows the move, and `--apply` does it (`git mv` in a git vault, so a tasks submodule follows). If a sync daemon or launchd job points at `05-Tasks/` by path, update it after. See [`MIGRATION.md`](MIGRATION.md).
+- `conversations/` → renamed `!!conversations/` in every project on 2026-11-05, so the chat folder sorts to the top in Finder. It holds only your text chats with AI; the agents' reports moved out to `01-Projects/VAULT/REPORTS/`. The same migration script renames them (with `git mv` in a git vault). In a shell, single-quote the name: `cd '01-Projects/MISC/!!conversations'`.
 
 Deep rationale for each skill is in [`PHILOSOPHY.md`](PHILOSOPHY.md).
 
@@ -369,7 +370,7 @@ If you've been keeping notes somewhere else, you don't have to abandon them. The
    bash scripts/import-claude.sh
    ```
    It unzips the export into `<vault>/.import-staging/<timestamp>-claude/` and prints the next step.
-3. **Inside Claude Code, run `/import-claude`** — scan first, dry-run, then apply. Each conversation becomes a full-fidelity capture in `01-Projects/<PROJECT>/conversations/` (post-2026-05-08; the old top-level `01-Conversations/` was retired; a chat with no single project goes to `01-Projects/MISC/conversations/`), and (where ideas repeat) an idea stub in `02-Library/ideas/`.
+3. **Inside Claude Code, run `/import-claude`** — scan first, dry-run, then apply. Each conversation becomes a full-fidelity capture in `01-Projects/<PROJECT>/!!conversations/` (post-2026-05-08; the old top-level `01-Conversations/` was retired; a chat with no single project goes to `01-Projects/MISC/!!conversations/`), and (where ideas repeat) an idea stub in `02-Library/ideas/`.
 
 ### Apple Notes / OneNote / Notion / Evernote / raw files → vault
 
@@ -398,7 +399,7 @@ Run these three in order (they're all quick):
 ```
 /tether        # audit and fix bidirectional project-note links
 /connect       # propose wikilinks between notes that share concepts
-/wiki audit    # write a dated audit report to 01-Projects/VAULT/conversations/reports/audit-YYYY-MM-DD.md
+/wiki audit    # write a dated audit report to 01-Projects/VAULT/REPORTS/audit-YYYY-MM-DD.md
 ```
 
 That's it. Your vault is wired.

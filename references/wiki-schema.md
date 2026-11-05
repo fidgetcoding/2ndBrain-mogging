@@ -23,13 +23,14 @@ The vault follows the operator's stripped operator layout. The plugin treats eac
 
 | Folder | Role | Primary writer | Secondary writers | Constraints |
 |---|---|---|---|---|
-| `01-Projects/<PROJECT>/conversations/` (post-2026-05-08; `01-Projects/<PROJECT>/conversations/` was retired) | Conversation captures, daily notes, scheduled-agent reports, interactive `/wiki audit` output | `save` (branches 1–3), `wiki` (`audit` branch) | `agents/morning`, `agents/nightly`, `agents/weekly`, `agents/health` | Append-only per file. A conversation that belongs to no single project goes to the catch-all project's `conversations/` (the `aliases.yaml` project whose aliases include `catch-all`; `01-Projects/MISC/` when none does). Conversations never go in `02-Library/`, and the old `LIT-conversation-*` mirror in `02-Sources/` is retired. All audit and daily reports — interactive or scheduled — live under `01-Projects/VAULT/conversations/reports/` (`audit-YYYY-MM-DD.md`, `daily-YYYY-MM-DD.md`, `weekly-YYYY-WW.md`, `health-YYYY-MM-DD.md`). Scheduled agents write here and nowhere else. |
+| `01-Projects/<PROJECT>/!!conversations/` (post-2026-05-08; the old top-level `01-Conversations/` was retired; named `!!conversations/` since 2026-11-05 so it sorts first in Finder) | Text chats with AI assistants, saved by `/save` | `save` (branches 1–3) | `backfill`, `import-claude` | Append-only per file. Text chats only: never audio captures, reports or logs. A conversation that belongs to no single project goes to the catch-all project's `!!conversations/` (the `aliases.yaml` project whose aliases include `catch-all`; `01-Projects/MISC/` when none does). Conversations never go in `02-Library/`, and the old `LIT-conversation-*` mirror in `02-Sources/` is retired. |
+| `01-Projects/VAULT/REPORTS/` | Daily notes, scheduled-agent reports, interactive `/wiki audit` output | `wiki` (`audit` branch) | `agents/morning`, `agents/nightly`, `agents/weekly`, `agents/health` | All audit and daily reports — interactive or scheduled — live here (`audit-YYYY-MM-DD.md`, `daily-YYYY-MM-DD.md`, `weekly-YYYY-WW.md`, `health-YYYY-MM-DD.md`). Scheduled agents write here and nowhere else. Never in `03-Index/` or a `!!conversations/` folder. |
 | `01-Projects/<PROJECT>/notes/` | Everything written for one project, including sources tied to that project | `save` (branch 2 `--source`), `wiki` (`add`) | `autoresearch` | A source tied to one project lives here, not in the Library, and keeps `type: source` with the same frontmatter as `02-Library/sources/`. |
 | `02-Library/sources/` | Source-of-truth notes for external content no single project owns (articles, videos, transcripts, emails) | `save` (branch 2 `--source`), `autoresearch`, `wiki` (`add`) | `wiki` (heal only) | Cross-project only. Filename `SRC-<YYYY-MM-DD>-<slug>.md` or `LIT-<slug>.md`. Each file must carry `source_url` + `source_type` + `captured` in frontmatter. Body is summary; raw fetched text lives in a `> [!source]` callout or a fenced block. |
 | `02-Library/ideas/` | Refined atomic idea notes (what `03-Concepts/` held) | `wiki` | `save` (branch 3, type `p`), `emerge` | One idea per file, `type: concept`. Must have ≥1 inbound from a source (`02-Library/sources/` or a project's `notes/`) and ≥1 outbound to `03-Index/`. `needs_review: true` on first write; promoted by `wiki` once it has 3+ inbound links. |
 | `02-Library/people/`, `02-Library/tools/` | One note per person; one note per tool, app, service, model or library | `wiki` | `save` (branch 3), `aliases` (read only) | `type: concept` plus tag `person` or `tool`. Same link minimum as `ideas/`. Cross-project only: a person or tool that matters to one project is described in that project's notes. |
 | `03-Index/` | Maps of content (MOCs), hub pages, topic indexes | `wiki`, `tether` | `emerge` (weekly only) | Maps only: link lists + terse one-liners. Never reports, audits, logs or dailies. Must list every idea in its topic cluster; `tether` fails the graph audit if a `02-Library/ideas/` note has no MOC entry. |
-| `01-Projects/` | Project hubs mirroring Claude Projects | `save` (branches 1–3), `tether` | `wiki` (heal only) | Each project folder has an index note where filename matches folder name (`FOO/FOO.md`, never `FOO-Index.md`), plus `conversations/`, `notes/` and `assets/` (images, PDFs, media, no code) as needed. Bidirectional links up to `03-Index/Projects-Index.md` are mandatory. |
+| `01-Projects/` | Project hubs mirroring Claude Projects | `save` (branches 1–3), `tether` | `wiki` (heal only) | Each project folder has an index note where filename matches folder name (`FOO/FOO.md`, never `FOO-Index.md`), plus `!!conversations/`, `notes/` and `assets/` (images, PDFs, media, no code) as needed. Bidirectional links up to `03-Index/Projects-Index.md` are mandatory. |
 | `04-Tasks/` | Obsidian Tasks plugin files + inline tasks | `save` (UUID-preserving edits only) | none | `/wiki` and `/autoresearch` are FORBIDDEN from writing here. `/save` is edit-safe only with strict UUID preservation (§5). No agent writes here. |
 | `Claude-Memory/` (vault root) | Plugin working state: aliases, ADRs, manifests, hot context | `aliases`, `save` (ADR branch + backfill manifest), `emerge` (hot.md) | `agents/morning` (hot.md prime) | Not user-facing notes — treat as config. `aliases.yaml` is the canonical alias source; `adr/` holds ADRs; `backfill-manifest.jsonl` is append-only. |
 | `.obsidian/` (root sidecar) | Obsidian app config | none (user-owned) | none | Forbidden path (§8). |
@@ -40,18 +41,20 @@ The numbered folders run 01 to 04 with no gaps. On 2026-11-05 `04-Index/` became
 
 ### Retired folders (read if present, never write)
 
-`00-Inbox/`, `01-Fleeting/`, `02-Literature/`, `02-Sources/`, `03-Concepts/`, `03-Permanent/`, `04-Index/`, `04-MOC/`, `05-Tasks/`, `05-Templates/`, `06-Assets/` and `00-Captures/` are retired. A skill may read a retired folder that a legacy vault still has (grandfathered), and never writes there; `bin/lib/vault-gate.sh` refuses the write. Library v2 (2026-11-05) retired four folders:
+`00-Inbox/`, `01-Fleeting/`, `02-Literature/`, `02-Sources/`, `03-Concepts/`, `03-Permanent/`, `04-Index/`, `04-MOC/`, `05-Tasks/`, `05-Templates/`, `06-Assets/` and `00-Captures/` are retired. A skill may read a retired folder that a legacy vault still has (grandfathered), and never writes there; `bin/lib/vault-gate.sh` refuses the write. Library v2 (2026-11-05) retired four folders and renamed the chat folders:
 
 | Legacy folder | Moves to | Notes |
 |---|---|---|
 | `02-Sources/` | `02-Library/sources/` | `LIT-conversation-*` mirrors move with the rest; no new ones are written. |
 | `03-Concepts/` | `02-Library/ideas/` | People and tools get sorted into `people/` and `tools/` later, by the user or a `/wiki heal` proposal. |
 | `04-Index/` | `03-Index/` | Renamed whole. |
+| `01-Projects/<P>/conversations/` | `01-Projects/<P>/!!conversations/` | Every chat folder under `01-Projects/`, renamed so it sorts first in Finder (`git mv` in a git vault). |
+| `01-Projects/VAULT/conversations/reports/` | `01-Projects/VAULT/REPORTS/` | Reports move out of the chat folder, which holds only text chats with AI. |
 | `05-Tasks/` | `04-Tasks/` | Renamed whole with `git mv`, so a tasks submodule and `.gitmodules` follow. `path includes 05-Tasks` becomes `path includes 04-Tasks` inside ```` ```tasks ```` query blocks only; task lines and 🆔 tokens are never touched. |
 | `02-Literature/` | `02-Library/sources/` | Older rename, same destination today. |
 | `03-Permanent/` | `02-Library/ideas/` | Older rename, same destination today. |
 
-`scripts/migrate-to-library.sh` does all four (dry run by default, `--apply` to act). Wikilinks are by basename, so the move breaks no links.
+`scripts/migrate-to-library.sh` does all of it (dry run by default, `--apply` to act). Wikilinks are by basename, so the move breaks no links.
 
 ## 2. Three non-negotiables
 
@@ -162,7 +165,7 @@ supersedes: "[[ADR-007-old-name]]"           # optional
 superseded_by: "[[ADR-012-new-name]]"        # optional; filled when a later ADR overrides this
 ```
 
-**type: conversation** (goes to `01-Projects/<PROJECT>/conversations/` (post-2026-05-08; `01-Projects/<PROJECT>/conversations/` was retired)): no per-type additions beyond universal. Rely on `source: "claude-cli session <id>"` in the body if needed.
+**type: conversation** (goes to `01-Projects/<PROJECT>/!!conversations/` (post-2026-05-08; the old top-level `01-Conversations/` was retired)): no per-type additions beyond universal. Rely on `source: "claude-cli session <id>"` in the body if needed.
 
 **type: moc** (goes to `03-Index/`): no additions beyond universal. The body is the MOC structure itself.
 

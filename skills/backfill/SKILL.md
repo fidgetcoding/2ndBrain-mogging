@@ -1,6 +1,6 @@
 ---
 name: backfill
-description: Scrape historical Claude Code JSONL session transcripts into the 2ndBrain vault as structured conversation notes. Handles inventory, per-session cost estimation, secret scrubbing, chunked summarization for large sessions, SHA-256 + embedding deduplication, and resumable batch runs. Routes output to `01-Projects/{PROJECT}/conversations/YYYY-MM-DD-{slug}.md` using the same 8 signal types as `/save`.
+description: Scrape historical Claude Code JSONL session transcripts into the 2ndBrain vault as structured conversation notes. Handles inventory, per-session cost estimation, secret scrubbing, chunked summarization for large sessions, SHA-256 + embedding deduplication, and resumable batch runs. Routes output to `01-Projects/{PROJECT}/!!conversations/YYYY-MM-DD-{slug}.md` using the same 8 signal types as `/save`.
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash
 ---
 
@@ -70,13 +70,13 @@ For each session that clears the `--since` filter and is not already in `backfil
    - Aliased entity mentions (`<PERSON-C>` → <ORG-B>/<PROJECT-A>, `<PERSON-H>` → <ORG-D>/<PROJECT-B>, etc.).
    - File-path cues (any edits inside `01-Projects/FOO/` → FOO).
    - Fallback: the catch-all project, i.e. the `Claude-Memory/aliases.yaml` project entry whose `aliases` list includes "catch-all"; if no entry has it, `01-Projects/MISC/`. Never the Library.
-6. **Routing.** Write to `01-Projects/{PROJECT}/conversations/YYYY-MM-DD-{slug}.md` where `YYYY-MM-DD` is the session's first-turn timestamp and `{slug}` is a 3–6 word kebab-case summary of the dominant topic.
+6. **Routing.** Write to `01-Projects/{PROJECT}/!!conversations/YYYY-MM-DD-{slug}.md` where `YYYY-MM-DD` is the session's first-turn timestamp and `{slug}` is a 3–6 word kebab-case summary of the dominant topic.
 
 ### 3. Dedup
 
 Before writing a new conversation note, check for duplicates in two passes:
 
-1. **SHA-256 exact match.** Hash the normalized signal body. If any existing file under `01-Projects/**/conversations/**` has the same hash, skip — the session is already captured.
+1. **SHA-256 exact match.** Hash the normalized signal body. If any existing file under `01-Projects/**/!!conversations/**` has the same hash, skip — the session is already captured.
 2. **Embedding cosine ≥ 0.92.** Embed the new note's signal body. Compare against stored embeddings for existing conversation files. On cosine ≥ 0.92, treat as duplicate: append a `related:` link rather than create a second file.
 
 Stash computed hashes + embeddings in `Claude-Memory/conversation-index.json` so dedup is cheap on subsequent runs.
@@ -115,7 +115,7 @@ Process at most **20 concurrent sessions**. Use a bounded worker pool; queue the
 
 ### Conversation notes
 
-`01-Projects/{PROJECT}/conversations/YYYY-MM-DD-{slug}.md`:
+`01-Projects/{PROJECT}/!!conversations/YYYY-MM-DD-{slug}.md`:
 
 ```markdown
 ---
@@ -184,7 +184,7 @@ If a scrubbed token lands in the final conversation note, leave the `[REDACTED:<
 
 ## Invariants
 
-- Never write outside `01-Projects/<PROJECT>/conversations/` (post-2026-05-08; `01-Projects/<PROJECT>/conversations/` was retired) or `Claude-Memory/`.
+- Never write outside `01-Projects/<PROJECT>/!!conversations/` (post-2026-05-08; the old top-level `01-Conversations/` was retired) or `Claude-Memory/`.
 - Never delete source JSONL files.
 - Never overwrite an existing conversation note without a dedup decision.
 - Never run `--apply` without an explicit `yes` on the cost-gate prompt.

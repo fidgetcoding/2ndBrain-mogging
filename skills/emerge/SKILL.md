@@ -11,7 +11,7 @@ The vault gets denser every day. Some of that density is signal — a concept sh
 ## When to Invoke
 
 - User runs `/emerge` manually, usually at end of week or start of a review.
-- Scheduled weekly agent (Friday 6pm ET) runs `/emerge --days 7 --audit` non-interactively and writes the report to `01-Projects/VAULT/conversations/reports/emerge-YYYY-WW.md`.
+- Scheduled weekly agent (Friday 6pm ET) runs `/emerge --days 7 --audit` non-interactively and writes the report to `01-Projects/VAULT/REPORTS/emerge-YYYY-WW.md`.
 - After a burst of activity (e.g. the operator just closed a Acme deliverable sprint and wants to see what emerged).
 
 Do NOT auto-run `/emerge` inside another skill's pipeline except the scheduled agent. It's expensive and slow.
@@ -129,7 +129,7 @@ Before emitting a cluster, check `02-Library/ideas/`, `people/` and `tools/` for
 ### 8. --promote behavior
 
 `/emerge --promote cluster-3` from the last run:
-- Read cached cluster data from `01-Projects/VAULT/conversations/reports/emerge-YYYY-WW.md`.
+- Read cached cluster data from `01-Projects/VAULT/REPORTS/emerge-YYYY-WW.md`.
 - Create `02-Library/ideas/<slug>.md` with frontmatter (never in the retired `03-Concepts/`):
   ```yaml
   ---
@@ -154,8 +154,8 @@ Before emitting a cluster, check `02-Library/ideas/`, `people/` and `tools/` for
 Weekly agent config (managed in `~/.claude/hooks/` not here):
 - Trigger: Friday 6pm ET
 - Command: `/emerge --days 7 --audit`
-- Output: `01-Projects/VAULT/conversations/reports/emerge-YYYY-WW.md` (ISO week number)
-- Side effect: appends one-line summary to `01-Projects/VAULT/conversations/reports/emerge-log.md` (run ID, cluster count, top cluster name).
+- Output: `01-Projects/VAULT/REPORTS/emerge-YYYY-WW.md` (ISO week number)
+- Side effect: appends one-line summary to `01-Projects/VAULT/REPORTS/emerge-log.md` (run ID, cluster count, top cluster name).
 
 The `--audit` flag means:
 - No interactive prompts.

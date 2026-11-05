@@ -14,8 +14,8 @@ Work about the vault itself. Skills and agents write their logs and reports here
 ## What lives here
 
 - [[log]] — the append-only vault log. `/wiki` adds one line per run; anything may append a dated entry, nothing rewrites one.
-- `conversations/` — meta-conversations about the vault (architecture sessions, graph repairs).
-- `conversations/reports/` — daily, audit, weekly and health reports from the scheduled agents and `/wiki audit`. Never in `03-Index/`.
+- `!!conversations/` — text chats about the vault (architecture sessions, graph repairs). Chats only.
+- `REPORTS/` — daily, audit, weekly and health reports from the scheduled agents and `/wiki audit`. Never in `03-Index/` or `!!conversations/`.
 
 ## Related
 

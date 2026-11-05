@@ -28,13 +28,13 @@ Vault/
 ├── 01-Projects/            # active projects, each with an index note matching the folder name
 │   ├── <PROJECT>/
 │   │   ├── <PROJECT>.md    # the project's hub note (filename = folder name)
-│   │   ├── conversations/  # /save captures: your text chats with AI assistants about it
+│   │   ├── !!conversations/  # /save captures: your text chats with AI assistants about it
 │   │   ├── notes/          # everything written for the project, incl. its own sources
 │   │   └── assets/         # images, PDFs, media (no code)
 │   ├── MISC/               # catch-all: conversations that belong to no single project
 │   ├── VAULT/              # work ABOUT the vault itself
 │   │   ├── log.md          # the append-only vault log
-│   │   └── conversations/reports/   # daily / audit / weekly / health reports
+│   │   └── REPORTS/        # daily / audit / weekly / health reports
 │   └── INCUBATOR/          # staging lane for pre-project ideas
 ├── 02-Library/             # cross-project reference only: things that belong to no single project
 │   ├── people/             # one note per person
@@ -50,7 +50,7 @@ The numbered folders run 01 to 04 with no gaps. `03-Index/` was `04-Index/` and 
 
 ### Folder rules
 
-- **01-Projects/<project>/conversations/** — raw conversation captures and session transcripts for that project. A conversation that belongs to no single project goes to the catch-all project's `conversations/` (`01-Projects/MISC/` unless `aliases.yaml` names another). Conversations never go in `02-Library/`. `VAULT/` is reserved for meta-work about the vault itself; never put project content there.
+- **01-Projects/<project>/!!conversations/** — raw conversation captures and session transcripts for that project. A conversation that belongs to no single project goes to the catch-all project's `!!conversations/` (`01-Projects/MISC/` unless `aliases.yaml` names another). Conversations never go in `02-Library/`. `VAULT/` is reserved for meta-work about the vault itself; never put project content there.
 - **01-Projects/<project>/notes/** — everything written for the project, including sources tied to it (they keep `type: source`).
 - **02-Library/** — cross-project reference only. `sources/` holds one note per outside source that no single project owns: filename `LIT-<slug>.md` or `SRC-<YYYY-MM-DD>-<slug>.md`, source URL in frontmatter. `ideas/` holds atomic notes, one idea per file, kebab-case filename. `people/` and `tools/` hold one note per person or tool (`type: concept`, tagged `person` or `tool`).
 - **03-Index/** — maps of content only: MOCs, the master Index, `Projects-Index.md`, and the graph `Map.canvas`. Link lists, never reports, audits, logs or dailies. Every new idea should be linked from at least one index.
@@ -60,14 +60,14 @@ The numbered folders run 01 to 04 with no gaps. `03-Index/` was `04-Index/` and 
 
 ### Retired folders — never write to these
 
-The 2026-04-16 mogging collapsed an older layout into the folders above. On 2026-11-05 (Library v2) `02-Sources/` and `03-Concepts/` merged into `02-Library/`, `04-Index/` became `03-Index/`, and `05-Tasks/` became `04-Tasks/`. These directories are retired and must never be re-created or written to:
+The 2026-04-16 mogging collapsed an older layout into the folders above. On 2026-11-05 (Library v2) `02-Sources/` and `03-Concepts/` merged into `02-Library/`, `04-Index/` became `03-Index/`, and `05-Tasks/` became `04-Tasks/`. The same day every project's `conversations/` became `!!conversations/` (it sorts first in Finder), and the VAULT reports moved out of it to `01-Projects/VAULT/REPORTS/`. These directories are retired and must never be re-created or written to:
 
 ```
 00-Inbox/      01-Fleeting/   02-Literature/   02-Sources/    03-Concepts/   03-Permanent/
 04-Index/      04-MOC/        05-Tasks/        05-Templates/  06-Assets/     07-Projects/   08-Tasks/
 ```
 
-A vault from before Library v2 may still have `02-Sources/`, `03-Concepts/`, `04-Index/` and `05-Tasks/`. Skills may read them until they're moved, and never write there. `scripts/migrate-to-library.sh` in the `2ndBrain-mogging` repo moves `02-Sources/*` to `02-Library/sources/` and `03-Concepts/*` to `02-Library/ideas/`, and renames `04-Index/` to `03-Index/` and `05-Tasks/` to `04-Tasks/` (with `git mv` in a git vault, so a tasks submodule follows). Wikilinks are by note name, so the move breaks no links. Anything outside the vault that names `05-Tasks/` by path, like a sync daemon or a launchd plist, has to be updated by hand.
+A vault from before Library v2 may still have `02-Sources/`, `03-Concepts/`, `04-Index/` and `05-Tasks/`. Skills may read them until they're moved, and never write there. `scripts/migrate-to-library.sh` in the `2ndBrain-mogging` repo moves `02-Sources/*` to `02-Library/sources/` and `03-Concepts/*` to `02-Library/ideas/`, renames `04-Index/` to `03-Index/` and `05-Tasks/` to `04-Tasks/`, and renames every `conversations/` under `01-Projects/` to `!!conversations/` (with `git mv` in a git vault, so a tasks submodule follows). Wikilinks are by note name, so the move breaks no links. Anything outside the vault that names `05-Tasks/` by path, like a sync daemon or a launchd plist, has to be updated by hand.
 
 If a skill or config still points at any of them, it's stale — treat it as a bug, not a source of truth.
 
@@ -75,7 +75,7 @@ If a skill or config still points at any of them, it's stale — treat it as a b
 
 The vault operates under four regimes that describe how content moves:
 
-1. **Capture** — raw inbound thoughts, URLs, and conversations land in `01-Projects/<PROJECT>/conversations/` (post-2026-05-08; the old top-level `01-Conversations/` was retired), the project's `notes/`, or `02-Library/sources/` for a source no single project owns. Minimal processing.
+1. **Capture** — raw inbound thoughts, URLs, and conversations land in `01-Projects/<PROJECT>/!!conversations/` (post-2026-05-08; the old top-level `01-Conversations/` was retired), the project's `notes/`, or `02-Library/sources/` for a source no single project owns. Minimal processing.
 2. **Connect** — promote captures into `02-Library/ideas/` (or `people/`, `tools/`) as atomic notes. Link to other notes and to at least one MOC in `03-Index/`.
 3. **Curate** — maintain `03-Index/` and project indexes in `01-Projects/`. Keep bidirectional links tight. Orphaned notes are the enemy.
 4. **Complete** — drive tasks through `04-Tasks/` and project indexes. Archive completed projects rather than deleting them.
@@ -90,11 +90,11 @@ Slash commands shipped with the mogging pack. Descriptions match each skill's ow
 4. `/emerge` — pattern-miner. Scans files modified in the last N days, extracts signals, clusters them, and names each cluster as a candidate concept. Powers the weekly review.
 5. `/connect` — bridge two notes. Finds semantic overlap, shared structural patterns, and candidate intermediate bridge notes. Read-only. Outputs 3–5 concrete connections typed as structural analogy, transfer opportunity, or collision idea.
 6. `/tether` — audits and repairs `01-Projects/`: filename-equals-folder, bidirectional links to Projects-Index and MOCs, org-hub tethering, sub-project back-links, unlinked-mention detection. Dry-run by default; atomic per-project transactions on `--execute`.
-7. `/backfill` — scrapes historical Claude Code session JSONLs into the vault as structured conversation notes. Handles inventory, cost estimation, secret scrubbing, chunked summarization, dedup, and resumable batch runs. Routes to `01-Projects/<project>/conversations/YYYY-MM-DD-<slug>.md` using the same signals as `/save`.
+7. `/backfill` — scrapes historical Claude Code session JSONLs into the vault as structured conversation notes. Handles inventory, cost estimation, secret scrubbing, chunked summarization, dedup, and resumable batch runs. Routes to `01-Projects/<project>/!!conversations/YYYY-MM-DD-<slug>.md` using the same signals as `/save`.
 8. `/aliases` — bootstraps and maintains `Claude-Memory/aliases.yaml`, the canonical entity→project disambiguation file used by `/save`, `/backfill`, `/tether`, and `/wiki`. Never overwrites the canonical file without review; emits to `aliases-pending.md` for merge.
 9. `/autoresearch` — three-round web research loop. Decomposes a topic, gathers sources, gap-fills contradictions, and emits vault-ready source + idea notes (`02-Library/sources/`, `02-Library/ideas/`) with confidence labels. Factual-only for source notes.
 10. `/canvas` — generates and maintains Obsidian Canvas files from vault queries. Central `03-Index/Map.canvas` uses a Fibonacci-spiral layout. Deterministic node IDs, JSON Canvas 1.0 validation, never mutates source notes.
-11. `/import-claude` — one-shot import of a Claude.ai or ChatGPT data-export zip. Unzip → inspect → bucket conversations → write full-fidelity captures to `01-Projects/<PROJECT>/conversations/` (post-2026-05-08; the old top-level `01-Conversations/` was retired; cross-cutting chats go to the catch-all project), and linked stubs to `02-Library/ideas/`. Alias-classified, dry-run-previewed, append-only.
+11. `/import-claude` — one-shot import of a Claude.ai or ChatGPT data-export zip. Unzip → inspect → bucket conversations → write full-fidelity captures to `01-Projects/<PROJECT>/!!conversations/` (post-2026-05-08; the old top-level `01-Conversations/` was retired; cross-cutting chats go to the catch-all project), and linked stubs to `02-Library/ideas/`. Alias-classified, dry-run-previewed, append-only.
 12. `/import-notes` — one-shot import of an existing notes pile from Apple Notes / OneNote / Notion / Evernote / raw files (docx/pptx/xlsx/html/rtf/md/txt). Pandoc + xlsx2csv conversion, per-file validation, folder classification against the layout above, dry-run-previewed.
 13. `/vault-coach` — onboarding + maintenance coach. Auto-loads right after install and whenever you add a folder or project. Drafts the missing index note (filename = folder name), registers it in `03-Index/Projects-Index.md`, enforces bidirectional tethering, runs orphan hygiene, and asks one question at a time. The live counterpart to `docs/MAINTAINING-YOUR-BRAIN.md`.
 
@@ -102,10 +102,10 @@ Slash commands shipped with the mogging pack. Descriptions match each skill's ow
 
 Four launchd agents run on a cron schedule and keep the vault honest. All are audit-only by default — any write-capable scheduled work requires explicit opt-in via the agent's frontmatter. Each agent's full contract lives in `agents/<name>.md`.
 
-1. **morning** — 8:00 AM ET daily. Pulls today's Morgen events, surfaces overdue/today tasks, primes `Claude-Memory/hot.md` with the day's context. Writes `01-Projects/VAULT/conversations/reports/daily-YYYY-MM-DD.md`.
-2. **nightly** — 10:00 PM ET daily. Runs `/wiki audit` scoped to `02-Library` and `03-Index`. Writes `01-Projects/VAULT/conversations/reports/audit-YYYY-MM-DD.md` and updates `Claude-Memory/lint-counter.json`. Never writes to idea or source notes.
-3. **weekly** — 6:00 PM ET Fridays. Runs `/emerge --days 7 --audit`, produces a week-in-review report covering new concepts, killed ideas, unresolved contradictions, and the rolling 7-day audit trend. Writes `01-Projects/VAULT/conversations/reports/weekly-YYYY-WW.md`.
-4. **health** — 9:00 PM ET Sundays. Four-gate vault integrity check: symlink resolution, Obsidian plugin loads, n8n sync freshness, Morgen↔Obsidian task-count parity. Writes `01-Projects/VAULT/conversations/reports/health-YYYY-MM-DD.md`.
+1. **morning** — 8:00 AM ET daily. Pulls today's Morgen events, surfaces overdue/today tasks, primes `Claude-Memory/hot.md` with the day's context. Writes `01-Projects/VAULT/REPORTS/daily-YYYY-MM-DD.md`.
+2. **nightly** — 10:00 PM ET daily. Runs `/wiki audit` scoped to `02-Library` and `03-Index`. Writes `01-Projects/VAULT/REPORTS/audit-YYYY-MM-DD.md` and updates `Claude-Memory/lint-counter.json`. Never writes to idea or source notes.
+3. **weekly** — 6:00 PM ET Fridays. Runs `/emerge --days 7 --audit`, produces a week-in-review report covering new concepts, killed ideas, unresolved contradictions, and the rolling 7-day audit trend. Writes `01-Projects/VAULT/REPORTS/weekly-YYYY-WW.md`.
+4. **health** — 9:00 PM ET Sundays. Four-gate vault integrity check: symlink resolution, Obsidian plugin loads, n8n sync freshness, Morgen↔Obsidian task-count parity. Writes `01-Projects/VAULT/REPORTS/health-YYYY-MM-DD.md`.
 
 ## 3 non-negotiables
 

@@ -21,14 +21,14 @@ This doc tells Claude **where to put things** when you run `/import-claude`, `/i
 
 This is the post-mogging vault layout. On 2026-11-05 (Library v2) `02-Sources/` and `03-Concepts/` merged into `02-Library/`, `04-Index/` became `03-Index/`, and `05-Tasks/` became `04-Tasks/`, so the numbers run 01 to 04 with no gaps. The folders below are the only writable targets — the skills will refuse to write anywhere else without explicit user confirmation.
 
-### `01-Projects/<PROJECT>/conversations/` (post-2026-05-08; `01-Projects/<PROJECT>/conversations/` was retired) — full-fidelity chat captures
+### `01-Projects/<PROJECT>/!!conversations/` (post-2026-05-08; the old top-level `01-Conversations/` was retired) — full-fidelity chat captures
 
 - Output of `/save` and `/import-claude`.
-- Subfolder-mirrors the structure of `01-Projects/` (so `<ORG-C>/` conversations land under `01-Projects/<ORG-C>/conversations/`).
+- Subfolder-mirrors the structure of `01-Projects/` (so `<ORG-C>/` conversations land under `01-Projects/<ORG-C>/!!conversations/`).
 - Filename: `YYYY-MM-DD-<slug>.md`.
 - Frontmatter: `type: conversation`, `owner: human` — blocks future auto-mutation.
 - A `VAULT/` subtree holds vault-about-vault captures (conversations *about* the system itself).
-- Cross-cutting chats (no single project) go to the catch-all project's `conversations/` — `01-Projects/MISC/conversations/` by default, or whichever project `aliases.yaml` marks as the catch-all. Conversations never go in the Library.
+- Cross-cutting chats (no single project) go to the catch-all project's `!!conversations/` — `01-Projects/MISC/!!conversations/` by default, or whichever project `aliases.yaml` marks as the catch-all. Conversations never go in the Library.
 
 ### `02-Library/` — cross-project reference only
 
@@ -55,13 +55,13 @@ Things that belong to no single project. Four subfolders:
 - Group and link related concepts into a topic map.
 - Filename: `<Topic>-Index.md` (e.g. `Tech-Index.md`, `Poetry-Index.md`).
 - Also lives here: `Map.canvas` if you build one.
-- Maps only. No reports, audits, logs, or dailies: `/wiki audit` output goes to `01-Projects/VAULT/conversations/reports/audit-YYYY-MM-DD.md`.
+- Maps only. No reports, audits, logs, or dailies: `/wiki audit` output goes to `01-Projects/VAULT/REPORTS/audit-YYYY-MM-DD.md`.
 - No content lives in `03-Index/` beyond structure + wikilinks — don't dump prose here.
 
 ### `01-Projects/` — active work
 
 - One folder per active project. The folder name matches the index filename exactly (`FOO/FOO.md`, never `FOO/FOO-Index.md`).
-- `conversations/` holds the project's saved chats, `notes/` holds everything written for it (including project-specific sources), and `assets/` holds images, PDFs, and media.
+- `!!conversations/` holds the project's saved chats, `notes/` holds everything written for it (including project-specific sources), and `assets/` holds images, PDFs, and media.
 - Other subfolders (`content/`, `misc-building/`, `GITHUB/`, etc.) are up to each project — use whatever makes sense, as long as the project's top-level index links them.
 - `INCUBATOR/` is the staging lane for ideas not yet formal project folders.
 - **Never auto-rewrite a project index file.** Add backlinks via `/tether` proposals; let the human merge.
@@ -85,8 +85,8 @@ Things that belong to no single project. Four subfolders:
 
 | If the incoming note is… | Send it to… | Frontmatter hints |
 |---|---|---|
-| A full chat transcript (Claude / ChatGPT / voice memo) | `01-Projects/<PROJECT>/conversations/<sub>/YYYY-MM-DD-<slug>.md` | `type: conversation`, `owner: human` |
-| A cross-cutting chat (no single project) | `01-Projects/MISC/conversations/YYYY-MM-DD-<slug>.md` (the catch-all project) | `type: conversation`, `owner: human` |
+| A full chat transcript (Claude / ChatGPT / voice memo) | `01-Projects/<PROJECT>/!!conversations/<sub>/YYYY-MM-DD-<slug>.md` | `type: conversation`, `owner: human` |
+| A cross-cutting chat (no single project) | `01-Projects/MISC/!!conversations/YYYY-MM-DD-<slug>.md` (the catch-all project) | `type: conversation`, `owner: human` |
 | A summary of an article, video, podcast, or paper (cross-project) | `02-Library/sources/SRC-<YYYY-MM-DD>-<slug>.md` | `type: source`, `source: <url>` |
 | A source tied to one project | `01-Projects/<project>/notes/SRC-<YYYY-MM-DD>-<slug>.md` | `type: source`, `related: [[<project>]]` |
 | A refined atomic idea in the user's voice | `02-Library/ideas/<slug>.md` | `type: concept`, `owner: wiki` (new) or `human` (user-written) |
@@ -158,6 +158,6 @@ Once `/import-claude` or `/import-notes` finishes, run these in order:
 
 1. `/tether` — audits bidirectional project links and fixes orphans.
 2. `/connect` — proposes `[[wikilinks]]` between notes that share concepts but don't link yet.
-3. `/wiki audit` — writes a dated audit report to `01-Projects/VAULT/conversations/reports/audit-YYYY-MM-DD.md` so you can see what still needs a human pass.
+3. `/wiki audit` — writes a dated audit report to `01-Projects/VAULT/REPORTS/audit-YYYY-MM-DD.md` so you can see what still needs a human pass.
 
 This replaces the old monolithic "wire the vault" step with three targeted skills you can run on demand.

@@ -91,7 +91,7 @@ assert_eq "$FIRST_RC" "0" "install.sh exits 0 on first run"
 # ---------------------------------------------------------------------------
 # Canonical folders (5, plus 02-Library's four and the catch-all project).
 # ---------------------------------------------------------------------------
-for d in 01-Projects 02-Library 02-Library/people 02-Library/tools 02-Library/ideas 02-Library/sources 03-Index 04-Tasks Claude-Memory 01-Projects/MISC/conversations; do
+for d in 01-Projects 02-Library 02-Library/people 02-Library/tools 02-Library/ideas 02-Library/sources 03-Index 04-Tasks Claude-Memory '01-Projects/MISC/!!conversations' 01-Projects/VAULT/REPORTS; do
   assert_dir "$FAKE_VAULT/$d" "canonical folder created: $d"
 done
 # Library v2 retired these; a fresh install must not create them.
@@ -112,7 +112,9 @@ assert_contains "$FAKE_VAULT/SOUL.md" "re:^#+[[:space:]]+Critical facts" "SOUL.m
 for f in 01-Projects/VAULT/VAULT.md 01-Projects/VAULT/log.md 03-Index/Index.md; do
   assert_file "$FAKE_VAULT/$f" "seeded: $f"
 done
-assert_dir "$FAKE_VAULT/01-Projects/VAULT/conversations/reports" "seeded: 01-Projects/VAULT/conversations/reports/"
+assert_dir "$FAKE_VAULT/01-Projects/VAULT/REPORTS" "seeded: 01-Projects/VAULT/REPORTS/"
+# Chat folders are named !!conversations since 2026-11-05; reports never live in one.
+if find "$FAKE_VAULT/01-Projects" -type d -name conversations | grep -q .; then _fail "a plain conversations/ folder was seeded"; else _pass "no plain conversations/ folder seeded"; fi
 
 # ---------------------------------------------------------------------------
 # CLAUDE.md routing headers + folder references.

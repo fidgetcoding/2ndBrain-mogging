@@ -53,13 +53,13 @@ The numbers run 01 to 04 with no gaps. On 2026-11-05 `02-Sources/` and `03-Conce
 
 ### `01-Projects/` — your actual work
 
-One folder per project. Each project folder contains a `conversations/` subfolder, and **every saved Claude chat about that project lands there.** Notes written for the project, including sources that only matter to it, go in its `notes/` subfolder.
+One folder per project. Each project folder contains a `!!conversations/` subfolder, and **every saved Claude chat about that project lands there.** Notes written for the project, including sources that only matter to it, go in its `notes/` subfolder.
 
 ```
 01-Projects/
 └── Project-A/
     ├── Project-A.md       ← index note (filename = folder name)
-    ├── conversations/     ← every /save'd chat about Project-A
+    ├── !!conversations/     ← every /save'd chat about Project-A
     ├── notes/             ← notes and sources written for Project-A
     └── research/          ← a subfolder you added
         └── research.md    ← its own index note
@@ -74,11 +74,11 @@ Things that are worth remembering but **not tied to a project**. Four shelves:
 - **`people/`** — one note per person.
 - **`tools/`** — one note per tool, app, service, model, or library.
 
-Saved chats never go here. A chat that isn't about one project goes to your catch-all project's `conversations/` (`01-Projects/MISC/` unless you picked another).
+Saved chats never go here. A chat that isn't about one project goes to your catch-all project's `!!conversations/` (`01-Projects/MISC/` unless you picked another).
 
 ### `03-Index/` — navigation
 
-This is the layer that **teaches your second brain how to operate itself.** Maps of content, the `Projects-Index`, the graph map. Maps only: audit reports and logs live under `01-Projects/VAULT/conversations/reports/`, not here. When you add a project, this is where you register it.
+This is the layer that **teaches your second brain how to operate itself.** Maps of content, the `Projects-Index`, the graph map. Maps only: audit reports and logs live under `01-Projects/VAULT/REPORTS/`, not here. When you add a project, this is where you register it.
 
 ### `04-Tasks/` — tasks (optional)
 
@@ -180,7 +180,7 @@ You don't have to start empty. Two paths, depending on your account.
 3. Copy that markdown into your terminal.
 4. Say: **"Here's a summary of what I did on Project-A. Organize it into the brain."**
 
-Either way: conversations go to `conversations/`, and reusable knowledge or assets route to wherever they belong.
+Either way: conversations go to `!!conversations/`, and reusable knowledge or assets route to wherever they belong.
 
 ### Why markdown, never PDF
 

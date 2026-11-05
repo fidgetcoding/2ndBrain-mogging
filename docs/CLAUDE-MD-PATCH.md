@@ -32,13 +32,13 @@ Every write path in every skill resolves its target against this table. If a ski
 
 | Folder | Role | Primary writer | Notes |
 |---|---|---|---|
-| `01-Projects/<PROJECT>/conversations/` (post-2026-05-08; the old top-level `01-Conversations/` was retired) | `/save` output + scheduled-agent reports; mirrors `01-Projects/` subfolders | `save` (branches 1–3) | Append-only per file. A conversation with no single project goes to the catch-all project's `conversations/` (the `aliases.yaml` entry aliased `catch-all`; `01-Projects/MISC/` by default), never to `02-Library/`. The `LIT-conversation-*` mirror is retired. Scheduled agents write reports under `01-Projects/VAULT/conversations/reports/` and nowhere else. Vault-about-vault notes live under `01-Projects/VAULT/conversations/`. |
+| `01-Projects/<PROJECT>/!!conversations/` (post-2026-05-08; the old top-level `01-Conversations/` was retired) | `/save` output: text chats with AI assistants only (never audio captures, reports or logs); mirrors `01-Projects/` subfolders. Named `!!conversations/` since 2026-11-05 so it sorts first in Finder | `save` (branches 1–3) | Append-only per file. A conversation with no single project goes to the catch-all project's `!!conversations/` (the `aliases.yaml` entry aliased `catch-all`; `01-Projects/MISC/` by default), never to `02-Library/`. The `LIT-conversation-*` mirror is retired. Scheduled agents write reports under `01-Projects/VAULT/REPORTS/` and nowhere else. Vault-about-vault notes live under `01-Projects/VAULT/!!conversations/`. |
 | `01-Projects/<PROJECT>/notes/` | Everything written for one project, including sources tied to it | `save` (branch 2 `--source`), `wiki add` | A source owned by one project lives here, not in the Library, and keeps `type: source`. |
 | `02-Library/sources/` | Source-of-truth notes for external content no single project owns (articles, videos, transcripts, emails, PDFs, books) | `save` (branch 2 `--source`), `autoresearch`, `wiki add` | Cross-project only. Each file carries `source_url` + `source_type` + `captured` in frontmatter. Body is summary; raw fetched text lives in a `> [!source]` callout or a fenced block. Replaces legacy `02-Sources/` (and `02-Literature/` before it). |
 | `02-Library/ideas/` | Refined atomic idea notes — one idea per file | `wiki` | `type: concept`. Needs ≥1 inbound from a source (`02-Library/sources/` or a project's `notes/`) and ≥1 outbound to `03-Index/`. First write sets `needs_review: true`; `wiki promote` flips it once the note has 3+ inbound links. Replaces legacy `03-Concepts/` (and `03-Permanent/` before it). Existing notes grandfathered with `owner: human` are never silently rewritten. |
 | `02-Library/people/`, `02-Library/tools/` | One note per person; one note per tool, app, service, model or library | `wiki` | `type: concept` plus tag `person` or `tool`. Cross-project only. Same link minimum as `ideas/`. |
 | `03-Index/` | Maps of content (indexes), hub pages, topic guides | `wiki`, `tether` | Maps only — link lists + terse one-liners. Never reports, audits, logs or dailies. Must list every idea in its topic cluster. Contains `Index.md`, `Home-Index`, `Projects-Index`, `Poetry-Index`, `Tech-Index`, and `Map.canvas`. Replaces legacy `04-MOC/`. |
-| `01-Projects/` | Project hubs mirroring Claude Projects; includes `INCUBATOR/` and the catch-all `MISC/` | `save` (branches 1–3), `tether` | Every project folder has an index note where filename = folder name (`FOO/FOO.md`, never `FOO-Index.md`), plus `conversations/`, `notes/` and `assets/` as needed. Bidirectional links up to `03-Index/Projects-Index.md` are mandatory. |
+| `01-Projects/` | Project hubs mirroring Claude Projects; includes `INCUBATOR/` and the catch-all `MISC/` | `save` (branches 1–3), `tether` | Every project folder has an index note where filename = folder name (`FOO/FOO.md`, never `FOO-Index.md`), plus `!!conversations/`, `notes/` and `assets/` as needed. Bidirectional links up to `03-Index/Projects-Index.md` are mandatory. |
 | `04-Tasks/` | Obsidian Tasks plugin files + inline tasks | `save` (UUID-preserving edits only) | `/wiki` and `/autoresearch` are FORBIDDEN from writing here. `/save` is edit-safe only with strict UUID preservation. No agent writes here. Live n8n ↔ Morgen 2-way sync is wired through this folder (Notion was dropped 2026-05-04); the `04-Tasks/` git submodule is preserved. |
 | `Claude-Memory/` | Plugin working state: aliases, ADRs, session manifests, hot context | `aliases`, `save` (ADR branch + backfill manifest), `emerge` (hot.md) | Symlink to `~/.claude/projects/<project-slug>/memory/`. Treat as config, not user-facing notes. `aliases.yaml` is the canonical alias source; `adr/` holds ADRs; `backfill-manifest.jsonl` is append-only. |
 
@@ -46,7 +46,7 @@ The numbered folders run 01 to 04 with no gaps. `03-Index/` was `04-Index/` and 
 
 **Killed folders** (pre-mogging layout, do not recreate): `00-Inbox/`, `01-Fleeting/`, `05-Templates/`, `06-Assets/`. If a skill sees one of these in a legacy vault, it treats the content as residue and routes it through `/save` migration — it does not reanimate the folder.
 
-**Retired by Library v2 (2026-11-05):** `02-Sources/` → `02-Library/sources/`, `03-Concepts/` → `02-Library/ideas/`, `04-Index/` → `03-Index/`, `05-Tasks/` → `04-Tasks/`. Skills may read them while a vault still has them; they never write there. `scripts/migrate-to-library.sh` in the plugin repo moves and renames them (dry run by default, `--apply` to act; `git mv` in a git vault, so a tasks submodule follows). People and tools get sorted into `people/` and `tools/` later. Anything outside the vault that names `05-Tasks/` by path (a sync daemon, a launchd plist, an n8n path filter) has to be updated by hand.
+**Retired by Library v2 (2026-11-05):** `02-Sources/` → `02-Library/sources/`, `03-Concepts/` → `02-Library/ideas/`, `04-Index/` → `03-Index/`, `05-Tasks/` → `04-Tasks/`, every `01-Projects/**/conversations/` → `!!conversations/`, and `01-Projects/VAULT/conversations/reports/` → `01-Projects/VAULT/REPORTS/`. Skills may read them while a vault still has them; they never write there. `scripts/migrate-to-library.sh` in the plugin repo moves and renames them (dry run by default, `--apply` to act; `git mv` in a git vault, so a tasks submodule follows). People and tools get sorted into `people/` and `tools/` later. Anything outside the vault that names `05-Tasks/` by path (a sync daemon, a launchd plist, an n8n path filter) has to be updated by hand.
 
 ### Note-type contract (frontmatter `type:`)
 
@@ -59,7 +59,7 @@ Closed set. A skill encountering an unknown `type` halts with a parse error rath
 | `source` | `02-Library/sources/`, or a project's `notes/` | External input (article, video, transcript, email, PDF, book). Must have `source_url`, `source_type`, `captured`. |
 | `concept` | `02-Library/ideas/`, `people/`, `tools/` | Refined atomic idea, person or tool (tag `person` / `tool`). Needs `last_confirmed`, `needs_review`, `owner`. |
 | `index` | `03-Index/` | Map of content, hub, topic index. Body is a link list, not prose. |
-| `conversation` | `01-Projects/<PROJECT>/conversations/` (post-2026-05-08; the old top-level `01-Conversations/` was retired) | `/save` output + scheduled-agent reports. No per-type additions beyond universal fields. |
+| `conversation` | `01-Projects/<PROJECT>/!!conversations/` (post-2026-05-08; the old top-level `01-Conversations/` was retired) | `/save` output (text chats with AI assistants). No per-type additions beyond universal fields. |
 | `adr` | `Claude-Memory/adr/` | Architectural decision record. Has `status`, `supersedes`, `superseded_by`. |
 | `synthesis` | `02-Library/ideas/` or `03-Index/` | Cross-concept rollup. Has `answers_question`, `sources`. |
 
@@ -114,10 +114,10 @@ Local installs use **hardlinks** (preferred) or symlinks — `install.sh --apply
 
 | Agent | When | Writes to | Purpose |
 |---|---|---|---|
-| `morning` | 08:00 local | `01-Projects/VAULT/conversations/reports/MORNING-<date>.md` (opt-in) | Review yesterday's transcripts, flag unsaved content. |
-| `nightly` | 22:00 local | `01-Projects/VAULT/conversations/reports/NIGHTLY-<date>.md` | `/tether` audit + `/connect` suggestions. |
-| `weekly` | Friday 18:00 | `01-Projects/VAULT/conversations/reports/WEEKLY-<date>.md` | `/emerge` pass over `02-Library/`. |
-| `health` | Sunday 21:00 | `01-Projects/VAULT/conversations/reports/HEALTH-<date>.md` | Broken wikilinks, orphan files, missing frontmatter. |
+| `morning` | 08:00 local | `01-Projects/VAULT/REPORTS/MORNING-<date>.md` (opt-in) | Review yesterday's transcripts, flag unsaved content. |
+| `nightly` | 22:00 local | `01-Projects/VAULT/REPORTS/NIGHTLY-<date>.md` | `/tether` audit + `/connect` suggestions. |
+| `weekly` | Friday 18:00 | `01-Projects/VAULT/REPORTS/WEEKLY-<date>.md` | `/emerge` pass over `02-Library/`. |
+| `health` | Sunday 21:00 | `01-Projects/VAULT/REPORTS/HEALTH-<date>.md` | Broken wikilinks, orphan files, missing frontmatter. |
 
 Scheduled agents are audit-only by default. Any write-capable scheduled agent requires explicit opt-in via its plist. Every scheduled write carries commit prefix `[bot:<agent>]` so the n8n 2-way sync's loop-prevention skips it. (Notion was dropped from the sync stack on 2026-05-04 — `task-maxxing` is now Obsidian ↔ Morgen only; the W3 worker is a no-op stub.)
 

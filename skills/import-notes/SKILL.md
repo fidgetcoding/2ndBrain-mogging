@@ -93,7 +93,7 @@ Apply the same alias lookup `/save` uses. Read `Claude-Memory/aliases.yaml`; for
 | If the note is… | Write it to… |
 |---|---|
 | A summary of an article, video, podcast, or external read | `02-Library/sources/SRC-<date>-<slug>.md` with `type: source`, or the project's `notes/` when it is tied to one project |
-| A summary of a conversation (including Claude / ChatGPT one-offs) | `01-Projects/<project>/conversations/<date>-<slug>.md`, or the catch-all project's `conversations/` when it spans projects. Never the Library; the old `LIT-conversation-*` mirror is retired |
+| A summary of a conversation (including Claude / ChatGPT one-offs) | `01-Projects/<project>/!!conversations/<date>-<slug>.md`, or the catch-all project's `!!conversations/` when it spans projects. Never the Library; the old `LIT-conversation-*` mirror is retired |
 | A refined, atomic idea in the user's voice | `02-Library/ideas/<slug>.md` with `owner: wiki` + `type: concept` (`02-Library/people/` or `tools/` for a note about one person or one tool, tagged `person` / `tool`) |
 | Tied to a specific active project | `01-Projects/<project>/notes/<slug>.md` (NOT the project index file) |
 | Meeting notes, raw dumps, partially-formed | the matching project's `notes/` (catch-all project when nothing matches) with `tags: [raw, triage]` |

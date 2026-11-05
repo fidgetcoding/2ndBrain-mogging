@@ -1,6 +1,6 @@
 ---
 name: import-claude
-description: Walk the user through a one-shot import of their full Claude.ai (or ChatGPT) data export into the 2ndBrain-mogging vault. Unzip → inspect → bucket conversations by source project/topic → write full-fidelity captures to 01-Projects/<PROJECT>/conversations/<sub>/ (cross-cutting ones to the catch-all project's conversations/) and linked concept stubs to 02-Library/ideas/. Alias-classified, dry-run-previewed, append-only.
+description: Walk the user through a one-shot import of their full Claude.ai (or ChatGPT) data export into the 2ndBrain-mogging vault. Unzip → inspect → bucket conversations by source project/topic → write full-fidelity captures to 01-Projects/<PROJECT>/!!conversations/<sub>/ (cross-cutting ones to the catch-all project's !!conversations/) and linked concept stubs to 02-Library/ideas/. Alias-classified, dry-run-previewed, append-only.
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash
 ---
 
@@ -79,8 +79,8 @@ Emit a summary: `N conversations, grouped into P projects / folders, Q with no p
 
 Apply the same alias lookup `/save` uses. Read `Claude-Memory/aliases.yaml`; for each conversation:
 
-- If the title, earliest system prompt, or project name matches an alias → route to that project's folder in `01-Projects/<PROJECT>/conversations/<sub>/`.
-- If no alias match, or the conversation spans several projects → route to the catch-all project's `conversations/UNCATEGORIZED/` and flag for user review. The catch-all is the `Claude-Memory/aliases.yaml` project entry whose `aliases` list includes "catch-all"; if no entry has it, use `01-Projects/MISC/`. Conversations never go in `02-Library/`.
+- If the title, earliest system prompt, or project name matches an alias → route to that project's folder in `01-Projects/<PROJECT>/!!conversations/<sub>/`.
+- If no alias match, or the conversation spans several projects → route to the catch-all project's `!!conversations/UNCATEGORIZED/` and flag for user review. The catch-all is the `Claude-Memory/aliases.yaml` project entry whose `aliases` list includes "catch-all"; if no entry has it, use `01-Projects/MISC/`. Conversations never go in `02-Library/`.
 
 Never invent a project folder that doesn't exist in `01-Projects/` without asking first.
 
@@ -88,7 +88,7 @@ Never invent a project folder that doesn't exist in `01-Projects/` without askin
 
 For each kept conversation, write:
 
-**Primary (`01-Projects/<PROJECT>/conversations/<sub>/YYYY-MM-DD-<slug>.md`):**
+**Primary (`01-Projects/<PROJECT>/!!conversations/<sub>/YYYY-MM-DD-<slug>.md`):**
 
 ```yaml
 ---
@@ -118,7 +118,7 @@ For each conversation, extract 1-3 atomic ideas that could become concept notes.
 ### 6. Backlink updates
 
 - Update the project index in `01-Projects/<project>/<project>.md` with a new line under `## Conversations` (create the section if missing).
-- Update `03-Index/Projects-Index.md` if a new project-mirror folder under `01-Projects/<PROJECT>/conversations/` (post-2026-05-08; `01-Projects/<PROJECT>/conversations/` was retired) was created.
+- Update `03-Index/Projects-Index.md` if a new project-mirror folder under `01-Projects/<PROJECT>/!!conversations/` (post-2026-05-08; the old top-level `01-Conversations/` was retired) was created.
 
 ### 7. State checkpoint
 

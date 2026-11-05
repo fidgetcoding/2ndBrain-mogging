@@ -516,6 +516,16 @@ seed_vault_from_template() {
       warn "  migrate it with: bash $REPO_ROOT/scripts/migrate-to-library.sh --vault \"$VAULT\"   (dry run; add --apply)"
     fi
   done
+
+  # Since 2026-11-05 every project's chat folder is !!conversations/ (it sorts
+  # first in Finder), and the VAULT reports live in 01-Projects/VAULT/REPORTS/.
+  # The name sits in a single-quoted variable so no shell ever expands the !!.
+  local chat='!!conversations' old_chat=""
+  old_chat="$(find "$VAULT/01-Projects" -maxdepth 3 -type d -name conversations -print -quit 2>/dev/null || true)"
+  if [[ -n "$old_chat" || -d "$VAULT/01-Projects/VAULT/conversations/reports" ]]; then
+    warn "found a chat folder still named conversations/ (now $chat/), or reports not yet in 01-Projects/VAULT/REPORTS/."
+    warn "  rename and move them with: bash $REPO_ROOT/scripts/migrate-to-library.sh --vault \"$VAULT\"   (dry run; add --apply)"
+  fi
 }
 
 # ---- step 4: backup settings.json -------------------------------------------

@@ -5,7 +5,7 @@ schedule: "0 21 * * 0 America/New_York"
 plist: scheduled/launchd/io.<ORG-A>.mogging.health.plist
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash, mcp__morgen__list_tasks, mcp__morgen__list_events
 writes:
-  - 01-Projects/VAULT/conversations/reports/health-YYYY-MM-DD.md
+  - 01-Projects/VAULT/REPORTS/health-YYYY-MM-DD.md
 reads:
   - vault root symlinks
   - .obsidian/plugins/ (existence check only, no content read)
@@ -53,7 +53,7 @@ If the delta exceeds tolerance: flag the sync as drifting and include the top 10
 
 ## 2. Report output
 
-Target: `01-Projects/VAULT/conversations/reports/health-YYYY-MM-DD.md`. Overwrite allowed. Frontmatter:
+Target: `01-Projects/VAULT/REPORTS/health-YYYY-MM-DD.md`. Overwrite allowed. Frontmatter:
 
 ```yaml
 ---

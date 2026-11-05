@@ -5,7 +5,7 @@ schedule: "0 22 * * * America/New_York"
 plist: scheduled/launchd/io.<ORG-A>.mogging.nightly.plist
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash
 writes:
-  - 01-Projects/VAULT/conversations/reports/audit-YYYY-MM-DD.md
+  - 01-Projects/VAULT/REPORTS/audit-YYYY-MM-DD.md
   - Claude-Memory/lint-counter.json
 reads:
   - 02-Library/**/*.md
@@ -42,7 +42,7 @@ Each check produces a list of file-level findings with exact paths and line numb
 
 ## 3. Report output
 
-Target: `01-Projects/VAULT/conversations/reports/audit-YYYY-MM-DD.md`. **Append mode** — if the file exists, append a new `## Run <timestamp>` section. This lets multiple audit passes in one day coexist.
+Target: `01-Projects/VAULT/REPORTS/audit-YYYY-MM-DD.md`. **Append mode** — if the file exists, append a new `## Run <timestamp>` section. This lets multiple audit passes in one day coexist.
 
 Frontmatter (only on file creation):
 
