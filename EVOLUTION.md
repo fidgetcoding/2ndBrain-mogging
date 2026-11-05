@@ -45,39 +45,41 @@ And on what a new install should get:
 | Date (2026) | What happened | Evidence |
 |---|---|---|
 | Apr 16 | Scaffold, after two design swarms (15 and 5 agents) | `16359bb` |
-| Apr 16 | v0.1.0: 10 skills, 4 agents, installer, docs, tests | `cc59259` |
+| Apr 16 | v0.1.0: 10 skills, 4 agents, installer, docs, tests | `5171161` |
 | Apr 16 | My own vault moves onto it the same evening | Private note |
-| Apr 17 | v0.1.1: first PII scrub | `b8ac8c1` |
-| Apr 17 | v0.1.2: reverts the scrub's own damage | `3bcf62c` |
-| Apr 20 | Opt-in self-learning tier | `3744168` |
-| Apr 20 | README rewrite in my voice, plus two importers | `dbdf622` |
-| Apr 20 | Proper attribution for Jens Heitmann | `5801483` |
-| Apr 20 | Removes made-up precision from the README | `17c6487` |
-| Apr 20 | 15-agent fix pass: 50+ audit findings | `136f678` |
-| Apr 22 | CI: shell tests, ShellCheck, Dependabot | `6585900` |
-| Apr 25 | Bugs from a real install call | `ddc2d6e` |
-| May 8 | Folders renumbered, conversations moved under projects | `a8db9d1` |
-| May 21 | `/vault-coach` and a setup guide | `698694d` |
-| Jul 20 | One-line updater | `e4d1b63` |
-| Aug 7 | Third-party vault skill packs, pinned | `2793430` |
-| Aug 7 | Opt-in research tier | `26d14b6` |
-| Aug 17 | Finishes the placeholder scrub | `6193f0d` |
-| Nov 1 | A run with skipped tests stops calling itself ALL GREEN | `f4ace9c` |
-| Nov 1 | The four skipped test files get real tests, plus an opt-in guard | `8e25fb5` |
-| Nov 1 | Opt-in memory tier | `79705ca` |
-| Nov 1 | Essence and build-history docs | `d9db3ad` |
-| Nov 2 | The onboarding test reads the installer's real exit code | `1d1a420` |
-| Nov 4 | Data preservation and helper locking, released once CI passed on Ubuntu and macOS | `9a8cf94` |
-| Nov 5 | Library v2: `02-Sources` and `03-Concepts` merge into `02-Library`, and the gate refuses writes to retired folders | `323706e`, `349696f`, `94e46c5` |
-| Nov 5 | Migration script for existing vaults | `da9b7fc`, `b36728d`, `8861872` |
-| Nov 5 | Renumber to `03-Index` and `04-Tasks` | `3e9bbbc` |
-| Nov 5 | Vault root down to `CLAUDE.md`, `AGENTS.md` and `SOUL.md` | `8aadc44` |
-| Nov 5 | `obsidian-mcp` and `defuddle` pinned | `6f04ca2` |
-| Nov 5 | Chat folders become `!!conversations`, reports move to `VAULT/REPORTS` | `0770cc0` |
-| Nov 5 | Catch-all, vault log and reports folder made on first use | `31e2389` |
-| Nov 5 | Minimal install plus a deletable layout guide | `6da37bd`, `6bfcbac` |
-| Nov 5 | Private names out of the skill examples | `02211d4` |
-| Nov 5 | Docs brought in line with the installer and the agents | `e31c710`, `4dfaf1e`, `e1a992c`, `5988cfa` |
+| Apr 17 | v0.1.1: first PII scrub | `35c9ff2` |
+| Apr 17 | v0.1.2: reverts the scrub's own damage | `a213526` |
+| Apr 20 | Opt-in self-learning tier | `1e9bce2` |
+| Apr 20 | README rewrite in my voice, plus two importers | `7a2bcbd` |
+| Apr 20 | Proper attribution for Jens Heitmann | `e54a9b0` |
+| Apr 20 | Removes made-up precision from the README | `4a6112e` |
+| Apr 20 | 15-agent fix pass: 50+ audit findings | `272b19b` |
+| Apr 22 | CI: shell tests, ShellCheck, Dependabot | `a5d728c` |
+| Apr 25 | Bugs from a real install call | `f0f0943` |
+| May 8 | Folders renumbered, conversations moved under projects | `1056ec7` |
+| May 21 | `/vault-coach` and a setup guide | `90e1bd3` |
+| Jul 20 | One-line updater | `dcc3ee1` |
+| Aug 7 | Third-party vault skill packs, pinned | `5856159` |
+| Aug 7 | Opt-in research tier | `4c7c6c4` |
+| Aug 17 | Finishes the placeholder scrub | `cc0e6ce` |
+| Nov 1 | A run with skipped tests stops calling itself ALL GREEN | `8ee4fac` |
+| Nov 1 | The four skipped test files get real tests, plus an opt-in guard | `ebb409e` |
+| Nov 1 | Opt-in memory tier | `7db3417` |
+| Nov 1 | Essence and build-history docs | `cfb6d24` |
+| Nov 2 | The onboarding test reads the installer's real exit code | `29cd009` |
+| Nov 4 | Data preservation and helper locking, released once CI passed on Ubuntu and macOS | `72b8be7` |
+| Nov 5 | Library v2: `02-Sources` and `03-Concepts` merge into `02-Library`, and the gate refuses writes to retired folders | `d0b01c8`, `e3360be`, `456aabb` |
+| Nov 5 | Migration script for existing vaults | `b9bee1c`, `6fbabb2`, `57ce053` |
+| Nov 5 | Renumber to `03-Index` and `04-Tasks` | `c61af9b` |
+| Nov 5 | Vault root down to `CLAUDE.md`, `AGENTS.md` and `SOUL.md` | `5af31a6` |
+| Nov 5 | `obsidian-mcp` and `defuddle` pinned | `e2bf2d3` |
+| Nov 5 | Chat folders become `!!conversations`, reports move to `VAULT/REPORTS` | `583daa7` |
+| Nov 5 | Catch-all, vault log and reports folder made on first use | `9d67eff` |
+| Nov 5 | Minimal install plus a deletable layout guide | `1f445da`, `8a46f7e` |
+| Nov 5 | Private names out of the skill examples | `01efd82` |
+| Nov 5 | Docs brought in line with the installer and the agents | `2df10fe`, `3c8af88`, `523fe9a`, `196e8f8` |
+| Nov 5 | History rewritten to take a client name out of old skill examples, so every hash after the first commit changed | The hashes in this file |
+| Nov 5 | Security reports go through GitHub's private reporting | `96ea09c` |
 
 ## 4. Round by round
 
@@ -89,38 +91,38 @@ And on what a new install should get:
 ### Round 2: make it public-safe (April 17)
 - **Built:** a scrub replacing real names with stable placeholders.
 - **Broke:** the scrub corrupted ordinary words where a name was a substring.
-- **Fixed:** `3bcf62c`.
-- **Wanted next:** a real README, in my voice (`dbdf622`).
+- **Fixed:** `a213526`.
+- **Wanted next:** a real README, in my voice (`7a2bcbd`).
 
 ### Round 3: audit what it claims (April 20)
 - **Tested:** a 5-agent audit, about 50 findings.
 - **Broke:** `vault-template/` described fictional skills. The README had fake 200/800 precision. An attribution to a project was wrong.
-- **Fixed:** `136f678` with 14 workers and a validator at 19 of 19 checks, then `17c6487` and `9577383`. Also a jq merge bug that broke installing the self-learning hooks (`646d073`) and invalid flags on the scheduled agents (`66f8e15`).
+- **Fixed:** `272b19b` with 14 workers and a validator at 19 of 19 checks, then `4a6112e` and `f1a017c`. Also a jq merge bug that broke installing the self-learning hooks (`2a9f7ea`) and invalid flags on the scheduled agents (`9d0667a`).
 - **Wanted next:** someone other than me installing it.
 
 ### Round 4: someone else installs it (April 22 to 25)
 - **Tested:** a real install call.
 - **Broke:** the install needed two passes, a missing vault folder bailed out, there was a root-owned npm cache, and a link had gone stale.
-- **Fixed:** `ddc2d6e`, plus new `doctor` checks.
-- **Wanted next:** a coach for new users, which became `/vault-coach` (`698694d`).
+- **Fixed:** `f0f0943`, plus new `doctor` checks.
+- **Wanted next:** a coach for new users, which became `/vault-coach` (`90e1bd3`).
 
 ### Round 5: keep running (May 8 to September 21)
 - **Built:** a folder restructure, the updater, skill packs, the research tier.
 - **Tested:** daily, on my vault.
-- **Broke:** the May 8 restructure left stale paths behind, cleaned up through May 13. A bare `log.md` from `/autoresearch` landed in the wrong folder (`29fdaa2`).
+- **Broke:** the May 8 restructure left stale paths behind, cleaned up through May 13. A bare `log.md` from `/autoresearch` landed in the wrong folder (`8910af5`).
 - **Wanted next:** proof that the rules hold, beyond my say-so.
 
 ### Round 6: make the rules real (November 1 and 2)
 - **Tested:** `tests/run_all.sh` printed ALL GREEN with 4 of 8 test files skipped, because those skills are instructions with nothing to run.
-- **Fixed:** `f4ace9c` makes any skip end on PARTIAL. `8e25fb5` puts the rules in code, in `bin/save`, `bin/wiki`, `bin/aliases` and `bin/lib/vault-gate.sh`, and tests that code against fixtures in a temp vault. CI runs `--strict`, so a skip fails the build. `--with-guard` adds a hook that blocks a Write or Edit that breaks a task ID, and holds `/wiki` and `/autoresearch` to their scope.
-- **Broke:** `/save` and `wiki-schema.md` told the model to mint a UUIDv4 for new tasks, and the sync's parser ignores anything but `m-XXXXXXXX`, so those tasks stranded. Fixed in the same commit. The next day I found the onboarding test checked the installer's exit code after `|| true`, so that check could never fail (`1d1a420`).
-- **Built:** `--with-memory` and `bin/memory` (`79705ca`): decay, promotion, and what was true when, with frontmatter as the only data model. It's the smallest version I could stand behind. It rewrites only `owner: wiki` and `owner: llm` frontmatter, with `--apply`, after a backup. Other notes get a proposal.
+- **Fixed:** `8ee4fac` makes any skip end on PARTIAL. `ebb409e` puts the rules in code, in `bin/save`, `bin/wiki`, `bin/aliases` and `bin/lib/vault-gate.sh`, and tests that code against fixtures in a temp vault. CI runs `--strict`, so a skip fails the build. `--with-guard` adds a hook that blocks a Write or Edit that breaks a task ID, and holds `/wiki` and `/autoresearch` to their scope.
+- **Broke:** `/save` and `wiki-schema.md` told the model to mint a UUIDv4 for new tasks, and the sync's parser ignores anything but `m-XXXXXXXX`, so those tasks stranded. Fixed in the same commit. The next day I found the onboarding test checked the installer's exit code after `|| true`, so that check could never fail (`29cd009`).
+- **Built:** `--with-memory` and `bin/memory` (`7db3417`): decay, promotion, and what was true when, with frontmatter as the only data model. It's the smallest version I could stand behind. It rewrites only `owner: wiki` and `owner: llm` frontmatter, with `--apply`, after a backup. Other notes get a proposal.
 - **Wanted next:** to attack the installer the way a stranger's machine would.
 
 ### Round 7: preserve existing data (November 4)
 - **Tested:** the installer, uninstaller, updater, importers and every write path against disposable vaults and fixture homes.
 - **Broke:** the installer could delete an existing memory directory. Uninstall could restore stale settings and delete backups. Settings files with two JSON roots, or a scalar before an object, got accepted. Hook processes doing read-modify-write on the same helper state could lose each other's updates, and consolidation cleared pending insights before the store write, so a crash lost them.
-- **Fixed:** preservation first, then archive staging, update persistence, quoted paths, task previews, atomic frontmatter writes and helper JSON publication. Settings must now be exactly one JSON object. Helper writers share a bounded lock, and consolidation keeps pending lines until the publish lands. The scheduled templates also needed valid XML and real manifest paths. All of it is `9a8cf94`.
+- **Fixed:** preservation first, then archive staging, update persistence, quoted paths, task previews, atomic frontmatter writes and helper JSON publication. Settings must now be exactly one JSON object. Helper writers share a bounded lock, and consolidation keeps pending lines until the publish lands. The scheduled templates also needed valid XML and real manifest paths. All of it is `72b8be7`.
 - **Tested after:** 13 of 13 test files strict, the original 357 assertions plus 38 data-safety tests and 24 helper concurrency tests. A `memory promote` dry run over 3,000 dependency files went from a 2.1216-second median to 0.1812 seconds with identical output. The [maintenance record](docs/MAINTENANCE-2026-11-04.md) and [helper state notes](docs/HELPER-STATE.md) have the details.
 - **Shipped:** pushed to main the same day. The macOS CI runners got cancelled for capacity with zero steps run, a rerun passed, and Linux passed first time.
 - **Wanted next:** the folder layout itself.
@@ -128,17 +130,17 @@ And on what a new install should get:
 ### Round 8: Library v2 (November 5)
 - **Built:** `02-Sources` and `03-Concepts` merged into `02-Library` with `people/`, `tools/`, `ideas/` and `sources/`. `04-Index` became `03-Index` and `05-Tasks` became `04-Tasks`, so the numbers run 01 to 04 with no gaps. A source that belongs to one project lives in that project's `notes/`. The vault root holds only `CLAUDE.md`, `AGENTS.md` and `SOUL.md`. Chat folders became `!!conversations`, and agent reports moved out to `01-Projects/VAULT/REPORTS/`.
 - **Built:** `scripts/migrate-to-library.sh` for everyone already on the old layout. It's a dry run by default, backs up first, refuses if a destination exists, uses `git mv` in a git vault so a tasks submodule follows, and rewrites task queries without touching a task line.
-- **Fixed as code:** the gate now refuses writes into every retired folder (`323706e`), so the layout rule holds even when a model forgets it.
-- **Broke:** `/safetycheck` flagged that `obsidian-mcp` and `defuddle` ran unpinned through `npx -y`, which means whatever npm served that day ran in every session. Pinned in `6f04ca2`.
+- **Fixed as code:** the gate now refuses writes into every retired folder (`d0b01c8`), so the layout rule holds even when a model forgets it.
+- **Broke:** `/safetycheck` flagged that `obsidian-mcp` and `defuddle` ran unpinned through `npx -y`, which means whatever npm served that day ran in every session. Pinned in `e2bf2d3`.
 - **Tested:** a new `test_migrate_to_library` suite, including a vault whose `05-Tasks` is a real git submodule. Every test file passed before and after.
 - **Wanted next:** a first install that doesn't hand you folders you'll never use.
 
 ### Round 9: a fresh install stays small (November 5)
-- **Built:** the template dropped its three example projects, `INCUBATOR/`, `MISC/`, the vault log and the reports folder. A new vault gets `01-Projects/VAULT/VAULT.md`, the four Library folders, two index notes, the task hub, the three root files and a `README.md` layout guide: house rules, example trees for a small and a busy vault, a structure grid, and a "Never delete these" list. It's only seeded into a vault with no numbered folders, so an update never brings it back after you delete it (`6da37bd`).
-- **Built:** the writers make what they need on first use. `/save` creates the catch-all project, hub note and all. The agents create `VAULT/REPORTS/`. `/wiki` finds an existing log anywhere under `VAULT/` before making one (`31e2389`).
-- **Broke:** the new onboarding test used `ls | grep`, which ShellCheck flags, so the lint job failed on `6da37bd`. Fixed in `6bfcbac`.
-- **Fixed:** a docs pass against the real installer. The CLAUDE.md block every install writes named agent reports that don't exist and called the morning agent opt-in (`4dfaf1e`). The research tier printed mid-install instead of in the summary (`e1a992c`). The README's install order skipped steps, and the helper count was 11 when there are 13 (`5988cfa`). `/tether` could treat files inside a `REPO/` checkout as vault notes (`e31c710`). A client name and my first name were still in the skill examples (`02211d4`).
-- **Tested:** 14 of 14 test files strict in CI on Ubuntu and macOS at `5988cfa`.
+- **Built:** the template dropped its three example projects, `INCUBATOR/`, `MISC/`, the vault log and the reports folder. A new vault gets `01-Projects/VAULT/VAULT.md`, the four Library folders, two index notes, the task hub, the three root files and a `README.md` layout guide: house rules, example trees for a small and a busy vault, a structure grid, and a "Never delete these" list. It's only seeded into a vault with no numbered folders, so an update never brings it back after you delete it (`1f445da`).
+- **Built:** the writers make what they need on first use. `/save` creates the catch-all project, hub note and all. The agents create `VAULT/REPORTS/`. `/wiki` finds an existing log anywhere under `VAULT/` before making one (`9d67eff`).
+- **Broke:** the new onboarding test used `ls | grep`, which ShellCheck flags, so the lint job failed on `1f445da`. Fixed in `8a46f7e`.
+- **Fixed:** a docs pass against the real installer. The CLAUDE.md block every install writes named agent reports that don't exist and called the morning agent opt-in (`3c8af88`). The research tier printed mid-install instead of in the summary (`523fe9a`). The README's install order skipped steps, and the helper count was 11 when there are 13 (`196e8f8`). `/tether` could treat files inside a `REPO/` checkout as vault notes (`2df10fe`). A client name and my first name were still in the skill examples (`01efd82`).
+- **Tested:** 14 of 14 test files strict in CI on Ubuntu and macOS, before and after the history rewrite, last at `96ea09c`.
 
 ## 5. Feature family tree
 
@@ -162,17 +164,19 @@ And on what a new install should get:
 
 | When | What | Result | Where |
 |---|---|---|---|
-| Apr 20 | Fix pass validator | 19 of 19 checks | `136f678` |
-| Apr 22 | CI added | Shell tests, ShellCheck, Dependabot | `6585900` |
+| Apr 20 | Fix pass validator | 19 of 19 checks | `272b19b` |
+| Apr 22 | CI added | Shell tests, ShellCheck, Dependabot | `a5d728c` |
 | Nov 1, before the fixes | `tests/run_all.sh` | 8 files: 4 pass, 4 skip, 91 assertions | Local run |
-| Nov 1, `79705ca`, fresh clone | `tests/run_all.sh --strict` | 11 of 11 files, 357 assertions, 0 skip | Local run |
+| Nov 1, `7db3417`, fresh clone | `tests/run_all.sh --strict` | 11 of 11 files, 357 assertions, 0 skip | Local run |
 | Nov 4, local branch | Strict suite plus new integration tests | 12 of 12 files: 357 assertions plus 35 new tests | Maintenance record |
-| Nov 4, `9a8cf94` | Strict suite in CI, Ubuntu and macOS | 13 of 13 files: 357 assertions, 38 data-safety tests, 24 helper tests | GitHub Actions |
+| Nov 4, `72b8be7` | Strict suite in CI, Ubuntu and macOS | 13 of 13 files: 357 assertions, 38 data-safety tests, 24 helper tests | GitHub Actions |
 | Nov 4 | `memory promote` dry run, 3,000 dependency files, 3 runs each | Median 2.1216 s before, 0.1812 s after, same output | Maintenance record |
-| Nov 5, `6da37bd` | Lint | Failed on ShellCheck SC2010 | GitHub Actions |
-| Nov 5, `5988cfa` | Strict suite in CI, Ubuntu and macOS | 14 of 14 files: 546 shell assertions, 38 data-safety tests, 24 helper tests | GitHub Actions |
+| Nov 5, `1f445da` | Lint | Failed on ShellCheck SC2010 | GitHub Actions |
+| Nov 5, `96ea09c` | Strict suite in CI, Ubuntu and macOS | 14 of 14 files: 546 shell assertions, 38 data-safety tests, 24 helper tests | GitHub Actions |
 
-The shell suites at `5988cfa`: `aliases_bootstrap` 20, `discuss_before_write` 9, `guard_install` 18, `memory_tier` 98, `migrate_to_library` 97, `obsidian_mcp` 10, `onboarding` 110, `preflight` 16, `run_all_summary` 15, `scope_guards` 81, `uuid_preservation` 58, `vault_skill_packs` 14. The other two files, `data_safety` and `helper_concurrency`, run the Python tests.
+The shell suites at `96ea09c`: `aliases_bootstrap` 20, `discuss_before_write` 9, `guard_install` 18, `memory_tier` 98, `migrate_to_library` 97, `obsidian_mcp` 10, `onboarding` 110, `preflight` 16, `run_all_summary` 15, `scope_guards` 81, `uuid_preservation` 58, `vault_skill_packs` 14. The other two files, `data_safety` and `helper_concurrency`, run the Python tests.
+
+The November 5 history rewrite changed every hash after the first commit. The hashes in this file are the current ones. The Actions tab lists runs from before the rewrite under their old hashes, on trees that differ only in that client name.
 
 What none of these exercise: a live Claude session, a real Obsidian app, launchd firing a real scheduled agent, or a live task sync. The tests run on disposable homes and vaults with those mocked.
 

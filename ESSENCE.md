@@ -31,7 +31,7 @@ Then open Claude Code in the vault and run `/save` at the end of a conversation.
 
 **What works today.**
 
-- 14 of 14 test files pass in CI on Ubuntu and macOS at `5988cfa`, run strict, so a skipped test fails the build. That's 546 shell assertions plus 62 Python tests: 38 for data safety and 24 for helper concurrency.
+- 14 of 14 test files pass in CI on Ubuntu and macOS at `96ea09c`, run strict, so a skipped test fails the build. That's 546 shell assertions plus 62 Python tests: 38 for data safety and 24 for helper concurrency.
 - The migration script has 97 of those checks to itself, including a vault whose task folder is a git submodule.
 - A memory scan over 3,000 dependency files dropped from a 2.12-second median to 0.18 seconds with identical output, after the November 4 fixes.
 - My own vault runs on it every day, on the same 01 to 04 layout.
