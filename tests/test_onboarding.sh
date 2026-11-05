@@ -100,11 +100,19 @@ for d in 02-Sources 03-Concepts; do
 done
 
 # ---------------------------------------------------------------------------
-# Root sidecars (6).
+# Root sidecars (3). Nothing else is seeded at the vault root.
 # ---------------------------------------------------------------------------
-for f in CLAUDE.md AGENTS.md SOUL.md CRITICAL_FACTS.md index.md log.md; do
+for f in CLAUDE.md AGENTS.md SOUL.md; do
   assert_file "$FAKE_VAULT/$f" "root sidecar created: $f"
 done
+for f in CRITICAL_FACTS.md index.md log.md; do
+  if [[ -e "$FAKE_VAULT/$f" ]]; then _fail "retired root file created: $f"; else _pass "retired root file not created: $f"; fi
+done
+assert_contains "$FAKE_VAULT/SOUL.md" "re:^#+[[:space:]]+Critical facts" "SOUL.md carries the Critical facts section"
+for f in 01-Projects/VAULT/VAULT.md 01-Projects/VAULT/log.md 03-Index/Index.md; do
+  assert_file "$FAKE_VAULT/$f" "seeded: $f"
+done
+assert_dir "$FAKE_VAULT/01-Projects/VAULT/conversations/reports" "seeded: 01-Projects/VAULT/conversations/reports/"
 
 # ---------------------------------------------------------------------------
 # CLAUDE.md routing headers + folder references.

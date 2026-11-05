@@ -88,6 +88,8 @@ After `--apply`, by hand:
 
 To undo it, the backup tarball holds every folder and note as it was before the move.
 
+The vault root now holds only `CLAUDE.md`, `AGENTS.md` and `SOUL.md`. The installer stops creating `CRITICAL_FACTS.md`, `index.md` and `log.md`, and nothing deletes or moves yours. When you're ready, move `log.md` to `01-Projects/VAULT/log.md` (where `/wiki` now appends), fold `CRITICAL_FACTS.md` into a **Critical facts** section of `SOUL.md`, and use `03-Index/Index.md` as the master index instead of a root `index.md`.
+
 ## Rollback
 
 Every step is reversible. See [`docs/MIGRATION.md`](docs/MIGRATION.md) for per-step rollback commands. Short version: `git reset --hard <pre-mogging-sha>` puts you back where you started, the plist files are symlinks you can remove, and `aliases.yaml` is a single file you can delete.

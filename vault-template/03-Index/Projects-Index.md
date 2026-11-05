@@ -19,6 +19,7 @@ The map of active projects in this vault. Every project folder in `01-Projects/`
 
 - [[INCUBATOR]] — ideas that aren't formal projects yet
 - [[MISC]] — catch-all: conversations that belong to no single project
+- [[VAULT]] — work about the vault itself: its log and the agents' reports
 
 ## How to add a new project
 

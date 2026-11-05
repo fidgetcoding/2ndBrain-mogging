@@ -34,7 +34,8 @@ Vault/
 │   │   ├── notes/          # everything written for it, incl. its own sources
 │   │   └── assets/         # images, PDFs, media (no code)
 │   ├── MISC/               # catch-all: conversations that belong to no single project
-│   ├── VAULT/              # meta-conversations ABOUT the vault itself
+│   ├── VAULT/              # work ABOUT the vault itself
+│   │   ├── log.md          # the append-only vault log
 │   │   └── conversations/reports/   # daily / audit / weekly / health reports
 │   └── INCUBATOR/          # staging lane for pre-project ideas
 ├── 02-Library/             # cross-project reference only
@@ -118,10 +119,9 @@ Four launchd agents run on a cron schedule. All are audit-only by default. Each 
 
 - `CLAUDE.md` — contract for Claude Code.
 - `AGENTS.md` — this file; contract for non-Claude agents.
-- `SOUL.md` — operator identity and long-horizon goals.
-- `CRITICAL_FACTS.md` — hard facts every agent needs (timezone, defaults, tooling).
-- `index.md` — top-level entry point.
-- `log.md` — append-only session log.
+- `SOUL.md` — operator identity, long-horizon goals, and a **Critical facts** section (timezone, defaults, tooling).
+
+Nothing else lives at the root. The master index is `03-Index/Index.md`; the append-only vault log is `01-Projects/VAULT/log.md`.
 
 ## Routing table
 
@@ -133,13 +133,13 @@ Four launchd agents run on a cron schedule. All are audit-only by default. Each 
 | Promote capture → idea | `02-Library/ideas/` existing siblings, target MOC in `03-Index/` |
 | Update a MOC | `03-Index/Index.md`, the specific MOC file |
 | Graph repair | `03-Index/Map.canvas`, `03-Index/Index.md`, § 3 non-negotiables |
-| Sync with external tool | `SOUL.md`, `CRITICAL_FACTS.md`, relevant area task file |
-| Identity / personal facts | `SOUL.md`, `CRITICAL_FACTS.md` |
+| Sync with external tool | `SOUL.md` (Critical facts), relevant area task file |
+| Identity / personal facts | `SOUL.md` |
 
 ## Hard rules
 
 1. Always read a file before editing it.
-2. Never save to the vault root except for the six files named above.
+2. Never save to the vault root except for the three files named above (`CLAUDE.md`, `AGENTS.md`, `SOUL.md`).
 3. Filenames: kebab-case for ideas, people and tools, `LIT-` / `SRC-` prefix for sources, `TASKS-` prefix for task area files.
 4. Frontmatter is required on every note.
 5. Never use a `-Index` suffix on project index files.
@@ -159,4 +159,4 @@ If you are running in an interactive session, do not use the bot prefix.
 
 ---
 
-[[index]] · [[Projects-Index]]
+[[Index]] · [[Projects-Index]]

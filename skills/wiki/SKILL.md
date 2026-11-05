@@ -97,7 +97,7 @@ Intake accepts any of: a URL, a local file path, a pasted blob, a YouTube URL, a
    │ Concept: "rate limit 300/15min"            │ 02-Library/ideas/morgen-rate-limit.md                      │ create  │
    │ Entity: "<PERSON-E>"                       │ 02-Library/people/<person-e>.md                            │ create  │
    │ Index update                               │ 03-Index/Index.md                                          │ append  │
-   │ Log entry                                  │ log.md                                                     │ append  │
+   │ Log entry                                  │ 01-Projects/VAULT/log.md                                   │ append  │
    └────────────────────────────────────────────┴────────────────────────────────────────────────────────────┴─────────┘
 
    Git branch: wiki-add/2026-04-16-<person-e>-morgen-mcp
@@ -158,7 +158,7 @@ If `Claude-Memory/memory-tier.yaml` exists, the vault has the memory tier on. Be
 ### 3.4 Index + log
 
 - `03-Index/Index.md` gets one new line per new concept or entity page, sorted into its topical section.
-- The vault-root `log.md` gets an append-only entry (`03-Index/` holds maps only, never logs):
+- `01-Projects/VAULT/log.md` gets an append-only entry (`03-Index/` holds maps only, never logs, and the vault root holds only `CLAUDE.md`, `AGENTS.md` and `SOUL.md`). Create the file if it's missing:
   ```
   2026-04-16 ADD source=SRC-2026-04-16-<person-e>-morgen-mcp created=2 updated=3 branch=wiki-add/2026-04-16-<person-e>-morgen-mcp
   ```
@@ -332,7 +332,7 @@ A critical FIND rule: the skill MUST NOT emit a `[[wikilink]]` to a page that is
 
 | Failure                                                | Detection                                | Recovery                                                                 |
 |--------------------------------------------------------|------------------------------------------|--------------------------------------------------------------------------|
-| Source URL returns 404 / paywalled                     | HTTP status                              | Record failure in the vault-root `log.md`, save captured paste/prompt text only, tag `source_status: unreachable`. |
+| Source URL returns 404 / paywalled                     | HTTP status                              | Record failure in `01-Projects/VAULT/log.md`, save captured paste/prompt text only, tag `source_status: unreachable`. |
 | Source is a YouTube URL with no transcript available   | yt-dlp returns empty                     | Offer to run whisper-mcp on the audio as fallback; require explicit `y`. |
 | Target concept page has `owner: human`                 | Frontmatter check before Edit            | Skip the Edit, write a sibling `-wiki.md` file, and link it from Evidence. |
 | `aliases.yaml` missing or malformed                    | YAML parse                                | Abort with clear error; suggest running ADD on a high-level alias source.|

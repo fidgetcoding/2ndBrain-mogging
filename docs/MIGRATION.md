@@ -21,11 +21,10 @@ Post-mogging canonical layout:
 ├── Claude-Memory/      # symlink to ~/.claude/projects/.../memory/
 ├── AGENTS.md           # sidecar
 ├── CLAUDE.md           # sidecar (append-only patched)
-├── CRITICAL_FACTS.md   # sidecar
-├── SOUL.md             # sidecar
-├── index.md            # sidecar
-└── log.md              # sidecar
+└── SOUL.md             # sidecar
 ```
+
+(This tree listed six root sidecars until 2026-11-05. `CRITICAL_FACTS.md` folded into a section of `SOUL.md`, `03-Index/Index.md` replaced `index.md`, and the vault log moved to `01-Projects/VAULT/log.md`.)
 
 Killed folders: `00-Inbox/`, `01-Fleeting/`, `05-Templates/`, `06-Assets/`.
 
@@ -191,9 +190,9 @@ else
 fi
 ```
 
-### D2. Six root sidecars
+### D2. Three root sidecars
 
-Create only if missing: `AGENTS.md`, `CLAUDE.md`, `CRITICAL_FACTS.md`, `SOUL.md`, `index.md`, `log.md`. Use `vault-template/` as the stencil.
+Create only if missing: `AGENTS.md`, `CLAUDE.md`, `SOUL.md`. Use `vault-template/` as the stencil. Nothing else goes at the vault root: hard facts go in the **Critical facts** section of `SOUL.md`, the master index is `03-Index/Index.md`, and the vault log is `01-Projects/VAULT/log.md`. An existing `CRITICAL_FACTS.md`, `index.md` or `log.md` is never deleted; move `log.md` to `01-Projects/VAULT/log.md` when you're ready.
 
 ### D3. CLAUDE.md append-only patch
 
@@ -259,8 +258,8 @@ git submodule status | grep 05-Tasks
 # 4. Symlink present and resolves
 readlink Claude-Memory && test -d Claude-Memory/ && echo OK
 
-# 5. Six sidecars present
-for f in AGENTS.md CLAUDE.md CRITICAL_FACTS.md SOUL.md index.md log.md; do
+# 5. Three sidecars present
+for f in AGENTS.md CLAUDE.md SOUL.md; do
   test -f "$f" && echo "OK $f" || echo "MISSING $f"
 done
 

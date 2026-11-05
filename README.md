@@ -147,7 +147,7 @@ cd 2ndBrain-mogging
 | `--with-memory` | off | Turn on the memory tier for this vault. See [Memory tier](#memory-tier-opt-in) below. |
 | `--skip-tests` | off | Skip the onboarding test suite at the end. |
 | `--merge-stop` | off | Replace the existing Stop hook instead of jq-merging onto it. |
-| `--no-seed-vault` | off | Skip seeding the 5-folder vault layout from `vault-template/`. By default the installer copies in any of `01-Projects/{example-project-1, example-project-2, example-project-3, INCUBATOR, MISC}/`, `02-Library/{people, tools, ideas, sources}/`, `03-Index/Projects-Index.md`, `04-Tasks/`, `Claude-Memory/`, `CLAUDE.md`, `AGENTS.md` that are missing. Existing files are never overwritten. |
+| `--no-seed-vault` | off | Skip seeding the 5-folder vault layout from `vault-template/`. By default the installer copies in any of `01-Projects/{example-project-1, example-project-2, example-project-3, INCUBATOR, MISC, VAULT}/`, `02-Library/{people, tools, ideas, sources}/`, `03-Index/Projects-Index.md`, `04-Tasks/`, `Claude-Memory/`, `CLAUDE.md`, `AGENTS.md`, `SOUL.md` that are missing. Existing files are never overwritten. |
 | `--with-intelligence` | off | Install the self-learning tier. See [Self-learning tier](#self-learning-tier-opt-in) below. |
 | `--symlink` | off | With `--with-intelligence`: symlink helpers instead of hardlinking. |
 
@@ -295,7 +295,9 @@ Each project gets its own folder. The folder name **equals** the index filename 
 │
 ├── INCUBATOR/                   ← staging lane for ideas not yet full projects
 │
-└── MISC/                        ← catch-all: conversations that belong to no single project
+├── MISC/                        ← catch-all: conversations that belong to no single project
+│
+└── VAULT/                       ← work about the vault: log.md and the agents' reports
 ```
 
 The subfolders inside each project are **up to you**. Use whatever makes sense — the skills only write to `conversations/` and `notes/` below the project's index note. The `content/` + `misc-building/` + `GITHUB/` pattern is what I use personally; yours might be `research/` + `drafts/` + `deliverables/`. Whatever works.

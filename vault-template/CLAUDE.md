@@ -32,7 +32,8 @@ Vault/
 │   │   ├── notes/          # everything written for the project, incl. its own sources
 │   │   └── assets/         # images, PDFs, media (no code)
 │   ├── MISC/               # catch-all: conversations that belong to no single project
-│   ├── VAULT/              # meta-conversations ABOUT the vault itself
+│   ├── VAULT/              # work ABOUT the vault itself
+│   │   ├── log.md          # the append-only vault log
 │   │   └── conversations/reports/   # daily / audit / weekly / health reports
 │   └── INCUBATOR/          # staging lane for pre-project ideas
 ├── 02-Library/             # cross-project reference only: things that belong to no single project
@@ -116,14 +117,13 @@ These three rules override everything else. If a command seems to violate them, 
 
 ## Root-level notes
 
-Six files live at the vault root and are always safe to read. Everything else belongs inside one of the 5 folders.
+Three files live at the vault root and are always safe to read. Everything else belongs inside one of the 5 folders.
 
 - `CLAUDE.md` — this file.
 - `AGENTS.md` — the same contract, framed for non-Claude agents (Codex, Cursor, custom CLIs).
-- `SOUL.md` — operator identity + long-horizon goals. Read every session when identity context matters.
-- `CRITICAL_FACTS.md` — hard facts the operator wants every agent to know (timezone, defaults, tooling, preferences). Read every session.
-- `index.md` — top-level entry point into the vault; thin pointer to `03-Index/Index.md` and `03-Index/Projects-Index.md`.
-- `log.md` — append-only lightweight session log. Agents may append dated entries; they must not rewrite history.
+- `SOUL.md` — operator identity, long-horizon goals, and a **Critical facts** section (timezone, defaults, tooling, preferences). Read every session.
+
+The master index is `03-Index/Index.md`. The append-only vault log is `01-Projects/VAULT/log.md`: agents may append dated entries there and must not rewrite history.
 
 ## Routing table
 
@@ -137,13 +137,13 @@ For any incoming task, read these files first:
 | Promote capture → idea | `02-Library/ideas/` existing siblings, target MOC in `03-Index/` |
 | Update a MOC | `03-Index/Index.md`, the specific MOC file, § Connect regime |
 | Graph repair | `03-Index/Map.canvas`, `03-Index/Index.md`, § 3 non-negotiables |
-| Sync with external tool | `SOUL.md`, `CRITICAL_FACTS.md`, relevant area task file |
-| Identity / personal facts | `SOUL.md`, `CRITICAL_FACTS.md` |
+| Sync with external tool | `SOUL.md` (Critical facts), relevant area task file |
+| Identity / personal facts | `SOUL.md` |
 
 ## Hard rules
 
 1. Always read a file before editing it.
-2. Never save to the vault root except for the six files named above (`CLAUDE.md`, `AGENTS.md`, `SOUL.md`, `CRITICAL_FACTS.md`, `index.md`, `log.md`).
+2. Never save to the vault root except for the three files named above (`CLAUDE.md`, `AGENTS.md`, `SOUL.md`).
 3. Filenames: kebab-case for ideas, people and tools, `LIT-` / `SRC-` prefix for sources, `TASKS-` prefix for task area files.
 4. Frontmatter is required on every note — at minimum `title`, `type`, `tags`. Add `owner`, `source`, `related`, `last_confirmed` as the note type requires.
 5. Never use a `-Index` suffix on a project index file. Filename must match the folder name.
@@ -168,4 +168,4 @@ Without the prefix, a single bot edit can trigger duplicate tasks, cascading gra
 
 ---
 
-[[index]] · [[Projects-Index]]
+[[Index]] · [[Projects-Index]]
