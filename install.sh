@@ -1431,13 +1431,13 @@ install_obsidian_mcp() {
   fi
 
   if [[ "$APPLY" -eq 1 ]]; then
-    if claude mcp add --scope user obsidian -- npx -y obsidian-mcp "$VAULT" >/dev/null 2>&1; then
+    if claude mcp add --scope user obsidian -- npx -y "obsidian-mcp@${OBSIDIAN_MCP_VERSION}" "$VAULT" >/dev/null 2>&1; then
       log "obsidian-mcp registered (vault: $VAULT)"
     else
-      warn "obsidian-mcp registration failed — run manually: claude mcp add --scope user obsidian -- npx -y obsidian-mcp \"$VAULT\""
+      warn "obsidian-mcp registration failed — run manually: claude mcp add --scope user obsidian -- npx -y obsidian-mcp@${OBSIDIAN_MCP_VERSION} \"$VAULT\""
     fi
   else
-    log "would register obsidian-mcp: claude mcp add --scope user obsidian -- npx -y obsidian-mcp \"$VAULT\""
+    log "would register obsidian-mcp: claude mcp add --scope user obsidian -- npx -y obsidian-mcp@${OBSIDIAN_MCP_VERSION} \"$VAULT\""
   fi
 }
 
@@ -1474,6 +1474,10 @@ install_obsidian_mcp() {
 
 SKILLPACK_URL="https://github.com/kepano/obsidian-skills"
 SKILLPACK_COMMIT="a1dc48e68138490d522c04cbf5822214c6eb1202"
+# npm packages the installer pulls are pinned too: an unpinned `npx -y`
+# runs whatever npm serves that day, every Claude session. Bump on purpose.
+OBSIDIAN_MCP_VERSION="2.0.1"
+DEFUDDLE_VERSION="0.19.6"
 SKILLPACK_SKILLS=(obsidian-markdown obsidian-bases obsidian-cli json-canvas defuddle)
 
 install_vault_skill_packs() {
@@ -1500,7 +1504,7 @@ install_vault_skill_packs() {
     for s in "${SKILLPACK_SKILLS[@]}"; do
       log "would install skill: $dest_root/$s (pinned @ ${SKILLPACK_COMMIT:0:7})"
     done
-    log "would run: npm install -g defuddle   (CLI behind the defuddle skill)"
+    log "would run: npm install -g defuddle@${DEFUDDLE_VERSION}   (CLI behind the defuddle skill)"
     return 0
   fi
 
@@ -1549,15 +1553,15 @@ install_vault_skill_packs() {
   if command -v defuddle >/dev/null 2>&1; then
     vlog "defuddle CLI already present — skipping"
   elif command -v npm >/dev/null 2>&1; then
-    if npm install -g defuddle >/dev/null 2>&1; then
+    if npm install -g "defuddle@${DEFUDDLE_VERSION}" >/dev/null 2>&1; then
       log "defuddle CLI installed (npm -g)"
     else
-      warn "defuddle CLI install failed — run manually: npm install -g defuddle"
+      warn "defuddle CLI install failed — run manually: npm install -g defuddle@${DEFUDDLE_VERSION}"
       warn "  (if this is an EACCES error, see the ~/.npm ownership note at the end of install)"
     fi
   else
     warn "npm not found — defuddle skill installed but its CLI is missing"
-    warn "  install node, then: npm install -g defuddle"
+    warn "  install node, then: npm install -g defuddle@${DEFUDDLE_VERSION}"
   fi
 }
 

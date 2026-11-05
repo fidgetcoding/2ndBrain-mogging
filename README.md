@@ -179,9 +179,9 @@ Five skills from [`kepano/obsidian-skills`](https://github.com/kepano/obsidian-s
 
 **Why `defuddle` matters enough to be a default:** `WebFetch` runs a page through a small model and hands back a lossy summary — a 12,500-word source comes back as roughly 20 lines, and the prompt is not honored. That is exactly the failure the `02-Library/sources/` contract exists to prevent, since a source note is supposed to be the source of truth for what a page actually said. Defuddle strips nav/ads/clutter and returns the full body.
 
-The skill shells out to a `defuddle` binary, so the installer also runs `npm install -g defuddle`. If npm is missing or the install fails you get a warning and a manual command, not a hard failure. Existing skill directories are preserved during install. On uninstall, only packs carrying this checkout’s ownership marker are moved into recovery backups; independently installed packs stay in place. The `defuddle` CLI is **left in place** — it is a shared global binary you may use outside the vault, and the uninstaller tells you the command to remove it yourself.
+The skill shells out to a `defuddle` binary, so the installer also runs `npm install -g defuddle@0.19.6` (pinned, like the skill packs). If npm is missing or the install fails you get a warning and a manual command, not a hard failure. Existing skill directories are preserved during install. On uninstall, only packs carrying this checkout’s ownership marker are moved into recovery backups; independently installed packs stay in place. The `defuddle` CLI is **left in place** — it is a shared global binary you may use outside the vault, and the uninstaller tells you the command to remove it yourself.
 
-To update the pin: bump `SKILLPACK_COMMIT` in `install.sh`.
+To update the pins: bump `SKILLPACK_COMMIT`, `DEFUDDLE_VERSION` or `OBSIDIAN_MCP_VERSION` in `install.sh`.
 
 ### Research tier (opt-in)
 
@@ -203,7 +203,7 @@ Two pipx tools that read and write **inside** the vault, which is why they live 
 
 ### Obsidian MCP
 
-The installer runs `claude mcp add --scope user obsidian -- npx -y obsidian-mcp "$VAULT"` so Claude Code can read and write vault notes directly. Upstream: [`obsidian-mcp`](https://github.com/StevenStavrakis/obsidian-mcp) on npm. Idempotent — skips if already registered. Opt out with `--no-obsidian-mcp`. To re-wire later against a different vault: `claude mcp remove obsidian && claude mcp add --scope user obsidian -- npx -y obsidian-mcp <new-path>`.
+The installer runs `claude mcp add --scope user obsidian -- npx -y obsidian-mcp@2.0.1 "$VAULT"` (pinned, so a new npm release can't change what runs in your sessions) so Claude Code can read and write vault notes directly. Upstream: [`obsidian-mcp`](https://github.com/StevenStavrakis/obsidian-mcp) on npm. Idempotent — skips if already registered. Opt out with `--no-obsidian-mcp`. To re-wire later against a different vault: `claude mcp remove obsidian && claude mcp add --scope user obsidian -- npx -y obsidian-mcp <new-path>`.
 
 ### Statusline (redirect to cli-maxxing)
 
