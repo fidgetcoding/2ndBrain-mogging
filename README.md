@@ -8,7 +8,7 @@
 
 **The best of five second-brain systems, sanded down, self-learning, and actually usable by a normal human.**
 
-More: [ESSENCE.md](ESSENCE.md) · [EVOLUTION.md](EVOLUTION.md)
+Short version: [ESSENCE.md](ESSENCE.md). How it got built: [EVOLUTION.md](EVOLUTION.md).
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
@@ -22,8 +22,8 @@ More: [ESSENCE.md](ESSENCE.md) · [EVOLUTION.md](EVOLUTION.md)
 
 | Link | Section | What it does | Time |
 |---|---|---|---|
-| [Why this exists](#why-this-exists) | Origin | The maxxing → mogging story | ~2 min |
 | [What you get](#what-you-get) | Overview | TL;DR of the kit | ~1 min |
+| [Why this exists](#why-this-exists) | Origin | The maxxing → mogging story | ~2 min |
 | [Install Obsidian (auto)](#install-obsidian-first) | Setup | Auto-installed by the installer; manual download is the fallback | ~1 min |
 | [Prerequisites](#prerequisites) | Setup | Claude Code and `jq` | ~5 min |
 | [Install the mogging pack](#install-the-mogging-pack) | Setup | Clone, dry-run, apply | ~2 min |
@@ -34,10 +34,22 @@ More: [ESSENCE.md](ESSENCE.md) · [EVOLUTION.md](EVOLUTION.md)
 | [Vault guard](#vault-guard-opt-in) | Optional | A hook that blocks edits that break a task's 🆔 | ~1 min |
 | [Memory tier](#memory-tier-opt-in) | Optional | Tracks when each concept note was last known true | ~1 min |
 | [Bring your existing stuff in](#bring-your-existing-stuff-in-optional) | Optional | Import Claude / ChatGPT conversations + Apple Notes / OneNote / Notion / Evernote | ~3 min |
-| [A note on placeholders](#a-note-on-placeholders) | Meta | Why some names read `<PERSON-A>` | — |
-| [Credits](#credits) | Meta | The 5 originals I mogged | — |
-| [License](#license) | Meta | MIT | — |
-| [Security](#security-gitleaks-pre-commit-hook) | Meta | The gitleaks pre-commit hook | — |
+| [A note on placeholders](#a-note-on-placeholders) | Meta | Why some names read `<PERSON-A>` | ~30 sec |
+| [Credits](#credits) | Meta | The 5 originals I mogged | ~1 min |
+| [Security](#security-gitleaks-pre-commit-hook) | Meta | The gitleaks pre-commit hook | ~1 min |
+| [License](#license) | Meta | MIT | ~5 sec |
+
+---
+
+## What you get
+
+- **A minimal vault to start from:** the four numbered folders and the files every skill needs, pre-wired to the skills below, plus a guide with example layouts that you delete when you're done.
+- **13 Claude Code skills** (10 core + 2 optional importers + a `/vault-coach` onboarding guide) that read + write against that layout with a shared alias dictionary + dry-run previews.
+- **Four scheduled agents** (morning / nightly / weekly / health) that audit the vault in the background so you don't have to.
+- **An opt-in self-learning tier** from **[FidgetFlo](https://github.com/fidgetcoding/fidgetflo)** (my MIT-licensed fork of [ruvnet's `ruflo@v3.5.80`](https://github.com/ruvnet/ruflo/tree/v3.5.80), made better): a pattern-graph that makes routing smarter the longer you use the vault.
+- **Two more opt-in tiers:** a vault guard that blocks an edit that would break a task's 🆔, and a memory tier that tracks when each idea note was last known to be true.
+- **Import tools** for bringing in every Claude.ai / ChatGPT conversation you've ever had, plus Apple Notes / OneNote / Notion / Evernote / raw docs, so you don't start from empty.
+- **A migration script** that moves an older vault onto the current layout, with a dry run first and a backup before anything moves.
 
 ---
 
@@ -45,48 +57,40 @@ More: [ESSENCE.md](ESSENCE.md) · [EVOLUTION.md](EVOLUTION.md)
 
 I wanted a second brain. So I built one.
 
-The first version was called **2ndBrain-maxxing** — a lightly modded replica of the second-brain system [**Jens Heitmann**](https://www.instagram.com/jens.heitmann/) had put out. It worked. For a while. Then I stared at it for six months and realized half the folders were doing nothing, the taxonomy had jargon I was learning on the fly, and every capture required thinking about three other captures first. That's when I went shopping.
+The first version was called **2ndBrain-maxxing**, a lightly modded replica of the second-brain system [**Jens Heitmann**](https://www.instagram.com/jens.heitmann/) had put out. It worked. For a while. Then I stared at it for six months and realized half the folders were doing nothing, the taxonomy had jargon I was learning on the fly, and every capture required thinking about three other captures first. That's when I went shopping.
 
-I tried **Karpathy's** Wiki-style LLM-powered second brain. I tried **AgriciDaniel's** [claude-obsidian](https://github.com/AgriciDaniel/claude-obsidian). I tried [**eugeniu's system**](https://github.com/eugeniughelbur/obsidian-second-brain). I tried [**NicholasSpisak's second-brain**](https://github.com/NicholasSpisak/second-brain). And I kept going back to [**Jens Heitmann's ai-second-brain-skills**](https://github.com/NulightJens/ai-second-brain-skills) — not because it was the best, but because it was the one I already knew. Each of those had one thing the others didn't. None of them had everything.
+I tried **Karpathy's** Wiki-style LLM-powered second brain. I tried **AgriciDaniel's** [claude-obsidian](https://github.com/AgriciDaniel/claude-obsidian). I tried [**eugeniu's system**](https://github.com/eugeniughelbur/obsidian-second-brain). I tried [**NicholasSpisak's second-brain**](https://github.com/NicholasSpisak/second-brain). And I kept going back to [**Jens Heitmann's ai-second-brain-skills**](https://github.com/NulightJens/ai-second-brain-skills). It was the one I already knew. Each of those had one thing the others didn't. None of them had everything.
 
 So I merged them. I took what earned its keep from each of the five, threw out what didn't, and killed `00-Inbox/` (it's where good notes went to die). I killed `01-Fleeting/` (fleeting notes are just concepts you haven't written yet). I killed `05-Templates/` (templates belong in the plugin layer, not in your graph). I killed `06-Assets/` (Obsidian already handles attachments in place).
 
 What was left was four numbered folders, thirteen skills, and a vault that doesn't require a taxonomy degree to use. Built for a layman. No complicated language. No complicated anything.
 
-The last piece — a **self-learning tier**. A couple of the originals had one, but bootstrapping them was heavy. This pack's is opt-in (`--with-intelligence`), ships clean, and fills itself in as you use the vault. Ignore it forever and the pack still works; turn it on and it stops feeling like a filing cabinet and starts feeling like… well, a second brain.
+The last piece was a **self-learning tier**. A couple of the originals had one, but bootstrapping them was heavy. This pack's is opt-in (`--with-intelligence`), ships clean, and fills itself in as you use the vault. Ignore it forever and the pack still works; turn it on and it stops feeling like a filing cabinet and starts feeling like… well, a second brain.
 
 So: we went from maxxing to absolutely **mogging** everybody.
 
----
-
-## What you get
-
-- **A minimal vault to start from** — the four numbered folders and the files every skill needs, pre-wired to the skills below, plus a guide with example layouts that you delete when you're done.
-- **13 Claude Code skills** (10 core + 2 optional importers + a `/vault-coach` onboarding guide) that read + write against that layout with a shared alias dictionary + dry-run previews.
-- **Four scheduled agents** (morning / nightly / weekly / health) that audit the vault in the background so you don't have to.
-- **An opt-in self-learning tier** from **[FidgetFlo](https://github.com/fidgetcoding/fidgetflo)** (my MIT-licensed fork of [ruvnet's `ruflo@v3.5.80`](https://github.com/ruvnet/ruflo/tree/v3.5.80), made better) — a pattern-graph that makes routing smarter the longer you use the vault.
-- **Import tools** for bringing in every Claude.ai / ChatGPT conversation you've ever had, plus Apple Notes / OneNote / Notion / Evernote / raw docs — so you don't start from empty.
+Mogging keeps going, too. In November 2026 I looked at my own vault again and asked whether `02-Sources/` and `03-Concepts/` were earning their keep. A lot of what sat in them belonged to one project anyway, so that moved into its project. The rest became one `02-Library/` (people, tools, ideas, sources), the numbers closed up to run 01 through 04, and the pack shipped the same layout the same day.
 
 ---
 
 ## Install Obsidian first
 
-**TL;DR — you can skip this whole section on macOS.** The installer auto-installs Obsidian.app via `brew install --cask obsidian` if it's missing, and auto-creates the vault directory if you point `--vault` at a folder that doesn't exist yet. Pass `--no-obsidian-app` to opt out of the auto-install if you'd rather grab Obsidian yourself.
+**TL;DR: you can skip this whole section on macOS.** The installer auto-installs Obsidian.app via `brew install --cask obsidian` if it's missing, and auto-creates the vault directory if you point `--vault` at a folder that doesn't exist yet. Pass `--no-obsidian-app` to opt out of the auto-install if you'd rather grab Obsidian yourself.
 
-The pack installs the Obsidian *configuration* on top of the Obsidian app. If the auto-install runs, you're done with this step — jump to [Install the mogging pack](#install-the-mogging-pack). Otherwise (Linux / Windows / no Homebrew / `--no-obsidian-app`), do it manually:
+The pack installs the Obsidian *configuration* on top of the Obsidian app. If the auto-install runs, you're done with this step, so jump to [Install the mogging pack](#install-the-mogging-pack). Otherwise (Linux / Windows / no Homebrew / `--no-obsidian-app`), do it manually:
 
 1. Go to **[obsidian.md](https://obsidian.md/download)** and download the installer for your OS.
 2. Run the installer. It takes about 30 seconds.
 3. Open Obsidian. It'll ask where your vault should live.
-4. **Strong recommendation:** put it at `~/MyVault/`. That's `/Users/<you>/MyVault/` on macOS — directly in your home folder, **not** under `~/Desktop`. Reasons:
+4. **Strong recommendation:** put it at `~/MyVault/`. That's `/Users/<you>/MyVault/` on macOS, directly in your home folder and **not** under `~/Desktop`. Reasons:
    - **Do NOT use `~/Desktop`, `~/Documents`, or `~/Downloads`.** On modern macOS those directories are permission-protected (TCC / Full Disk Access). The terminal gets "Operation not permitted" there, and git + the installer fail. Keep the vault in your home dir (`~/MyVault`, or `~/<vault-name>`).
-   - Short path — easier to type in scripts and your shell.
+   - Short path. Easier to type in scripts and your shell.
    - You'll have a lot of subfolders. A shallow root path keeps them navigable.
    - The import + sync scripts auto-detect vaults at `~/BRAIN/` or `~/MyVault/` without needing a `VAULT_PATH=…` prefix.
 5. Accept the "Create new vault" prompt. Obsidian makes the folder.
-6. **Done — close Obsidian.** The next step runs from the terminal and wants the vault folder empty-ish.
+6. **Done. Close Obsidian.** The next step runs from the terminal and wants the vault folder empty-ish.
 
-> If you hit any install weirdness, the fix is almost always "use the official installer, not a script." That's why the auto-install path is `brew install --cask obsidian` (Homebrew's cask uses the official installer under the hood) and why we don't curl-pipe-shell the Obsidian binary ourselves.
+If you hit any install weirdness, the fix is almost always "use the official installer, not a script." That's why the auto-install path is `brew install --cask obsidian` (Homebrew's cask uses the official installer under the hood), and why the installer never downloads the Obsidian binary itself.
 
 ---
 
@@ -94,16 +98,16 @@ The pack installs the Obsidian *configuration* on top of the Obsidian app. If th
 
 Before running the installer you need two things on your machine. Takes about 5 minutes if you don't have them yet.
 
-**1. Claude Code** — the CLI that runs all the skills.
+**1. Claude Code**, the CLI that runs all the skills.
 
 ```bash
-# Fastest way — this one-liner handles everything (Homebrew, Node, claude, aliases)
+# Fastest way: this one-liner handles everything (Homebrew, Node, claude, aliases)
 bash <(curl -fsSL https://raw.githubusercontent.com/fidgetcoding/cli-maxxing/main/step-1/step-1-install.sh)
 ```
 
 Already have it? Run `claude --version` to confirm. If that prints a version number, you're good.
 
-**2. `jq`** — a command-line JSON tool the installer uses to merge your settings file safely.
+**2. `jq`**, a command-line JSON tool the installer uses to merge your settings file safely.
 
 ```bash
 # macOS
@@ -114,7 +118,7 @@ brew install jq
 
 Already have it? Run `jq --version` to confirm.
 
-> **Coming from cli-maxxing?** If you've already run cli-maxxing Step 1 + Step 3, you have both. Skip straight to [Install the mogging pack](#install-the-mogging-pack).
+**Coming from cli-maxxing?** If you've already run cli-maxxing Step 1 + Step 3, you have both. Skip straight to [Install the mogging pack](#install-the-mogging-pack).
 
 ---
 
@@ -122,13 +126,13 @@ Already have it? Run `jq --version` to confirm.
 
 Once Obsidian is installed and you have a vault folder (e.g. `~/MyVault/`), the pack's installer takes over.
 
-> **Vault location matters.** Keep your vault in your home dir (`~/MyVault`, `~/<vault-name>`). Do **not** put it under `~/Desktop`, `~/Documents`, or `~/Downloads` — modern macOS permission-protects those folders, so the terminal gets "Operation not permitted" and git + the installer fail.
+**Vault location matters.** Keep your vault in your home dir (`~/MyVault`, `~/<vault-name>`). Do **not** put it under `~/Desktop`, `~/Documents`, or `~/Downloads`. Modern macOS permission-protects those folders, so the terminal gets "Operation not permitted" and git + the installer fail.
 
 ```bash
 git clone https://github.com/fidgetcoding/2ndBrain-mogging.git
 cd 2ndBrain-mogging
 
-# Dry-run first (default) — shows every change without touching disk
+# Dry run first (the default): shows every change without touching disk
 ./install.sh --vault ~/MyVault
 
 # Then apply for real
@@ -139,16 +143,16 @@ cd 2ndBrain-mogging
 
 | Flag | Default | What it does |
 |---|---|---|
-| `--vault PATH` | — | Absolute path to your Obsidian vault. Required with `--apply`. |
-| `--dry-run` | on | Simulate only — print every change, write nothing. |
+| `--vault PATH` | none | Absolute path to your Obsidian vault. Required with `--apply`. |
+| `--dry-run` | on | Simulate only: print every change, write nothing. |
 | `--apply` | off | Execute the changes on disk and in `~/.claude/settings.json`. |
 | `--no-launchd` | off | Skip the 4 scheduled-agent launchd jobs (morning / nightly / weekly / health). |
 | `--no-obsidian-mcp` | off | Skip registering the `obsidian-mcp` server with Claude Code (`claude mcp add obsidian … $VAULT`). |
-| `--no-statusline-brain` | off | Skip writing `~/.claude/.mogging-vault` — the vault-path marker [cli-maxxing](https://github.com/fidgetcoding/cli-maxxing)'s ⚡ fidgetflo statusline reads to light up the 🧠 Brain² indicator. |
+| `--no-statusline-brain` | off | Skip writing `~/.claude/.mogging-vault`, the vault-path marker that [cli-maxxing](https://github.com/fidgetcoding/cli-maxxing)'s ⚡ fidgetflo statusline reads to light up the 🧠 Brain² indicator. |
 | `--no-obsidian-app` | off | Skip auto-installing the Obsidian.app desktop client (macOS; default runs `brew install --cask obsidian` when the app is missing). |
 | `--no-shell-shortcuts` | off | Skip writing the `cbrain` / `cbraintg` launchers to `~/.local/bin`. |
 | `--no-skill-packs` | off | Skip the 5 third-party vault skill packs from `kepano/obsidian-skills` (and the `defuddle` npm CLI they need). See [Vault skill packs](#vault-skill-packs) below. |
-| `--with-research` | off | Install the research tier — `hyperresearch` + `graphify`. See [Research tier](#research-tier-opt-in) below. |
+| `--with-research` | off | Install the research tier (`hyperresearch` + `graphify`). See [Research tier](#research-tier-opt-in) below. |
 | `--with-guard` | off | Install the vault guard, a hook that blocks edits that break a task's 🆔. See [Vault guard](#vault-guard-opt-in) below. |
 | `--with-memory` | off | Turn on the memory tier for this vault. See [Memory tier](#memory-tier-opt-in) below. |
 | `--skip-tests` | off | Skip the onboarding test suite at the end. |
@@ -157,7 +161,7 @@ cd 2ndBrain-mogging
 | `--with-intelligence` | off | Install the self-learning tier. See [Self-learning tier](#self-learning-tier-opt-in) below. |
 | `--symlink` | off | With `--with-intelligence`: symlink helpers instead of hardlinking. |
 
-On `--apply`, the installer, in order: checks for `claude`, `jq`, `git` and bash, validates the vault path (creating the folder if it doesn't exist yet), installs Obsidian.app on macOS if it's missing (unless `--no-obsidian-app`), **seeds the minimal vault from `vault-template/` (any folder/file already in your vault is left untouched)**, backs up `~/.claude/settings.json`, jq-merges the Stop hook (never overwrites), symlinks skills + commands + agents into `~/.claude/`, symlinks `$VAULT/Claude-Memory/` to Claude Code's per-project memory dir, seeds a starter `Claude-Memory/aliases.yaml` if you don't have one, patches the canonical post-mogging contract block into your vault's `CLAUDE.md` (backs up the old one to `$VAULT/Claude-Memory/backups/<timestamp>/` first — idempotent marker block, never duplicates), installs the launchd plists (unless `--no-launchd`), installs the self-learning tier, the vault guard and the memory tier if you passed `--with-intelligence`, `--with-guard` or `--with-memory`, repairs stale helper hook paths in `settings.json`, **registers the `obsidian-mcp` server with Claude Code pointed at your vault** (unless `--no-obsidian-mcp`), **installs the 5 third-party vault skill packs at a pinned upstream commit** (unless `--no-skill-packs`), installs the research tier if `--with-research` was passed, **writes `~/.claude/.mogging-vault` so cli-maxxing's statusline can light up the 🧠 Brain² indicator** (unless `--no-statusline-brain`), writes the `cbrain` / `cbraintg` launchers to `~/.local/bin` (unless `--no-shell-shortcuts`), runs the onboarding tests (unless `--skip-tests`), runs `bin/doctor.sh` to sanity-check the install, and prints a summary of which tiers are on.
+On `--apply`, the installer, in order: checks for `claude`, `jq`, `git` and bash, validates the vault path (creating the folder if it doesn't exist yet), installs Obsidian.app on macOS if it's missing (unless `--no-obsidian-app`), **seeds the minimal vault from `vault-template/` (any folder/file already in your vault is left untouched)**, backs up `~/.claude/settings.json`, jq-merges the Stop hook (never overwrites), symlinks skills + commands + agents into `~/.claude/`, symlinks `$VAULT/Claude-Memory/` to Claude Code's per-project memory dir, seeds a starter `Claude-Memory/aliases.yaml` if you don't have one, patches the canonical post-mogging contract block into your vault's `CLAUDE.md` (backs up the old one to `$VAULT/Claude-Memory/backups/<timestamp>/` first; it's an idempotent marker block that never duplicates), installs the launchd plists (unless `--no-launchd`), installs the self-learning tier, the vault guard and the memory tier if you passed `--with-intelligence`, `--with-guard` or `--with-memory`, repairs stale helper hook paths in `settings.json`, **registers the `obsidian-mcp` server with Claude Code pointed at your vault** (unless `--no-obsidian-mcp`), **installs the 5 third-party vault skill packs at a pinned upstream commit** (unless `--no-skill-packs`), installs the research tier if `--with-research` was passed, **writes `~/.claude/.mogging-vault` so cli-maxxing's statusline can light up the 🧠 Brain² indicator** (unless `--no-statusline-brain`), writes the `cbrain` / `cbraintg` launchers to `~/.local/bin` (unless `--no-shell-shortcuts`), runs the onboarding tests (unless `--skip-tests`), runs `bin/doctor.sh` to sanity-check the install, and prints a summary of which tiers are on.
 
 ### Data preservation and updates
 
@@ -173,25 +177,25 @@ See [the maintenance record](docs/MAINTENANCE-2026-11-04.md) for validation and 
 
 ### Vault skill packs
 
-Five skills from [`kepano/obsidian-skills`](https://github.com/kepano/obsidian-skills) (MIT, by Obsidian's founder) install into `~/.claude/skills/` at a **pinned commit** — the same rug-pull defense [creativity-maxxing](https://github.com/fidgetcoding/creativity-maxxing) uses for its third-party packs. They are fetched at install time, not vendored, so upstream fixes arrive on a deliberate version bump instead of a fork.
+Five skills from [`kepano/obsidian-skills`](https://github.com/kepano/obsidian-skills) (MIT, by Obsidian's founder) install into `~/.claude/skills/` at a **pinned commit**, the same rug-pull defense [creativity-maxxing](https://github.com/fidgetcoding/creativity-maxxing) uses for its third-party packs. They are fetched at install time, not vendored, so upstream fixes arrive on a deliberate version bump instead of a fork.
 
 | Skill | What it does | Why the vault pack needs it |
 |---|---|---|
 | `obsidian-markdown` | Wikilinks, embeds, callouts, properties | Every note in `02-Library/` and `03-Index/` is written in Obsidian Flavored Markdown. Without this an agent emits plain CommonMark and the graph quietly loses edges. |
-| `obsidian-bases` | `.base` files — views, filters, formulas | Base files are code, not prose; guessing the schema corrupts them. |
-| `json-canvas` | `.canvas` files — nodes, edges, groups | `03-Index/Map.canvas` is one. |
-| `obsidian-cli` | Live vault operations | Needs the **Obsidian 1.12.7+** installer. On older Obsidian it installs but stays inert — that is expected, not a failed install. |
+| `obsidian-bases` | `.base` files: views, filters, formulas | Base files are code, not prose; guessing the schema corrupts them. |
+| `json-canvas` | `.canvas` files: nodes, edges, groups | `03-Index/Map.canvas` is one. |
+| `obsidian-cli` | Live vault operations | Needs the **Obsidian 1.12.7+** installer. On older Obsidian it installs but stays inert. That's expected, and the install didn't fail. |
 | `defuddle` | Web page → clean markdown | The capture front door for `/wiki add` and `/save --source`. |
 
-**Why `defuddle` matters enough to be a default:** `WebFetch` runs a page through a small model and hands back a lossy summary — a 12,500-word source comes back as roughly 20 lines, and the prompt is not honored. That is exactly the failure the `02-Library/sources/` contract exists to prevent, since a source note is supposed to be the source of truth for what a page actually said. Defuddle strips nav/ads/clutter and returns the full body.
+**Why `defuddle` matters enough to be a default:** `WebFetch` runs a page through a small model and hands back a lossy summary. A 12,500-word source comes back as roughly 20 lines, and the prompt is ignored. That is exactly the failure the `02-Library/sources/` contract exists to prevent, since a source note is supposed to be the source of truth for what a page actually said. Defuddle strips nav/ads/clutter and returns the full body.
 
-The skill shells out to a `defuddle` binary, so the installer also runs `npm install -g defuddle@0.19.6` (pinned, like the skill packs). If npm is missing or the install fails you get a warning and a manual command, not a hard failure. Existing skill directories are preserved during install. On uninstall, only packs carrying this checkout’s ownership marker are moved into recovery backups; independently installed packs stay in place. The `defuddle` CLI is **left in place** — it is a shared global binary you may use outside the vault, and the uninstaller tells you the command to remove it yourself.
+The skill shells out to a `defuddle` binary, so the installer also runs `npm install -g defuddle@0.19.6` (pinned, like the skill packs). If npm is missing or the install fails you get a warning and a manual command, not a hard failure. Existing skill directories are preserved during install. On uninstall, only packs carrying this checkout’s ownership marker are moved into recovery backups; independently installed packs stay in place. The `defuddle` CLI is **left in place**. It's a shared global binary you may use outside the vault, and the uninstaller tells you the command to remove it yourself.
 
 To update the pins: bump `SKILLPACK_COMMIT`, `DEFUDDLE_VERSION` or `OBSIDIAN_MCP_VERSION` in `install.sh`.
 
 ### Research tier (opt-in)
 
-Two pipx tools that read and write **inside** the vault, which is why they live here rather than in cli-maxxing's generic tool steps. Both are **off by default** — same posture as the self-learning tier. A full-tier research run reads 55–130 sources and bills real tokens; nobody should get that wired in as a surprise.
+Two pipx tools that read and write **inside** the vault, which is why they live here rather than in cli-maxxing's generic tool steps. Both are **off by default**, same as the self-learning tier. A full-tier research run reads 55 to 130 sources and bills real tokens, and nobody should get that wired in as a surprise.
 
 ```bash
 ./install.sh --vault ~/MyVault --apply --with-research
@@ -199,23 +203,22 @@ Two pipx tools that read and write **inside** the vault, which is why they live 
 
 | Tool | What it does | Where it writes |
 |---|---|---|
-| [`hyperresearch`](https://pypi.org/project/hyperresearch/) | 16-step adversarial deep-research pipeline — decompose, width sweep, contradiction graph, depth investigation, 4 critics, patch, polish | Its own note base at `$VAULT/research/`, plus a block in your vault's `CLAUDE.md` |
+| [`hyperresearch`](https://pypi.org/project/hyperresearch/) | 16-step adversarial deep-research pipeline: decompose, width sweep, contradiction graph, depth investigation, 4 critics, patch, polish | Its own note base at `$VAULT/research/`, plus a block in your vault's `CLAUDE.md` |
 | [`graphifyy`](https://pypi.org/project/graphifyy/) | Turns any folder into a navigable knowledge graph (interactive HTML + GraphRAG JSON + a plain-language report) | `graphify-out/` wherever you run it |
 
-**The Python pin is not optional.** `hyperresearch` declares `requires-python >=3.11,<3.14`. A plain `pipx install` picks whatever interpreter pipx defaults to — currently 3.14 on Homebrew — and pipx **installs it anyway with only a warning**. Nothing breaks at install time; it breaks later at fetch time, where `crawl4ai` is broken on 3.14. The installer therefore hunts for `python3.13` → `python3.12` → `python3.11` and pins to the first one it finds. No interpreter in that range means hyperresearch is skipped with a `brew install python@3.13` pointer rather than installed broken. `graphify` needs no pin (`>=3.10`).
+**The Python pin is not optional.** `hyperresearch` declares `requires-python >=3.11,<3.14`. A plain `pipx install` picks whatever interpreter pipx defaults to (currently 3.14 on Homebrew), and pipx **installs it anyway with only a warning**. Nothing breaks at install time; it breaks later at fetch time, where `crawl4ai` is broken on 3.14. The installer therefore hunts for `python3.13` → `python3.12` → `python3.11` and pins to the first one it finds. No interpreter in that range means hyperresearch is skipped with a `brew install python@3.13` pointer rather than installed broken. `graphify` needs no pin (`>=3.10`).
 
-> [!WARNING]
-> **Never run `/graphify` against your vault root.** A mature vault contains embedded git clones and `node_modules`; the crawl balloons into tens of gigabytes. Always scope it to a subtree — `/graphify "$VAULT/02-Library/ideas"`, `/graphify "$VAULT/02-Library/sources"`. Keep `graphify-out/` out of git and out of the Obsidian graph. The installer prints this same warning on the way out.
+**Warning: never run `/graphify` against your vault root.** A mature vault contains embedded git clones and `node_modules`, and the crawl balloons into tens of gigabytes. Always scope it to a subtree, like `/graphify "$VAULT/02-Library/ideas"` or `/graphify "$VAULT/02-Library/sources"`. Keep `graphify-out/` out of git and out of the Obsidian graph. The installer prints this same warning on the way out.
 
 ### Obsidian MCP
 
-The installer runs `claude mcp add --scope user obsidian -- npx -y obsidian-mcp@2.0.1 "$VAULT"` (pinned, so a new npm release can't change what runs in your sessions) so Claude Code can read and write vault notes directly. Upstream: [`obsidian-mcp`](https://github.com/StevenStavrakis/obsidian-mcp) on npm. Idempotent — skips if already registered. Opt out with `--no-obsidian-mcp`. To re-wire later against a different vault: `claude mcp remove obsidian && claude mcp add --scope user obsidian -- npx -y obsidian-mcp@2.0.1 <new-path>`.
+The installer runs `claude mcp add --scope user obsidian -- npx -y obsidian-mcp@2.0.1 "$VAULT"` (pinned, so a new npm release can't change what runs in your sessions) so Claude Code can read and write vault notes directly. Upstream: [`obsidian-mcp`](https://github.com/StevenStavrakis/obsidian-mcp) on npm. It's idempotent and skips if already registered. Opt out with `--no-obsidian-mcp`. To re-wire later against a different vault: `claude mcp remove obsidian && claude mcp add --scope user obsidian -- npx -y obsidian-mcp@2.0.1 <new-path>`.
 
 ### Statusline (redirect to cli-maxxing)
 
-Mogging does **not** ship a statusline of its own. If you want the live `⚡ fidgetflo` status line — model name, context %, duration, swarm/hive/mini activity, plus a 🧠 Brain² indicator that lights up when you're working inside the vault — install [`cli-maxxing`](https://github.com/fidgetcoding/cli-maxxing). Cli-maxxing writes `~/.claude/statusline.sh` and wires it into `~/.claude/settings.json`.
+Mogging does **not** ship a statusline of its own. If you want the live `⚡ fidgetflo` status line (model name, context %, duration, swarm/hive/mini activity, plus a 🧠 Brain² indicator that lights up when you're working inside the vault), install [`cli-maxxing`](https://github.com/fidgetcoding/cli-maxxing). Cli-maxxing writes `~/.claude/statusline.sh` and wires it into `~/.claude/settings.json`.
 
-The *only* thing mogging contributes is a one-line marker file: `~/.claude/.mogging-vault` contains your vault's absolute path. Cli-maxxing's statusline reads that file and lights up 🧠 when `$CWD` matches. No cli-maxxing installed? The marker is a harmless ~100-byte no-op. No mogging installed? Cli-maxxing's statusline still works — the 🧠 indicator just never shows.
+The *only* thing mogging contributes is a one-line marker file: `~/.claude/.mogging-vault` contains your vault's absolute path. Cli-maxxing's statusline reads that file and lights up 🧠 when `$CWD` matches. No cli-maxxing installed? The marker is a harmless ~100-byte no-op. No mogging installed? Cli-maxxing's statusline still works. The 🧠 indicator just never shows.
 
 Rewire later against a different vault:
 
@@ -229,9 +232,9 @@ Opt out with `--no-statusline-brain` and the marker won't be written.
 
 ## After install: setup + maintenance
 
-[`docs/MAINTAINING-YOUR-BRAIN.md`](docs/MAINTAINING-YOUR-BRAIN.md) is the post-install setup and maintenance guide — what to do first, how to add a folder or project without orphaning it, and how to keep the graph healthy over time. Read it once after you install.
+[`docs/MAINTAINING-YOUR-BRAIN.md`](docs/MAINTAINING-YOUR-BRAIN.md) is the post-install setup and maintenance guide: what to do first, how to add a folder or project without orphaning it, and how to keep the graph healthy over time. Read it once after you install.
 
-You don't have to read it cold, though. The `/vault-coach` skill carries the same guidance and walks you through it interactively. It auto-loads on your first session in a freshly installed vault, and again whenever you add a folder or a new project — it forces an index note on the new folder, registers it in `Projects-Index`, and wires the bidirectional links so nothing ends up orphaned. The doc is the human reference; `/vault-coach` is the hands-on version.
+You don't have to read it cold, though. The `/vault-coach` skill carries the same guidance and walks you through it interactively. It auto-loads on your first session in a freshly installed vault, and again whenever you add a folder or a new project. It forces an index note on the new folder, registers it in `Projects-Index`, and wires the bidirectional links so nothing ends up orphaned. The doc is the human reference; `/vault-coach` is the hands-on version.
 
 ---
 
@@ -243,19 +246,19 @@ Every skill is a Claude Code slash command. You type `/<name>` inside Claude Cod
 |---|---|
 | `/save` | Capture this conversation (or a passage, dictated note, ADR) into the vault. Alias-classified, dry-run-previewed, append-only. Also runs in `--backfill` mode for historical transcripts. |
 | `/wiki` | Re-compile a topic note from its sources. Single source of truth is `wiki-schema.md`. |
-| `/challenge` | Steel-man the opposing view of any claim in your vault. Prints the case in the terminal; `--save` writes it to `02-Library/ideas/challenges/YYYY-MM-DD-<slug>.md` — receipts for arguing with yourself. |
+| `/challenge` | Steel-man the opposing view of any claim in your vault. Prints the case in the terminal; `--save` writes it to `02-Library/ideas/challenges/YYYY-MM-DD-<slug>.md`. Receipts for arguing with yourself. |
 | `/emerge` | Surface patterns across N notes you'd otherwise miss. Clusters, contradictions, half-formed arguments. |
 | `/connect` | Propose new `[[wikilinks]]` between notes that share concepts but don't link yet. |
 | `/tether` | Audit project-index bidirectional links, MOC membership, hub wiring. Fix orphans. |
 | `/backfill` | Walk a set of historical Claude Code session JSONLs and route them into the vault as if `/save` had run at the time. |
 | `/aliases` | Manage the classifier dictionary in `Claude-Memory/aliases.yaml`. Add / rename / split entities. |
-| `/autoresearch` | 3-round deepening research loop — shallow sweep, follow-up pass, synthesis. |
+| `/autoresearch` | 3-round deepening research loop: shallow sweep, follow-up pass, synthesis. |
 | `/canvas` | Drop an Obsidian Canvas scratchpad pre-wired to whatever set of notes you name. |
-| `/import-claude` | One-shot import your entire Claude.ai or ChatGPT data export into the vault. Full conversation history, alias-classified, spawns concept stubs where ideas repeat. **New.** |
-| `/import-notes` | One-shot import your existing notes from Apple Notes, OneNote, Notion, Evernote, or any raw `.md` / `.docx` / `.pptx` / `.xlsx` / `.html` pile. Pandoc under the hood, full dry-run preview. **New.** |
-| `/vault-coach` | Coach you through setting up and maintaining your vault — auto-loads after install and whenever you add a folder or project. Forces an index note on every new folder, registers it in Projects-Index, keeps the graph healthy. Pairs with `docs/MAINTAINING-YOUR-BRAIN.md`. **New.** |
+| `/import-claude` | One-shot import your entire Claude.ai or ChatGPT data export into the vault. Full conversation history, alias-classified, spawns concept stubs where ideas repeat. |
+| `/import-notes` | One-shot import your existing notes from Apple Notes, OneNote, Notion, Evernote, or any raw `.md` / `.docx` / `.pptx` / `.xlsx` / `.html` pile. Pandoc under the hood, full dry-run preview. |
+| `/vault-coach` | Coaches you through setting up and maintaining your vault. Auto-loads after install and whenever you add a folder or project. Forces an index note on every new folder, registers it in Projects-Index, keeps the graph healthy. Pairs with `docs/MAINTAINING-YOUR-BRAIN.md`. |
 
-All thirteen are auto-namespaced under the `2ndbrain-mogging` plugin. Both `/save` and `/2ndbrain-mogging:save` resolve to the same skill — use whichever form you like inside Claude Code.
+All thirteen are auto-namespaced under the `2ndbrain-mogging` plugin. Both `/save` and `/2ndbrain-mogging:save` resolve to the same skill, so use whichever form you like inside Claude Code.
 
 ---
 
@@ -278,7 +281,7 @@ MyVault/
 │   └── Projects-Index.md    # every project, listed
 ├── 04-Tasks/
 │   └── TASKS.md             # the task hub. Optional 2-way Morgen sync via task-maxxing.
-├── Claude-Memory/           # symlink to ~/.claude/projects/<vault>/memory — aliases.yaml + auto-memory
+├── Claude-Memory/           # symlink to ~/.claude/projects/<vault>/memory: aliases.yaml + auto-memory
 ├── CLAUDE.md                # the vault's rules, plus the pack's marker block
 ├── AGENTS.md                # the same rules, for non-Claude agents
 ├── SOUL.md                  # who you are and what you're after. Fill it in.
@@ -287,9 +290,9 @@ MyVault/
 
 Your projects have your names, so `01-Projects/` starts with just `VAULT/` and you add the rest yourself (or let `/vault-coach` walk you through it). Three more things show up on their own, the first time something needs them:
 
-- `01-Projects/MISC/` — the catch-all project. `/save` makes it, hub note and all, the first time a chat fits no single project.
-- `01-Projects/VAULT/log.md` — the vault log. `/wiki` starts it on its first run, unless you already keep a `log.md` somewhere under `01-Projects/VAULT/` (say `VAULT/MISC/log.md`), in which case it uses that one.
-- `01-Projects/VAULT/REPORTS/` — where the scheduled agents and `/wiki audit` drop their reports. The first report makes it.
+- `01-Projects/MISC/`: the catch-all project. `/save` makes it, hub note and all, the first time a chat fits no single project.
+- `01-Projects/VAULT/log.md`: the vault log. `/wiki` starts it on its first run, unless you already keep a `log.md` somewhere under `01-Projects/VAULT/` (say `VAULT/MISC/log.md`), in which case it uses that one.
+- `01-Projects/VAULT/REPORTS/`: where the scheduled agents and `/wiki audit` drop their reports. The first report makes it.
 
 **Open the `README.md` inside your vault.** It has example folder trees for a small vault and a busy one, a structure grid (folder, what goes in it, example), the house naming rules, and the short list of things you should never delete. When you're done with it, delete it. The installer only drops it into a brand-new vault, so it stays gone.
 
@@ -319,7 +322,7 @@ Install puts `VAULT/` here and nothing else. Every project you add gets its own 
 └── VAULT/                       ← made by install; log.md and REPORTS/ arrive later
 ```
 
-The subfolders inside each project are **up to you** — the skills only write to `!!conversations/` and `notes/` below the project's hub note. I go ALL CAPS on folder names, park old work in `!ARCHIVE/`, and keep code in `REPO/`. Yours might be `research/` + `drafts/` + `deliverables/`. Whatever works.
+The subfolders inside each project are **up to you**. The skills only write to `!!conversations/` and `notes/` below the project's hub note. I go ALL CAPS on folder names, park old work in `!ARCHIVE/`, and keep code in `REPO/`. Yours might be `research/` + `drafts/` + `deliverables/`. Whatever works.
 
 ### What the retired folders were
 
@@ -338,7 +341,7 @@ Deep rationale for each skill is in [`PHILOSOPHY.md`](PHILOSOPHY.md).
 
 ## Self-learning tier (opt-in)
 
-Pass `--with-intelligence` to the installer and the pack wires in a pattern-graph from **[FidgetFlo](https://github.com/fidgetcoding/fidgetflo)** that plugs into `/save` and `/wiki` so routing gets progressively smarter as the vault grows, without rewriting a single one of your notes. 13 helper scripts get hardlinked into `$VAULT/.claude/helpers/` and 5 additional hook types (PreToolUse / PostToolUse / UserPromptSubmit / SessionStart / SessionEnd) get jq-merged into `~/.claude/settings.json` — your existing hooks are preserved. (FidgetFlo is my MIT-licensed fork of [ruvnet's `ruflo@v3.5.80`](https://github.com/ruvnet/ruflo/tree/v3.5.80); upstream copyright is preserved in FidgetFlo's `LICENSE`.)
+Pass `--with-intelligence` to the installer and the pack wires in a pattern-graph from **[FidgetFlo](https://github.com/fidgetcoding/fidgetflo)** that plugs into `/save` and `/wiki` so routing gets progressively smarter as the vault grows, without rewriting a single one of your notes. 13 helper scripts get hardlinked into `$VAULT/.claude/helpers/` and 5 additional hook types (PreToolUse / PostToolUse / UserPromptSubmit / SessionStart / SessionEnd) get jq-merged into `~/.claude/settings.json`, and your existing hooks are preserved. (FidgetFlo is my MIT-licensed fork of [ruvnet's `ruflo@v3.5.80`](https://github.com/ruvnet/ruflo/tree/v3.5.80); upstream copyright is preserved in FidgetFlo's `LICENSE`.)
 
 Off by default so the advertised pack works for people who just want the folders and the skills. Turn it on when you want the vault to start learning from your session history.
 
@@ -350,7 +353,7 @@ The skills are instructions to a model, and a model can forget an instruction. T
 
 Pass `--with-guard` and `hooks/vault-guard.sh` runs them as a Claude Code hook, so a broken edit gets blocked before it lands:
 
-- **Task IDs.** Any Write or Edit under `04-Tasks/` that rewrites, drops, duplicates, swaps or invents a 🆔 is refused. A new task with no 🆔 is fine, because W1 mints it on the next sync.
+- **Task IDs.** Any Write or Edit under `04-Tasks/` that rewrites, drops, duplicates, swaps or invents a 🆔 is refused. A new task with no 🆔 is fine. If you run the optional task sync, it mints one on its next run.
 - **Scope.** Once `/wiki` or `/autoresearch` runs, Claude Code keeps that skill's hook for the rest of the session. It refuses writes to `04-Tasks/`, project indexes and `owner: human` notes. So after a `/wiki` run, start a new session to edit tasks.
 
 It's off by default because it can refuse an edit you actually asked for. Removing or moving a task under the guard is a job for you in Obsidian. It covers Claude's Write and Edit tools only, so a shell command in Bash can still change a file.
@@ -389,7 +392,7 @@ If you've been keeping notes somewhere else, you don't have to abandon them. The
    bash scripts/import-claude.sh
    ```
    It unzips the export into `<vault>/.import-staging/<timestamp>-claude/` and prints the next step.
-3. **Inside Claude Code, run `/import-claude`** — scan first, dry-run, then apply. Each conversation becomes a full-fidelity capture in `01-Projects/<PROJECT>/!!conversations/` (post-2026-05-08; the old top-level `01-Conversations/` was retired; a chat with no single project goes to `01-Projects/MISC/!!conversations/`), and (where ideas repeat) an idea stub in `02-Library/ideas/`.
+3. **Inside Claude Code, run `/import-claude`.** Scan first, dry run, then apply. Each conversation becomes a full-fidelity capture in `01-Projects/<PROJECT>/!!conversations/` (a chat with no single project goes to `01-Projects/MISC/!!conversations/`), and where ideas repeat, an idea stub in `02-Library/ideas/`.
 
 ### Apple Notes / OneNote / Notion / Evernote / raw files → vault
 
@@ -407,7 +410,7 @@ Then `/import-notes --source ~/Desktop/<export-folder>` inside Claude Code.
 - **OneNote** via File → Export → Word `.docx`
 - **Notion** via Settings → Export → Markdown & CSV
 - **Evernote** via File → Export Notes → `.enex`
-- **Raw pile** — any folder full of `.md` / `.txt` / `.docx` / `.pptx` / `.xlsx` / `.html` / `.rtf`
+- **Raw pile:** any folder full of `.md` / `.txt` / `.docx` / `.pptx` / `.xlsx` / `.html` / `.rtf`
 
 All five routes share the same rulebook in [`docs/PARSING-GUIDE.md`](docs/PARSING-GUIDE.md). Pandoc handles conversions; `/import-notes` does the classification.
 
@@ -433,23 +436,17 @@ This pack was extracted from a live operator's personal vault. Real names and pr
 
 ## Credits
 
-This pack is an amalgamation — not an invention. The best ideas are all borrowed; what I did was test them side-by-side and throw out what didn't earn its keep. In alphabetical order:
+This pack is an amalgamation of other people's ideas. The best ones are all borrowed. What I did was test them side by side and throw out what didn't earn its keep. In alphabetical order:
 
-- **AgriciDaniel** ([`claude-obsidian`](https://github.com/AgriciDaniel/claude-obsidian)) — the conversation-capture hygiene and the `owner: wiki` vs `owner: human` discipline that makes skills safe to run against live notes.
-- **eugeniu** ([`obsidian-second-brain`](https://github.com/eugeniughelbur/obsidian-second-brain)) — the concept-atomization rules that keep `02-Library/ideas/` from becoming a dumping ground.
-- **Jens Heitmann** ([`ai-second-brain-skills`](https://github.com/NulightJens/ai-second-brain-skills)) — the original folder structure I modded to death, and the taste-making starting point.
-- **Karpathy** ([`LLM Wiki` gist](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f)-era second brain) — the wiki-style synthesis pattern that became `/wiki` and `/emerge`.
-- **NicholasSpisak** ([`second-brain`](https://github.com/NicholasSpisak/second-brain)) — the Canvas-scratchpad pattern that became `/canvas`.
+- **AgriciDaniel** ([`claude-obsidian`](https://github.com/AgriciDaniel/claude-obsidian)): the three-round `/autoresearch` loop, `/canvas`, the hot-cache pattern and the plugin repo layout.
+- **eugeniu** ([`obsidian-second-brain`](https://github.com/eugeniughelbur/obsidian-second-brain)): the thinking tools (`/challenge`, `/emerge`, `/connect`) and the morning / nightly / weekly / health agent schedule.
+- **Jens Heitmann** ([`ai-second-brain-skills`](https://github.com/NulightJens/ai-second-brain-skills)): the `/save` + `/wiki` core, the habit of shipping only what's needed, and the original folder structure I modded to death.
+- **Karpathy** ([`LLM Wiki` gist](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f)-era second brain): compile instead of retrieve, the sources-to-wiki pattern behind `/wiki`, and source-first frontmatter.
+- **NicholasSpisak** ([`second-brain`](https://github.com/NicholasSpisak/second-brain)): the source-page template, discuss-before-write, prefer-update-over-create, and the shell test pattern `tests/` follows.
 
-Each of them is worth a look even if you install this pack instead. They're the people who did the hard work; I just picked the best of five.
+The full list, with licenses and exactly what came from whom, is in [`docs/CREDITS.md`](docs/CREDITS.md). Each of them is worth a look even if you install this pack instead. They're the people who did the hard work; I just picked the best of five.
 
 ---
-
-## License
-
-MIT — see [`LICENSE`](LICENSE).
-
-[⤴ back to top](#top)
 
 ## Security: gitleaks pre-commit hook
 
@@ -462,9 +459,17 @@ bash scripts/install-pre-commit-hook.sh
 ```
 
 The hook runs `gitleaks protect --staged` and blocks commits that contain secrets.
-For emergencies you can bypass with `git commit --no-verify` — but DO NOT bypass for
+For emergencies you can bypass it with `git commit --no-verify`, but DO NOT bypass it for
 real secrets. Use env vars or a secret manager instead.
 
 If gitleaks isn't installed yet:
 - macOS: `brew install gitleaks`
 - Linux: https://github.com/gitleaks/gitleaks/releases
+
+---
+
+## License
+
+MIT. See [`LICENSE`](LICENSE), and [`NOTICE`](NOTICE) for the vendored helpers. Copyright (c) 2026 Nate Davidovich.
+
+[⤴ back to top](#top)
