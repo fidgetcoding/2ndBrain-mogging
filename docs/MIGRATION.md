@@ -1,5 +1,7 @@
 # Migration Runbook — Detailed
 
+> This runbook covers the April 2026 move to the mogged layout and is kept as written. For the 2026-11-05 Library v2 move (`02-Sources/` and `03-Concepts/` into `02-Library/`, `04-Index/` to `03-Index/`, `05-Tasks/` to `04-Tasks/`), see [Moving to Library v2](../MIGRATION.md#moving-to-library-v2-2026-11-05) and `scripts/migrate-to-library.sh`.
+
 Long-form, command-first migration guide for moving from a pre-mogging 9-folder vault to the post-mogging 7-structure contract. The short version lives in the root [`MIGRATION.md`](../MIGRATION.md); this file owns per-phase commands, rollback points, edge cases, and validation queries.
 
 ## Pre-flight
