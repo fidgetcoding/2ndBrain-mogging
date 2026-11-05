@@ -48,19 +48,19 @@ The tag is your full-rollback anchor. The tarball is your oh-shit anchor if git 
 
 ### A1. Drain `00-Inbox/` and `01-Fleeting/` into legacy reports
 
-Nothing gets deleted without a paper trail. Concatenate survivors into two legacy bundles, then remove the source folders.
+Nothing gets deleted without a paper trail. Concatenate survivors into two legacy bundles, then remove the source folders. The bundles go in `01-Projects/VAULT/notes/`: they aren't chats, so they stay out of `!!conversations/`.
 
 ```bash
-mkdir -p 01-Projects/VAULT/conversations/legacy
+mkdir -p 01-Projects/VAULT/notes/legacy
 { printf '# Legacy Inbox (drained %s)\n\n' "$(date +%Y-%m-%d)"; \
   for f in 00-Inbox/*.md; do [ -f "$f" ] && printf '\n\n---\n\n## %s\n\n' "$(basename "$f")" && cat "$f"; done; \
-} > 01-Projects/VAULT/conversations/legacy/inbox-drain.md
+} > 01-Projects/VAULT/notes/legacy/inbox-drain.md
 
 { printf '# Legacy Fleeting (drained %s)\n\n' "$(date +%Y-%m-%d)"; \
   for f in 01-Fleeting/*.md; do [ -f "$f" ] && printf '\n\n---\n\n## %s\n\n' "$(basename "$f")" && cat "$f"; done; \
-} > 01-Projects/VAULT/conversations/legacy/fleeting-drain.md
+} > 01-Projects/VAULT/notes/legacy/fleeting-drain.md
 
-git add 01-Projects/VAULT/conversations/legacy/
+git add 01-Projects/VAULT/notes/legacy/
 git commit -m "phase-A-1: drain 00-Inbox + 01-Fleeting into legacy reports"
 ```
 

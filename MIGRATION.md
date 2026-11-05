@@ -41,15 +41,15 @@ This pack is additive, not replacing. You keep:
 
 1. **Back up the vault.** Either `git commit -am "pre-mogging"` or `cp -R 2ndBrain 2ndBrain.bak`. Both are cheap. Do both.
 
-2. **Install the plugin.** `/plugin marketplace add fidgetcoding/2ndBrain-mogging` then `/plugin install 2ndbrain-mogging@fidgetcoding`. Restart Claude Code.
+2. **Install the pack.** Clone the repo, run `./install.sh --vault ~/MyVault` to preview, then add `--apply`. In a vault that already has folders, it only adds the folders and files that are missing. It also seeds a starter `Claude-Memory/aliases.yaml`, patches its marker block into your `CLAUDE.md` (backing up the old one first) and loads the scheduled agents. Restart Claude Code. (The `/plugin install` route skips those vault steps, and the steps below assume them.)
 
-3. **Run `/aliases init`.** This walks your `01-Projects/` tree and proposes an `aliases.yaml` seed with one entry per project. Review and edit before `y`. This file becomes the classifier dictionary for every future `/save`.
+3. **Run `/aliases --bootstrap`.** This walks your vault and proposes one entry per project in `Claude-Memory/aliases-pending.md` (it never overwrites the starter `aliases.yaml`). Review and edit, then merge with `/aliases --accept`. This file becomes the classifier dictionary for every future `/save`.
 
-4. **Run `/tether --dry-run`.** This audits project-index bidirectional links, MOC membership, and hub wiring. It reports orphans without fixing anything. Eyeball the report. If it looks sane, re-run without `--dry-run` to apply the fixes. If it looks wrong, check your `aliases.yaml` — it's usually a classification bug.
+4. **Run `/tether --dry-run`.** This audits project-index bidirectional links, MOC membership, and hub wiring. It reports orphans without fixing anything. Eyeball the report. If it looks sane, re-run with `--execute` to apply the fixes. If it looks wrong, check your `aliases.yaml` — it's usually a classification bug.
 
-5. **Run `/backfill --last-30-days`.** This walks recent Claude Code transcripts and routes them into the vault as if `/save` had run at the time. Preview-heavy — nothing writes without your `y`. Step 1 rollback: `git reset --hard HEAD~N` where N is the number of backfilled commits.
+5. **Run `/backfill --all --dry-run --since <date 30 days ago>`, then the same with `--apply`.** This walks recent Claude Code transcripts and routes them into the vault as if `/save` had run at the time. Preview-heavy — nothing writes without your `y`. Step 1 rollback: `git reset --hard HEAD~N` where N is the number of backfilled commits.
 
-6. **Enable scheduled agents.** `cp scheduled/launchd/*.plist ~/Library/LaunchAgents/` and `launchctl load` each one. Four plists: morning, nightly, weekly, health. Delete any you don't want.
+6. **Check the scheduled agents.** `install.sh --apply` already copied the four plists (morning, nightly, weekly, health) into `~/Library/LaunchAgents/` with your paths filled in, and loaded them. Don't copy them by hand: the repo files hold `$VAULT` / `$REPO_ROOT` placeholders. To drop one, `launchctl unload` it and delete its plist. Installed with `--no-launchd`? Re-run the installer without it.
 
 After step 6 the pack is live. You're running tier 2 thinking tools over your existing vault, with regime awareness, alias classification, and `[bot:*]` filter-safe writes.
 
@@ -95,7 +95,7 @@ The vault root now holds only `CLAUDE.md`, `AGENTS.md` and `SOUL.md`, plus an op
 
 ## Rollback
 
-Every step is reversible. See [`docs/MIGRATION.md`](docs/MIGRATION.md) for per-step rollback commands. Short version: `git reset --hard <pre-mogging-sha>` puts you back where you started, the plist files are symlinks you can remove, and `aliases.yaml` is a single file you can delete.
+Every step is reversible. See [`docs/MIGRATION.md`](docs/MIGRATION.md) for per-step rollback commands. Short version: `git reset --hard <pre-mogging-sha>` puts you back where you started, `uninstall.sh` unloads and removes the plists, and `aliases.yaml` is a single file you can delete.
 
 ## Detailed runbook
 
