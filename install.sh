@@ -112,11 +112,13 @@ Options:
   --skip-tests         Skip running tests/test_onboarding.sh
   --verbose            Verbose logging (does NOT echo settings.json contents)
   --merge-stop         Replace any existing Stop hook with ours instead of append
-  --no-seed-vault      Skip seeding the 5-folder vault layout from vault-template/.
-                       Default is to copy missing folders (01-Projects/, 02-Library/, 03-Index/,
-                       04-Tasks/, Claude-Memory/ placeholder, CLAUDE.md,
-                       AGENTS.md) into --vault. Existing files are never
-                       overwritten — the seed is strictly additive.
+  --no-seed-vault      Skip seeding the minimal vault from vault-template/.
+                       Default is to copy whichever of 01-Projects/ (with
+                       VAULT/VAULT.md), 02-Library/ (people, tools, ideas,
+                       sources), 03-Index/, 04-Tasks/, Claude-Memory/, CLAUDE.md,
+                       AGENTS.md and SOUL.md are missing into --vault, plus a
+                       README.md guide in a brand-new vault only. Existing files
+                       are never overwritten — the seed is strictly additive.
   --with-intelligence  Install the self-learning tier (helpers/ + 5 hook types
                        merged into settings.json + seeded .claude-flow/data/).
                        OFF by default; existing users won't get surprise hooks.
@@ -439,11 +441,15 @@ validate_vault() {
 }
 
 # ---- step 3.5: seed vault from vault-template/ ------------------------------
-# For a freshly-created Obsidian vault (empty folder), copy the 5-folder layout
-# + CLAUDE.md + AGENTS.md + Projects-Index + example projects out of
-# vault-template/ into $VAULT. Strictly additive — existing files/folders are
-# never overwritten. Skipped entirely with --no-seed-vault or if $VAULT is unset
-# (the doctor-only / dry-run-only paths).
+# For a freshly-created Obsidian vault (empty folder), copy the minimal vault out
+# of vault-template/ into $VAULT: 01-Projects/VAULT/VAULT.md, the four
+# 02-Library/ folders, 03-Index/{Index,Projects-Index}.md, 04-Tasks/TASKS.md,
+# CLAUDE.md, AGENTS.md, SOUL.md, and README.md (a deletable layout guide). No
+# example projects: the catch-all project, VAULT/log.md and VAULT/REPORTS/ are
+# made by the skills and agents the first time they need them. Strictly
+# additive — existing files/folders are never overwritten. Skipped entirely
+# with --no-seed-vault or if $VAULT is unset (the doctor-only / dry-run-only
+# paths).
 
 seed_vault_from_template() {
   log "step 3.5: seed vault from template"
@@ -461,11 +467,17 @@ seed_vault_from_template() {
     return 0
   fi
 
-  local copied=0 skipped=0
+  local copied=0 skipped=0 fresh=1 numbered
+  # README.md is a guide the user is told they can delete, and update.sh re-runs
+  # this seed, so it only goes into a vault that has none of the numbered
+  # folders yet (old numbers included). Once deleted, it stays deleted.
+  for numbered in 01-Projects 02-Library 03-Index 04-Tasks 02-Sources 03-Concepts 04-Index 05-Tasks; do
+    if [[ -e "$VAULT/$numbered" ]]; then fresh=0; break; fi
+  done
   # Top-level dirs (01-Projects, 02-Library, 03-Index, 04-Tasks) — copy each if absent.
   # `cp -R` preserves nested empty dirs and .gitkeep files from the template,
   # which matters because git-clone drops truly-empty dirs but we want the
-  # 5-folder layout (and 02-Library's people/tools/ideas/sources) to render
+  # numbered folders (and 02-Library's people/tools/ideas/sources) to render
   # even before any notes land in it.
   while IFS= read -r -d '' entry; do
     local rel="${entry#"$src"/}"
@@ -476,6 +488,11 @@ seed_vault_from_template() {
     local dest="$VAULT/$rel"
     if [[ -e "$dest" || -L "$dest" ]]; then
       vlog "seed skip (exists): $rel"
+      skipped=$((skipped + 1))
+      continue
+    fi
+    if [[ "$rel" == "README.md" && "$fresh" -eq 0 ]]; then
+      vlog "seed skip (guide is for new vaults only): $rel"
       skipped=$((skipped + 1))
       continue
     fi
@@ -1904,7 +1921,7 @@ run_doctor() {
 #   step 1    preflight                  claude + jq/git/bash + osascript + version gate
 #   step 1.5  ensure_obsidian_app        macOS: brew install --cask obsidian if missing; opt out w/ --no-obsidian-app
 #   step 2/3  validate_vault             --apply requires --vault; auto-creates the directory if missing
-#   step 3.5  seed_vault_from_template   additive copy of 5-folder layout + template files
+#   step 3.5  seed_vault_from_template   additive copy of the minimal vault (+ README guide in a new vault)
 #   step 4    backup_settings            timestamped ~/.claude/.backups/<ts>/settings.json
 #   step 5    merge_stop_hook            jq-merge Stop hook (append | replace | skip-if-present)
 #   step 6    symlink_dir "skills"       ~/.claude/skills/<name> -> repo/skills/<name>

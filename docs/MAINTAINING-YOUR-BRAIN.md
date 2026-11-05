@@ -49,6 +49,8 @@ The more you save, the more it understands where things go — *as long as the i
 └── Claude-Memory/  # aliases + memory (leave it alone)
 ```
 
+A fresh install makes only what the skills need: these folders, `01-Projects/VAULT/`, the two maps in `03-Index/`, `04-Tasks/TASKS.md`, and the rule files at the root. It also drops a `README.md` at the vault root with example layouts, a structure grid, and the list of things you should never delete. Read it once, then delete it if you like.
+
 The numbers run 01 to 04 with no gaps. On 2026-11-05 `02-Sources/` and `03-Concepts/` merged into `02-Library/`, `04-Index/` became `03-Index/`, and `05-Tasks/` became `04-Tasks/`. If your vault still has the old folders, `scripts/migrate-to-library.sh` moves and renames them for you (it previews first).
 
 ### `01-Projects/` — your actual work
@@ -74,7 +76,7 @@ Things that are worth remembering but **not tied to a project**. Four shelves:
 - **`people/`** — one note per person.
 - **`tools/`** — one note per tool, app, service, model, or library.
 
-Saved chats never go here. A chat that isn't about one project goes to your catch-all project's `!!conversations/` (`01-Projects/MISC/` unless you picked another).
+Saved chats never go here. A chat that isn't about one project goes to your catch-all project's `!!conversations/` (`01-Projects/MISC/` unless you picked another). `/save` makes that folder the first time it needs it.
 
 ### `03-Index/` — navigation
 

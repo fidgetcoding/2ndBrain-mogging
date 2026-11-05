@@ -16,7 +16,7 @@ Post-mogging canonical layout:
 ├── 02-Sources/         # external inputs (renamed from 02-Literature)
 ├── 03-Concepts/        # atomic concepts (renamed from 03-Permanent)
 ├── 04-Index/           # MOCs (renamed from 04-MOC)
-├── 01-Projects/        # project folders (renamed from 07-Projects), + INCUBATOR/
+├── 01-Projects/        # project folders (renamed from 07-Projects)
 ├── 05-Tasks/           # Obsidian Tasks hub (renamed from 08-Tasks), submodule preserved
 ├── Claude-Memory/      # symlink to ~/.claude/projects/.../memory/
 ├── AGENTS.md           # sidecar
@@ -192,7 +192,7 @@ fi
 
 ### D2. Three root sidecars
 
-Create only if missing: `AGENTS.md`, `CLAUDE.md`, `SOUL.md`. Use `vault-template/` as the stencil. Nothing else goes at the vault root: hard facts go in the **Critical facts** section of `SOUL.md`, the master index is `03-Index/Index.md`, and the vault log is `01-Projects/VAULT/log.md`. An existing `CRITICAL_FACTS.md`, `index.md` or `log.md` is never deleted; move `log.md` to `01-Projects/VAULT/log.md` when you're ready.
+Create only if missing: `AGENTS.md`, `CLAUDE.md`, `SOUL.md`. Use `vault-template/` as the stencil. The only other root file is an optional `README.md` layout guide, which the installer adds to a brand-new vault only. Nothing else goes at the vault root: hard facts go in the **Critical facts** section of `SOUL.md`, the master index is `03-Index/Index.md`, and the vault log is `01-Projects/VAULT/log.md` (or a `log.md` you already keep in a subfolder of `01-Projects/VAULT/`). An existing `CRITICAL_FACTS.md`, `index.md` or `log.md` is never deleted; move `log.md` to `01-Projects/VAULT/log.md` when you're ready.
 
 ### D3. CLAUDE.md append-only patch
 

@@ -91,7 +91,7 @@ After `--apply`, by hand:
 
 To undo it, the backup tarball holds every folder and note as it was before the move.
 
-The vault root now holds only `CLAUDE.md`, `AGENTS.md` and `SOUL.md`. The installer stops creating `CRITICAL_FACTS.md`, `index.md` and `log.md`, and nothing deletes or moves yours. When you're ready, move `log.md` to `01-Projects/VAULT/log.md` (where `/wiki` now appends), fold `CRITICAL_FACTS.md` into a **Critical facts** section of `SOUL.md`, and use `03-Index/Index.md` as the master index instead of a root `index.md`.
+The vault root now holds only `CLAUDE.md`, `AGENTS.md` and `SOUL.md`, plus an optional `README.md` layout guide that a brand-new install adds and you can delete. The installer stops creating `CRITICAL_FACTS.md`, `index.md` and `log.md`, and nothing deletes or moves yours. When you're ready, move `log.md` to `01-Projects/VAULT/log.md` (where `/wiki` now appends; a `log.md` already in a subfolder of `01-Projects/VAULT/` works too), fold `CRITICAL_FACTS.md` into a **Critical facts** section of `SOUL.md`, and use `03-Index/Index.md` as the master index instead of a root `index.md`.
 
 ## Rollback
 

@@ -27,7 +27,7 @@ More: [ESSENCE.md](ESSENCE.md) · [EVOLUTION.md](EVOLUTION.md)
 | [Install Obsidian (auto)](#install-obsidian-first) | Setup | Auto-installed by the installer; manual download is the fallback | ~1 min |
 | [Install the mogging pack](#install-the-mogging-pack) | Setup | Clone, dry-run, apply | ~2 min |
 | [The 13 skills](#the-13-skills) | Reference | Every slash command in plain English | ~3 min |
-| [Vault structure](#vault-structure) | Reference | The 5-folder layout, with example projects | ~2 min |
+| [Vault structure](#vault-structure) | Reference | What install creates, plus example layouts | ~2 min |
 | [Self-learning tier](#self-learning-tier-opt-in) | Optional | Turns the pack into a pattern-graph that gets smarter as you go | ~1 min |
 | [Bring your existing stuff in](#bring-your-existing-stuff-in-optional) | Optional | Import Claude / ChatGPT conversations + Apple Notes / OneNote / Notion / Evernote | ~3 min |
 | [Credits](#credits) | Meta | The 5 originals I mogged | — |
@@ -55,7 +55,7 @@ So: we went from maxxing to absolutely **mogging** everybody.
 
 ## What you get
 
-- **The 5-folder vault-mogging layout** — the contract you install against, pre-wired to the skills below.
+- **A minimal vault to start from** — the four numbered folders and the files every skill needs, pre-wired to the skills below, plus a guide with example layouts that you delete when you're done.
 - **13 Claude Code skills** (10 core + 2 optional importers + a `/vault-coach` onboarding guide) that read + write against that layout with a shared alias dictionary + dry-run previews.
 - **Four scheduled agents** (morning / nightly / weekly / health) that audit the vault in the background so you don't have to.
 - **An opt-in self-learning tier** from **[FidgetFlo](https://github.com/fidgetcoding/fidgetflo)** (my MIT-licensed fork of [ruvnet's `ruflo@v3.5.80`](https://github.com/ruvnet/ruflo/tree/v3.5.80), made better) — a pattern-graph that makes routing smarter the longer you use the vault.
@@ -147,11 +147,11 @@ cd 2ndBrain-mogging
 | `--with-memory` | off | Turn on the memory tier for this vault. See [Memory tier](#memory-tier-opt-in) below. |
 | `--skip-tests` | off | Skip the onboarding test suite at the end. |
 | `--merge-stop` | off | Replace the existing Stop hook instead of jq-merging onto it. |
-| `--no-seed-vault` | off | Skip seeding the 5-folder vault layout from `vault-template/`. By default the installer copies in any of `01-Projects/{example-project-1, example-project-2, example-project-3, INCUBATOR, MISC, VAULT}/`, `02-Library/{people, tools, ideas, sources}/`, `03-Index/{Index, Projects-Index}.md`, `04-Tasks/TASKS.md`, `Claude-Memory/`, `CLAUDE.md`, `AGENTS.md`, `SOUL.md` that are missing. Existing files are never overwritten. |
+| `--no-seed-vault` | off | Skip seeding the minimal vault from `vault-template/`. By default the installer copies in whichever of `01-Projects/` (with `VAULT/VAULT.md`), `02-Library/{people, tools, ideas, sources}/`, `03-Index/{Index, Projects-Index}.md`, `04-Tasks/TASKS.md`, `Claude-Memory/`, `CLAUDE.md`, `AGENTS.md` and `SOUL.md` are missing, plus a `README.md` layout guide in a brand-new vault only. Existing files are never overwritten. |
 | `--with-intelligence` | off | Install the self-learning tier. See [Self-learning tier](#self-learning-tier-opt-in) below. |
 | `--symlink` | off | With `--with-intelligence`: symlink helpers instead of hardlinking. |
 
-On `--apply`, the installer, in order: validates the vault path, **seeds the 5-folder vault layout from `vault-template/` (any folder/file already in your vault is left untouched)**, backs up `~/.claude/settings.json`, jq-merges the Stop hook (never overwrites), symlinks skills + commands + agents into `~/.claude/`, symlinks `$VAULT/Claude-Memory/` to Claude Code's per-project memory dir, patches the canonical post-mogging contract block into your vault's `CLAUDE.md` (backs up the old one to `$VAULT/Claude-Memory/backups/<timestamp>/` first — idempotent marker block, never duplicates), installs the launchd plists (unless `--no-launchd`), installs the self-learning tier if `--with-intelligence` was passed, **registers the `obsidian-mcp` server with Claude Code pointed at your vault** (unless `--no-obsidian-mcp`), **installs the 5 third-party vault skill packs at a pinned upstream commit** (unless `--no-skill-packs`), **writes `~/.claude/.mogging-vault` so cli-maxxing's statusline can light up the 🧠 Brain² indicator** (unless `--no-statusline-brain`), runs the onboarding tests (unless `--skip-tests`), and finally runs `bin/doctor.sh` to sanity-check the install.
+On `--apply`, the installer, in order: validates the vault path, **seeds the minimal vault from `vault-template/` (any folder/file already in your vault is left untouched)**, backs up `~/.claude/settings.json`, jq-merges the Stop hook (never overwrites), symlinks skills + commands + agents into `~/.claude/`, symlinks `$VAULT/Claude-Memory/` to Claude Code's per-project memory dir, patches the canonical post-mogging contract block into your vault's `CLAUDE.md` (backs up the old one to `$VAULT/Claude-Memory/backups/<timestamp>/` first — idempotent marker block, never duplicates), installs the launchd plists (unless `--no-launchd`), installs the self-learning tier if `--with-intelligence` was passed, **registers the `obsidian-mcp` server with Claude Code pointed at your vault** (unless `--no-obsidian-mcp`), **installs the 5 third-party vault skill packs at a pinned upstream commit** (unless `--no-skill-packs`), **writes `~/.claude/.mogging-vault` so cli-maxxing's statusline can light up the 🧠 Brain² indicator** (unless `--no-statusline-brain`), runs the onboarding tests (unless `--skip-tests`), and finally runs `bin/doctor.sh` to sanity-check the install.
 
 ### Data preservation and updates
 
@@ -255,52 +255,65 @@ All thirteen are auto-namespaced under the `2ndbrain-mogging` plugin. Both `/sav
 
 ## Vault structure
 
-The post-mogging 5-folder layout ("Library", since 2026-11-05). This is what the installer creates (and what every skill is hard-wired to target):
+The post-mogging layout ("Library", since 2026-11-05): four numbered folders plus `Claude-Memory/`. Every skill is hard-wired to it. Here's everything a default install creates in a brand-new vault (the opt-in tiers below add their own folders):
 
 ```
-BRAIN/
-├── 01-Projects/         # Active work. One folder per project. /save output now lives in `<PROJECT>/!!conversations/` (post-2026-05-08 restructure absorbed the old top-level `01-Conversations/`).
-├── 02-Library/          # Cross-project reference only: things that belong to no single project
-│   ├── people/          #   one note per person
-│   ├── tools/           #   one note per tool, app, service, model, library
-│   ├── ideas/           #   one idea per note, densely linked. The graph lives here.
-│   └── sources/         #   articles, videos, podcasts, book notes no single project owns
-├── 03-Index/            # Maps of Content — navigation hubs only, never reports
-├── 04-Tasks/            # Obsidian Tasks plugin area files. Optional 2-way Morgen sync via task-maxxing (Notion dropped 2026-05-04).
-└── Claude-Memory/       # Symlink to ~/.claude/projects/<vault>/memory — aliases.yaml + auto-memory shards
+MyVault/
+├── 01-Projects/
+│   └── VAULT/
+│       └── VAULT.md         # work about the vault itself
+├── 02-Library/              # cross-project reference only
+│   ├── people/              #   one note per person
+│   ├── tools/               #   one note per tool, app, service, model, library
+│   ├── ideas/               #   one idea per note, densely linked. The graph lives here.
+│   └── sources/             #   articles, videos, podcasts, book notes no single project owns
+├── 03-Index/
+│   ├── Index.md             # the master map
+│   └── Projects-Index.md    # every project, listed
+├── 04-Tasks/
+│   └── TASKS.md             # the task hub. Optional 2-way Morgen sync via task-maxxing.
+├── Claude-Memory/           # symlink to ~/.claude/projects/<vault>/memory — aliases.yaml + auto-memory
+├── CLAUDE.md                # the vault's rules, plus the pack's marker block
+├── AGENTS.md                # the same rules, for non-Claude agents
+├── SOUL.md                  # who you are and what you're after. Fill it in.
+└── README.md                # a layout guide. Read it, then delete it.
 ```
 
-The numbers run 01 to 04 with no gaps: `02-Sources/` and `03-Concepts/` merged into `02-Library/`, `04-Index/` became `03-Index/`, and `05-Tasks/` became `04-Tasks/`. A source that belongs to one project goes in that project's `notes/`, not the Library. A conversation with no single project goes to the catch-all project, `01-Projects/MISC/`.
+Your projects have your names, so `01-Projects/` starts with just `VAULT/` and you add the rest yourself (or let `/vault-coach` walk you through it). Three more things show up on their own, the first time something needs them:
 
-### `01-Projects/` in detail — example layout
+- `01-Projects/MISC/` — the catch-all project. `/save` makes it, hub note and all, the first time a chat fits no single project.
+- `01-Projects/VAULT/log.md` — the vault log. `/wiki` starts it on its first run, unless you already keep a `log.md` somewhere under `01-Projects/VAULT/` (say `VAULT/MISC/log.md`), in which case it uses that one.
+- `01-Projects/VAULT/REPORTS/` — where the scheduled agents and `/wiki audit` drop their reports. The first report makes it.
 
-Each project gets its own folder. The folder name **equals** the index filename exactly (no `-Index` suffix), so `[[example-project-1]]` resolves from anywhere in the vault.
+**Open the `README.md` inside your vault.** It has example folder trees for a small vault and a busy one, a structure grid (folder, what goes in it, example), the house naming rules, and the short list of things you should never delete. When you're done with it, delete it. The installer only drops it into a brand-new vault, so it stays gone.
+
+The numbers run 01 to 04 with no gaps: `02-Sources/` and `03-Concepts/` merged into `02-Library/`, `04-Index/` became `03-Index/`, and `05-Tasks/` became `04-Tasks/`. A source that belongs to one project goes in that project's `notes/`, not the Library.
+
+### `01-Projects/` in detail
+
+Install puts `VAULT/` here and nothing else. Every project you add gets its own folder, and the folder name **equals** the hub note's filename exactly (no `-Index` suffix), so `[[PODCAST]]` resolves from anywhere in the vault. A few weeks in, it might look like this:
 
 ```
 01-Projects/
-├── example-project-1/
-│   ├── example-project-1.md    ← index note (filename = folder name)
-│   ├── !!conversations/           ← /save captures about this project
+├── PODCAST/
+│   ├── PODCAST.md               ← hub note (filename = folder name)
+│   ├── !!conversations/         ← /save captures about this project
 │   ├── notes/                   ← everything written for it, incl. its own sources
-│   ├── content/                 ← write-ups, specs, decks, session logs
-│   ├── misc-building/           ← experiments, tools, plugins built for this project
-│   └── GITHUB/                  ← cloned repos tied to this project
+│   ├── assets/                  ← images, PDFs, media
+│   └── !ARCHIVE/                ← old stuff that isn't a focus anymore
+│       └── PODCAST-ARCHIVE.md
 │
-├── example-project-2/
-│   └── example-project-2.md
+├── TODO-APP/
+│   ├── TODO-APP.md
+│   ├── !!conversations/
+│   └── REPO/                    ← the git checkout
 │
-├── example-project-3/
-│   ├── example-project-3.md
-│   └── <any subfolders you want>
+├── MISC/                        ← the catch-all, made by /save on first use
 │
-├── INCUBATOR/                   ← staging lane for ideas not yet full projects
-│
-├── MISC/                        ← catch-all: conversations that belong to no single project
-│
-└── VAULT/                       ← work about the vault: log.md and the agents' reports
+└── VAULT/                       ← made by install; log.md and REPORTS/ arrive later
 ```
 
-The subfolders inside each project are **up to you**. Use whatever makes sense — the skills only write to `!!conversations/` and `notes/` below the project's index note. The `content/` + `misc-building/` + `GITHUB/` pattern is what I use personally; yours might be `research/` + `drafts/` + `deliverables/`. Whatever works.
+The subfolders inside each project are **up to you** — the skills only write to `!!conversations/` and `notes/` below the project's hub note. I go ALL CAPS on folder names, park old work in `!ARCHIVE/`, and keep code in `REPO/`. Yours might be `research/` + `drafts/` + `deliverables/`. Whatever works.
 
 ### What the retired folders were
 

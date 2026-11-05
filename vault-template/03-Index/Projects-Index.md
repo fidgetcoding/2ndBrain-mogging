@@ -11,21 +11,19 @@ The map of active projects in this vault. Every project folder in `01-Projects/`
 
 ## Active projects
 
-- [[example-project-1]] — placeholder; rename and fill in
-- [[example-project-2]] — placeholder; rename and fill in
-- [[example-project-3]] — placeholder; rename and fill in
+- _none yet — add a line for each project you create_
 
-## Staging
+## Vault
 
-- [[INCUBATOR]] — ideas that aren't formal projects yet
-- [[MISC]] — catch-all: conversations that belong to no single project
 - [[VAULT]] — work about the vault itself: its log and the agents' reports
+
+The catch-all project (`01-Projects/MISC/` unless `Claude-Memory/aliases.yaml` names another) doesn't exist yet. `/save` makes it, and adds its line here, the first time a chat belongs to no single project.
 
 ## How to add a new project
 
-1. Make a new folder under `01-Projects/` whose name is the project's canonical handle (e.g. `my-new-project/`).
-2. Inside that folder, create `my-new-project.md` — filename MUST match the folder name exactly (so `[[my-new-project]]` resolves from anywhere in the vault).
-3. Add a line under **Active projects** above: `- [[my-new-project]] — one-sentence description`.
+1. Make a new folder under `01-Projects/` whose name is the project's canonical handle, in ALL CAPS (e.g. `MY-PROJECT/`).
+2. Inside that folder, create `MY-PROJECT.md` — the filename MUST match the folder name exactly (so `[[MY-PROJECT]]` resolves from anywhere in the vault).
+3. Add a line under **Active projects** above: `- [[MY-PROJECT]] — one-sentence description`.
 4. Link back from the project's `Related:` section to this index (`[[Projects-Index]]`).
 
-See `CLAUDE.md` for the full project-index rules.
+`/vault-coach` does all four for you. See `CLAUDE.md` for the full project-index rules.

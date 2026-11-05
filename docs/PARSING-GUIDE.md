@@ -17,7 +17,7 @@ This doc tells Claude **where to put things** when you run `/import-claude`, `/i
 
 ---
 
-## Folder routing (the 5-folder map)
+## Folder routing (the vault map)
 
 This is the post-mogging vault layout. On 2026-11-05 (Library v2) `02-Sources/` and `03-Concepts/` merged into `02-Library/`, `04-Index/` became `03-Index/`, and `05-Tasks/` became `04-Tasks/`, so the numbers run 01 to 04 with no gaps. The folders below are the only writable targets — the skills will refuse to write anywhere else without explicit user confirmation.
 
@@ -28,7 +28,7 @@ This is the post-mogging vault layout. On 2026-11-05 (Library v2) `02-Sources/` 
 - Filename: `YYYY-MM-DD-<slug>.md`.
 - Frontmatter: `type: conversation`, `owner: human` — blocks future auto-mutation.
 - A `VAULT/` subtree holds vault-about-vault captures (conversations *about* the system itself).
-- Cross-cutting chats (no single project) go to the catch-all project's `!!conversations/` — `01-Projects/MISC/!!conversations/` by default, or whichever project `aliases.yaml` marks as the catch-all. Conversations never go in the Library.
+- Cross-cutting chats (no single project) go to the catch-all project's `!!conversations/` — `01-Projects/MISC/!!conversations/` by default, or whichever project `aliases.yaml` marks as the catch-all. A fresh vault has no catch-all folder yet; the first import or `/save` that needs it makes it, hub note included. Conversations never go in the Library.
 
 ### `02-Library/` — cross-project reference only
 
@@ -62,8 +62,8 @@ Things that belong to no single project. Four subfolders:
 
 - One folder per active project. The folder name matches the index filename exactly (`FOO/FOO.md`, never `FOO/FOO-Index.md`).
 - `!!conversations/` holds the project's saved chats, `notes/` holds everything written for it (including project-specific sources), and `assets/` holds images, PDFs, and media.
-- Other subfolders (`content/`, `misc-building/`, `GITHUB/`, etc.) are up to each project — use whatever makes sense, as long as the project's top-level index links them.
-- `INCUBATOR/` is the staging lane for ideas not yet formal project folders.
+- Other subfolders (`REPO/`, `!ARCHIVE/`, `research/`, etc.) are up to each project — use whatever makes sense, as long as the project's top-level index links them.
+- A fresh install creates only `01-Projects/VAULT/`. Every other project folder is yours to make, and the vault's `README.md` shows example layouts.
 - **Never auto-rewrite a project index file.** Add backlinks via `/tether` proposals; let the human merge.
 
 ### `04-Tasks/` — Obsidian Tasks plugin area

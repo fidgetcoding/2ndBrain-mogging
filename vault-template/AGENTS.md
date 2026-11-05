@@ -23,7 +23,7 @@ Concretely: if this is the first session in a new vault, **offer to run `/vault-
 
 The deeper human reference is `docs/MAINTAINING-YOUR-BRAIN.md` in the `2ndBrain-mogging` repo. (It ships with the repo, not necessarily inside an installed vault — so point the operator to `/vault-coach`, which carries the same guidance, and cite the repo doc as further reading.)
 
-## Folder structure (5 folders)
+## Folder structure
 
 ```
 Vault/
@@ -33,11 +33,10 @@ Vault/
 │   │   ├── !!conversations/  # agent captures about this project
 │   │   ├── notes/          # everything written for it, incl. its own sources
 │   │   └── assets/         # images, PDFs, media (no code)
-│   ├── MISC/               # catch-all: conversations that belong to no single project
-│   ├── VAULT/              # work ABOUT the vault itself
-│   │   ├── log.md          # the append-only vault log
-│   │   └── REPORTS/        # daily / audit / weekly / health reports
-│   └── INCUBATOR/          # staging lane for pre-project ideas
+│   ├── MISC/               # catch-all project; /save makes it the first time a chat fits no other project
+│   └── VAULT/              # work ABOUT the vault itself (VAULT.md)
+│       ├── log.md          # the append-only vault log; /wiki starts it
+│       └── REPORTS/        # daily / audit / weekly / health reports; the first report makes it
 ├── 02-Library/             # cross-project reference only
 │   ├── people/             # one note per person
 │   ├── tools/              # one note per tool, app, service, model, library
@@ -48,12 +47,14 @@ Vault/
 └── Claude-Memory/          # symlinked on install; auto-memory + aliases.yaml
 ```
 
+Install creates the four numbered folders, `01-Projects/VAULT/VAULT.md`, the two maps in `03-Index/`, `04-Tasks/TASKS.md`, the `Claude-Memory` link and the root files. Everything else is made the first time it's needed: the catch-all project `01-Projects/MISC/` by `/save`, `01-Projects/VAULT/log.md` by `/wiki`, and `01-Projects/VAULT/REPORTS/` by the first report.
+
 The numbered folders run 01 to 04 with no gaps. `03-Index/` was `04-Index/` and `04-Tasks/` was `05-Tasks/` until 2026-11-05.
 
 Folder rules:
 
 - `01-Projects/VAULT/!!conversations/` is reserved for meta-work about the vault. Never put project content there.
-- `01-Projects/<project>/!!conversations/` holds that project's captures. A conversation with no single project goes to the catch-all project (`01-Projects/MISC/` unless `aliases.yaml` names another). Conversations never go in `02-Library/`.
+- `01-Projects/<project>/!!conversations/` holds that project's captures. A conversation with no single project goes to the catch-all project (`01-Projects/MISC/` unless `aliases.yaml` names another; `/save` makes that folder and its hub note the first time it needs it). Conversations never go in `02-Library/`.
 - `01-Projects/<project>/notes/` holds what's written for the project, including sources tied to it (`type: source`).
 - `02-Library/sources/` — one note per outside source no single project owns. Filename `LIT-<slug>.md` or `SRC-<YYYY-MM-DD>-<slug>.md`. Source URL in frontmatter.
 - `02-Library/ideas/` — atomic notes. One idea per file. Filename is kebab-case. `people/` and `tools/` work the same way (`type: concept`, tagged `person` or `tool`).
@@ -109,6 +110,8 @@ Four launchd agents run on a cron schedule. All are audit-only by default. Each 
 3. **weekly** — 6:00 PM ET Fridays. Runs `/emerge --days 7 --audit` and writes `weekly-YYYY-WW.md` covering new concepts, killed ideas, contradictions, audit trend.
 4. **health** — 9:00 PM ET Sundays. Four-gate integrity check: symlinks, Obsidian plugins, n8n sync freshness, Morgen↔Obsidian task parity. Writes `health-YYYY-MM-DD.md`.
 
+`01-Projects/VAULT/REPORTS/` doesn't exist in a fresh vault. Whichever report runs first makes it.
+
 ## 3 non-negotiables
 
 1. **Bidirectional links or no link.** Every `[[wikilink]]` needs a reverse link from the target.
@@ -120,8 +123,9 @@ Four launchd agents run on a cron schedule. All are audit-only by default. Each 
 - `CLAUDE.md` — contract for Claude Code.
 - `AGENTS.md` — this file; contract for non-Claude agents.
 - `SOUL.md` — operator identity, long-horizon goals, and a **Critical facts** section (timezone, defaults, tooling).
+- `README.md` — optional. A plain-English guide to laying out the vault, with example folder trees. The installer puts it in a new vault, the operator may delete it, and no agent recreates or rewrites it.
 
-Nothing else lives at the root. The master index is `03-Index/Index.md`; the append-only vault log is `01-Projects/VAULT/log.md`.
+Nothing else lives at the root. The master index is `03-Index/Index.md`. The append-only vault log is `01-Projects/VAULT/log.md`. If that file is missing, use an existing `log.md` anywhere under `01-Projects/VAULT/` (some vaults keep it in a subfolder such as `VAULT/MISC/`); create `01-Projects/VAULT/log.md` only when no log exists under `VAULT/`.
 
 ## Routing table
 
@@ -129,7 +133,7 @@ Nothing else lives at the root. The master index is `03-Index/Index.md`; the app
 |---|---|
 | Capture a URL | `02-Library/sources/` and the project's `notes/` (dedupe), this file § Skills (`/wiki add`) |
 | Add a task | `04-Tasks/TASKS.md`, `04-Tasks/TASKS-<AREA>.md`, § 3 non-negotiables |
-| Create a new project | `03-Index/Projects-Index.md`, `01-Projects/INCUBATOR/`, § Folder rules |
+| Create a new project | `03-Index/Projects-Index.md`, § Folder rules, `README.md` (if the operator kept it) |
 | Promote capture → idea | `02-Library/ideas/` existing siblings, target MOC in `03-Index/` |
 | Update a MOC | `03-Index/Index.md`, the specific MOC file |
 | Graph repair | `03-Index/Map.canvas`, `03-Index/Index.md`, § 3 non-negotiables |
@@ -139,7 +143,7 @@ Nothing else lives at the root. The master index is `03-Index/Index.md`; the app
 ## Hard rules
 
 1. Always read a file before editing it.
-2. Never save to the vault root except for the three files named above (`CLAUDE.md`, `AGENTS.md`, `SOUL.md`).
+2. Never save to the vault root except for the files named above (`CLAUDE.md`, `AGENTS.md`, `SOUL.md`, and the optional `README.md`, which only the operator edits).
 3. Filenames: kebab-case for ideas, people and tools, `LIT-` / `SRC-` prefix for sources, `TASKS-` prefix for task area files.
 4. Frontmatter is required on every note.
 5. Never use a `-Index` suffix on project index files.

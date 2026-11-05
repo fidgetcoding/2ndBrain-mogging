@@ -89,32 +89,93 @@ assert_eq "$FIRST_RC" "0" "install.sh exits 0 on first run"
 [[ "${VERBOSE:-0}" == "1" ]] && printf '%s\n' "$FIRST_OUT"
 
 # ---------------------------------------------------------------------------
-# Canonical folders (5, plus 02-Library's four and the catch-all project).
+# The template itself is minimal: the numbered folders, the notes every skill
+# needs, the root rule files, a deletable README guide, and the Claude-Memory
+# examples. No example projects. A file added to or dropped from
+# vault-template/ fails here until this list is updated on purpose.
 # ---------------------------------------------------------------------------
-for d in 01-Projects 02-Library 02-Library/people 02-Library/tools 02-Library/ideas 02-Library/sources 03-Index 04-Tasks Claude-Memory '01-Projects/MISC/!!conversations' 01-Projects/VAULT/REPORTS; do
+EXPECTED_TEMPLATE='01-Projects/VAULT/VAULT.md
+02-Library/ideas/.gitkeep
+02-Library/people/.gitkeep
+02-Library/sources/.gitkeep
+02-Library/tools/.gitkeep
+03-Index/Index.md
+03-Index/Projects-Index.md
+04-Tasks/TASKS.md
+AGENTS.md
+CLAUDE.md
+Claude-Memory/aliases.example.yaml
+Claude-Memory/memory-tier.example.yaml
+README.md
+SOUL.md'
+ACTUAL_TEMPLATE="$(cd "$REPO_ROOT/vault-template" && find . -type f ! -name .DS_Store | sed 's#^\./##' | LC_ALL=C sort)"
+assert_eq "$ACTUAL_TEMPLATE" "$(printf '%s\n' "$EXPECTED_TEMPLATE" | LC_ALL=C sort)" "vault-template/ holds exactly the minimal file set"
+
+# ---------------------------------------------------------------------------
+# Canonical folders: the four numbered ones, 02-Library's four, VAULT/, and
+# the Claude-Memory link.
+# ---------------------------------------------------------------------------
+for d in 01-Projects 01-Projects/VAULT 02-Library 02-Library/people 02-Library/tools 02-Library/ideas 02-Library/sources 03-Index 04-Tasks Claude-Memory; do
   assert_dir "$FAKE_VAULT/$d" "canonical folder created: $d"
 done
 # Library v2 retired these; a fresh install must not create them.
 for d in 02-Sources 03-Concepts; do
   if [[ -e "$FAKE_VAULT/$d" ]]; then _fail "retired folder created: $d"; else _pass "retired folder not created: $d"; fi
 done
+# No example projects. The catch-all, the vault log and the reports folder are
+# made by /save, /wiki and the agents the first time they need them.
+for p in example-project-1 example-project-2 example-project-3 INCUBATOR MISC VAULT/log.md VAULT/REPORTS; do
+  if [[ -e "$FAKE_VAULT/01-Projects/$p" ]]; then _fail "seeded but should be made on demand: 01-Projects/$p"; else _pass "not seeded: 01-Projects/$p"; fi
+done
+PROJECTS_LS="$(cd "$FAKE_VAULT/01-Projects" && ls -A | grep -v '^\.DS_Store$' | tr '\n' ' ')"
+assert_eq "$PROJECTS_LS" "VAULT " "01-Projects/ holds only VAULT/ after a fresh install"
 
 # ---------------------------------------------------------------------------
-# Root sidecars (3). Nothing else is seeded at the vault root.
+# Root files: the three rule files, plus the README guide in a fresh vault.
 # ---------------------------------------------------------------------------
-for f in CLAUDE.md AGENTS.md SOUL.md; do
-  assert_file "$FAKE_VAULT/$f" "root sidecar created: $f"
+for f in CLAUDE.md AGENTS.md SOUL.md README.md; do
+  assert_file "$FAKE_VAULT/$f" "root file created: $f"
 done
 for f in CRITICAL_FACTS.md index.md log.md; do
   if [[ -e "$FAKE_VAULT/$f" ]]; then _fail "retired root file created: $f"; else _pass "retired root file not created: $f"; fi
 done
 assert_contains "$FAKE_VAULT/SOUL.md" "re:^#+[[:space:]]+Critical facts" "SOUL.md carries the Critical facts section"
-for f in 01-Projects/VAULT/VAULT.md 01-Projects/VAULT/log.md 03-Index/Index.md; do
+for f in 01-Projects/VAULT/VAULT.md 03-Index/Index.md 03-Index/Projects-Index.md 04-Tasks/TASKS.md; do
   assert_file "$FAKE_VAULT/$f" "seeded: $f"
 done
-assert_dir "$FAKE_VAULT/01-Projects/VAULT/REPORTS" "seeded: 01-Projects/VAULT/REPORTS/"
 # Chat folders are named !!conversations since 2026-11-05; reports never live in one.
 if find "$FAKE_VAULT/01-Projects" -type d -name conversations | grep -q .; then _fail "a plain conversations/ folder was seeded"; else _pass "no plain conversations/ folder seeded"; fi
+
+# Projects-Index lists only what exists: VAULT, no example projects.
+assert_contains "$FAKE_VAULT/03-Index/Projects-Index.md" "[[VAULT]]" "Projects-Index lists VAULT"
+for gone in example-project INCUBATOR '[[MISC]]'; do
+  assert_not_contains "$FAKE_VAULT/03-Index/Projects-Index.md" "$gone" "Projects-Index has no link for an unseeded folder: $gone"
+done
+# The seeded aliases starter keeps the catch-all and VAULT, and nothing else.
+assert_contains "$FAKE_VAULT/Claude-Memory/aliases.yaml" '"catch-all"' "aliases.yaml keeps the catch-all entry"
+assert_contains "$FAKE_VAULT/Claude-Memory/aliases.yaml" "path: 01-Projects/VAULT" "aliases.yaml lists VAULT"
+for gone in example-project INCUBATOR; do
+  assert_not_contains "$FAKE_VAULT/Claude-Memory/aliases.yaml" "$gone" "aliases.yaml has no entry for $gone"
+done
+
+# The README guide: example trees, the structure grid, the never-delete list.
+README_V="$FAKE_VAULT/README.md"
+assert_contains "$README_V" "re:^#+[[:space:]]+Never delete these" "README has a Never delete these section"
+assert_contains "$README_V" "| Folder | What goes in it | Example |" "README has the structure grid"
+assert_contains "$README_V" "re:^#+[[:space:]]+Example: a small vault" "README has a small example tree"
+assert_contains "$README_V" "re:^#+[[:space:]]+Example: a busier vault" "README has a busier example tree"
+for keep in '`01-Projects/`' '`02-Library/`' '`people/`' '`tools/`' '`ideas/`' '`sources/`' '`Index.md`' '`Projects-Index.md`' '`TASKS.md`' '`VAULT.md`' '`CLAUDE.md`' '`AGENTS.md`' '`SOUL.md`' '`Claude-Memory`'; do
+  assert_contains "$README_V" "$keep" "README names $keep"
+done
+for rule in '!!conversations/' '!ARCHIVE/' '-ARCHIVE.md' '-MISC.md' 'REPO/' 'ALL CAPS'; do
+  assert_contains "$README_V" "$rule" "README teaches: $rule"
+done
+assert_contains "$README_V" "re:[Dd]elete it" "README says it can be deleted"
+
+# Each scheduled agent makes the reports folder before it runs.
+for plist in "$REPO_ROOT"/scheduled/launchd/*.plist; do
+  assert_contains "$plist" "mkdir -p 01-Projects/VAULT/REPORTS" "$(basename "$plist") makes REPORTS/ first"
+done
 
 # ---------------------------------------------------------------------------
 # CLAUDE.md routing headers + folder references.
@@ -226,6 +287,8 @@ assert_eq "$CUSTOM" "preserve-me" "top-level customField preserved"
 # Add a user-authored edit to CLAUDE.md to confirm it survives re-run.
 USER_NOTE="# USER_CUSTOM_MARKER do-not-clobber"
 printf "\n%s\n" "$USER_NOTE" >> "$FAKE_VAULT/CLAUDE.md"
+# The user reads the README guide and deletes it, as it tells them to.
+rm -f "$FAKE_VAULT/README.md"
 
 SECOND_OUT="$(run_install || true)"
 SECOND_RC=$?
@@ -267,5 +330,8 @@ assert_json_valid "$SETTINGS" "settings.json still valid after re-install"
 for d in 01-Projects 02-Library 03-Index 04-Tasks Claude-Memory; do
   assert_dir "$FAKE_VAULT/$d" "folder still present after re-install: $d"
 done
+
+# A deleted README stays deleted: the guide only goes into a brand-new vault.
+if [[ -e "$FAKE_VAULT/README.md" ]]; then _fail "README.md came back after the user deleted it"; else _pass "deleted README.md stays deleted on re-install"; fi
 
 assert_report
