@@ -8,6 +8,8 @@
 # - any name conflict refuses the whole run and changes nothing
 # - task queries are rewritten only inside ```tasks blocks; task lines and 🆔 never
 # - in a git repo, tracked paths move with git mv, so a 05-Tasks submodule follows
+# - every chat folder under 01-Projects/ becomes !!conversations/, except inside
+#   an embedded git repo; VAULT reports move to 01-Projects/VAULT/REPORTS/
 # - empty legacy folders stay unless --remove-empty
 
 set -u
@@ -34,6 +36,7 @@ MIGRATE="$REPO_ROOT/scripts/migrate-to-library.sh"
 assert_file "$MIGRATE" "scripts/migrate-to-library.sh exists"
 
 TASK_LINE='- [ ] tidy 05-Tasks notes 📅 2026-11-10 🆔 m-0a1b2c3d'
+CHAT='!!conversations'   # single quotes: the !! must never expand
 tasks_hub() { # the hub note: two queries, a task line and a non-tasks code block
   printf -- '---\ntitle: "TASKS"\n---\n\n```tasks\nnot done\npath includes 05-Tasks\npath does not include 04-Index\n```\n\n%s\n\n```bash\nls 05-Tasks\n```\n' "$TASK_LINE"
 }
@@ -51,6 +54,14 @@ legacy_vault() {
   printf -- '---\ntitle: "Index"\ntype: index\n---\n- [[idea-one]]\n' > "$v/04-Index/Index.md"
   printf -- '%s\n' "$TASK_LINE" > "$v/05-Tasks/TASKS-SAMPLE.md"
   tasks_hub > "$v/05-Tasks/TASKS.md"
+  # Chat folders on the old name, VAULT reports inside one, and an embedded code
+  # repo whose own conversations/ folder must never be touched.
+  mkdir -p "$v/01-Projects/acme/conversations" "$v/01-Projects/VAULT/conversations/reports" \
+           "$v/01-Projects/VAULT/conversations/arch" "$v/01-Projects/code/app/.git" "$v/01-Projects/code/app/src/conversations"
+  printf 'a chat\n' > "$v/01-Projects/acme/conversations/2026-01-01-chat.md"
+  printf 'an audit\n' > "$v/01-Projects/VAULT/conversations/reports/audit-2026-01-01.md"
+  printf 'a vault chat\n' > "$v/01-Projects/VAULT/conversations/arch/2026-01-02-x.md"
+  printf 'code\n' > "$v/01-Projects/code/app/src/conversations/index.ts"
 }
 
 VAULT="$TMPROOT/vault"
@@ -61,6 +72,7 @@ md5_idea="$(md5_of "$VAULT/03-Concepts/idea-one.md")"
 md5_clip="$(md5_of "$VAULT/02-Sources/clips/c.md")"
 md5_index="$(md5_of "$VAULT/04-Index/Index.md")"
 md5_sample="$(md5_of "$VAULT/05-Tasks/TASKS-SAMPLE.md")"
+md5_chat="$(md5_of "$VAULT/01-Projects/acme/conversations/2026-01-01-chat.md")"
 
 # ---------------------------------------------------------------------------
 # Usage errors.
@@ -93,12 +105,16 @@ for want in "02-Sources/SRC-2026-01-01-a.md  ->  02-Library/sources/SRC-2026-01-
             "rename    05-Tasks/  ->  04-Tasks/" \
             "    05-Tasks/TASKS.md" \
             "    01-Projects/acme/acme.md" \
-            "4 to move, 2 to rename, 2 with task queries to rewrite, 0 conflicting" \
+            "rename    01-Projects/acme/conversations/  ->  01-Projects/acme/$CHAT/" \
+            "rename    01-Projects/VAULT/conversations/reports/  ->  01-Projects/VAULT/REPORTS/" \
+            "rename    01-Projects/VAULT/conversations/  ->  01-Projects/VAULT/$CHAT/" \
+            "4 to move, 5 to rename, 2 with task queries to rewrite, 0 conflicting" \
             "05-Tasks/ becomes 04-Tasks/" \
             "old: $(cd -P "$VAULT" && pwd -P)/05-Tasks"; do
   if printf '%s' "$DRY_OUT" | grep -qF -- "$want"; then _pass "dry run says: $want"; else _fail "dry run is missing: $want"; fi
 done
 if printf '%s' "$DRY_OUT" | grep -q '\.gitkeep'; then _fail "dry run plans to move .gitkeep"; else _pass "placeholders are not moved"; fi
+if printf '%s' "$DRY_OUT" | grep -qF "code/app"; then _fail "dry run plans to rename inside an embedded repo"; else _pass "an embedded repo's conversations/ is left out"; fi
 if printf '%s' "$DRY_OUT" | grep -qF "link into a renamed folder by path"; then
   _pass "dry run flags the path-style link"
 else
@@ -135,6 +151,25 @@ ln -s "$SVAULT/elsewhere" "$SVAULT/05-Tasks"
 bash "$MIGRATE" --vault "$SVAULT" --apply >/dev/null 2>&1
 assert_eq "$?" "3" "a symlinked 05-Tasks/ exits 3"
 
+HVAULT="$TMPROOT/chatclash"
+mkdir -p "$HVAULT/01-Projects/p/conversations" "$HVAULT/01-Projects/p/$CHAT"
+printf 'old\n' > "$HVAULT/01-Projects/p/conversations/a.md"
+printf 'new\n' > "$HVAULT/01-Projects/p/$CHAT/b.md"
+H_SNAP="$(snapshot_dir "$HVAULT")"
+H_RC=0
+H_OUT="$(bash "$MIGRATE" --vault "$HVAULT" --apply 2>&1)" || H_RC=$?
+assert_eq "$H_RC" "3" "both conversations/ and a non-empty $CHAT/ exits 3"
+assert_eq "$(snapshot_dir "$HVAULT")" "$H_SNAP" "the chat-folder clash changes nothing"
+if printf '%s' "$H_OUT" | grep -qF "01-Projects/p/$CHAT already exists"; then _pass "the chat-folder clash is named"; else _fail "chat clash output: $H_OUT"; fi
+
+# Already renamed by hand, reports still inside: they still move to REPORTS/.
+KVAULT="$TMPROOT/handrenamed"
+mkdir -p "$KVAULT/01-Projects/VAULT/$CHAT/reports"
+printf 'health\n' > "$KVAULT/01-Projects/VAULT/$CHAT/reports/health-2026-01-04.md"
+bash "$MIGRATE" --vault "$KVAULT" --apply >/dev/null 2>&1
+assert_eq "$?" "0" "reports inside an already-renamed chat folder migrate"
+assert_file "$KVAULT/01-Projects/VAULT/REPORTS/health-2026-01-04.md" "reports leave $CHAT/ for REPORTS/"
+
 # ---------------------------------------------------------------------------
 # --apply: backup first, then the moves and renames, byte for byte.
 # ---------------------------------------------------------------------------
@@ -153,7 +188,12 @@ assert_eq "$(md5_of "$VAULT/02-Library/ideas/idea-one.md")" "$md5_idea" "owner: 
 assert_eq "$(md5_of "$VAULT/02-Library/sources/clips/c.md")" "$md5_clip" "nested file bytes unchanged"
 assert_eq "$(md5_of "$VAULT/03-Index/Index.md")" "$md5_index" "04-Index/ renamed to 03-Index/, bytes unchanged"
 assert_eq "$(md5_of "$VAULT/04-Tasks/TASKS-SAMPLE.md")" "$md5_sample" "05-Tasks/ renamed to 04-Tasks/, task file bytes unchanged"
-for gone in 04-Index 05-Tasks 02-Sources/LIT-b.md 03-Concepts/idea-one.md; do
+assert_eq "$(md5_of "$VAULT/01-Projects/acme/$CHAT/2026-01-01-chat.md")" "$md5_chat" "chat folder renamed to $CHAT/, bytes unchanged"
+assert_file "$VAULT/01-Projects/VAULT/REPORTS/audit-2026-01-01.md" "VAULT reports moved to 01-Projects/VAULT/REPORTS/"
+assert_file "$VAULT/01-Projects/VAULT/$CHAT/arch/2026-01-02-x.md" "VAULT chats stay in VAULT/$CHAT/"
+if [[ -e "$VAULT/01-Projects/VAULT/$CHAT/reports" ]]; then _fail "reports left in the chat folder"; else _pass "no reports left in the chat folder"; fi
+assert_file "$VAULT/01-Projects/code/app/src/conversations/index.ts" "an embedded repo's conversations/ is untouched"
+for gone in 04-Index 05-Tasks 02-Sources/LIT-b.md 03-Concepts/idea-one.md 01-Projects/acme/conversations 01-Projects/VAULT/conversations; do
   if [[ -e "$VAULT/$gone" ]]; then _fail "$gone is still there"; else _pass "$gone is gone"; fi
 done
 
@@ -169,7 +209,7 @@ if printf '%s' "$A_OUT" | grep -qF "05-Tasks/ becomes 04-Tasks/"; then _pass "--
 
 BACKUP="$(find "$BACKUPS" -maxdepth 1 -name 'vault-backup-library-migration-*.tar.gz' 2>/dev/null | head -n 1)"
 if [[ -n "$BACKUP" && -s "$BACKUP" ]]; then _pass "backup written to ~/WORK/vault-BACKUPS/"; else _fail "no backup in $BACKUPS"; fi
-for member in vault/02-Sources/SRC-2026-01-01-a.md vault/03-Concepts/idea-one.md vault/04-Index/Index.md vault/05-Tasks/TASKS.md vault/01-Projects/acme/acme.md; do
+for member in vault/02-Sources/SRC-2026-01-01-a.md vault/03-Concepts/idea-one.md vault/04-Index/Index.md vault/05-Tasks/TASKS.md vault/01-Projects/acme/acme.md vault/01-Projects/acme/conversations/2026-01-01-chat.md vault/01-Projects/VAULT/conversations/reports/audit-2026-01-01.md; do
   if [[ -n "$BACKUP" ]] && tar -tzf "$BACKUP" | grep -qxF "$member"; then
     _pass "backup holds the pre-move $member"
   else
@@ -211,6 +251,8 @@ GVAULT="$TMPROOT/gitvault"
 mkdir -p "$GVAULT/04-Index" "$GVAULT/03-Concepts"
 printf -- '- [[x]]\n' > "$GVAULT/04-Index/Index.md"
 printf -- 'idea\n' > "$GVAULT/03-Concepts/x.md"
+mkdir -p "$GVAULT/01-Projects/p/conversations"
+printf -- 'a tracked chat\n' > "$GVAULT/01-Projects/p/conversations/chat.md"
 git -C "$GVAULT" init -q
 git -C "$GVAULT" add -A && git -C "$GVAULT" commit -q -m "vault"
 git -C "$GVAULT" -c protocol.file.allow=always submodule --quiet add "$TREPO" 05-Tasks >/dev/null 2>&1
@@ -227,6 +269,11 @@ if git -C "$GVAULT" diff --cached --name-status | grep -qE '^R[0-9]*[[:space:]]+
   _pass "04-Index -> 03-Index is staged as a rename"
 else
   _fail "no staged rename for 04-Index: $(git -C "$GVAULT" diff --cached --name-status)"
+fi
+if git -C "$GVAULT" diff --cached --name-status | grep -qF "01-Projects/p/$CHAT/chat.md"; then
+  _pass "a tracked chat folder is renamed with git mv"
+else
+  _fail "no staged rename for the chat folder: $(git -C "$GVAULT" diff --cached --name-status)"
 fi
 assert_contains "$GVAULT/04-Tasks/TASKS.md" "path includes 04-Tasks" "queries inside the submodule are rewritten"
 if grep -qxF -- "$TASK_LINE" "$GVAULT/04-Tasks/TASKS.md"; then _pass "submodule task line untouched"; else _fail "submodule task line changed"; fi

@@ -8,6 +8,8 @@
 #   03-Concepts/*  ->  02-Library/ideas/
 #   04-Index/      ->  03-Index/
 #   05-Tasks/      ->  04-Tasks/
+#   01-Projects/**/conversations/       ->  !!conversations/ (sorts first in Finder)
+#   01-Projects/VAULT/conversations/reports/  ->  01-Projects/VAULT/REPORTS/
 #
 # and rewrites Obsidian Tasks queries that name the old folders
 # (`path includes 05-Tasks` -> `path includes 04-Tasks`, and 04-Index the same
@@ -37,6 +39,8 @@
 #   - Refuses, and changes nothing, if any destination name already exists.
 #     A destination folder holding only .gitkeep / .DS_Store counts as empty.
 #   - Refuses symlinked legacy, Library, index or task folders.
+#   - Chat folders inside an embedded git repo or node_modules under
+#     01-Projects/ are code, not chats, and are never renamed.
 #   - In a git repo, tracked paths move with `git mv`, so a 05-Tasks/ submodule
 #     keeps working and .gitmodules follows it.
 #   - Wikilinks resolve by note name, so moving notes breaks no [[links]].
@@ -88,6 +92,8 @@ LIB="02-Library"
 MOVES="02-Sources:sources 03-Concepts:ideas"   # legacy folder : Library subfolder
 RENAMES="04-Index:03-Index 05-Tasks:04-Tasks"  # legacy folder : new folder
 STALE_RE='05-Tasks|04-Index'
+CHAT='!!conversations'                         # single quotes: no shell ever expands the !!
+REPORTS='01-Projects/VAULT/REPORTS'
 
 IN_GIT=0
 if command -v git >/dev/null 2>&1 && git -C "$VAULT" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
@@ -145,6 +151,38 @@ stale_query_files() {
   rm -f "$tmp"
 }
 
+# Vault-relative chat folders still named conversations/ under 01-Projects/.
+# Skips embedded git repos (any folder holding a .git), node_modules, and
+# anything already inside a chat folder.
+old_chat_dirs() {
+  [ -d "$VAULT/01-Projects" ] || return 0
+  local roots
+  roots="$(cd "$VAULT" && find 01-Projects -name node_modules -prune -o -name .git -print -prune 2>/dev/null | sed 's#/\.git$##')"
+  ( cd "$VAULT" && find 01-Projects \( -name node_modules -o -name .git -o -name "$CHAT" \) -prune \
+      -o -type d -name conversations -print -prune 2>/dev/null ) |
+  awk -v roots="$roots" '
+    BEGIN { n = split(roots, r, "\n") }
+    { for (i = 1; i <= n; i++) if (r[i] != "" && index($0 "/", r[i] "/") == 1) next; print }
+  ' | LC_ALL=C sort
+}
+
+# Plan one folder rename, refusing when the destination holds anything real.
+plan_rename() {
+  local src="$1" new="$2" err
+  case "$src$new" in *$'\t'*|*$'\n'*) die "refused: $src has a tab or newline in its path. Rename it first." 3 ;; esac
+  if [ -L "$VAULT/$src" ] || [ -L "$VAULT/$new" ]; then
+    die "refused: $src or $new is a symlink. Move it by hand first." 3
+  fi
+  if [ -e "$VAULT/$new" ] && { [ ! -d "$VAULT/$new" ] || ! only_placeholders "$VAULT/$new"; }; then
+    printf 'conflict\t%s\t%s\n' "$src" "$new" >> "$PLAN"; conflicts=$((conflicts + 1))
+    return 0
+  fi
+  if tracked "$src" && ! err="$(git -C "$VAULT" mv -n -- "$src" "$new" 2>&1)"; then
+    die "refused: git mv $src $new would fail: $err" 3
+  fi
+  printf 'rename\t%s\t%s\n' "$src" "$new" >> "$PLAN"; renames=$((renames + 1))
+}
+
 # ---- safety checks -----------------------------------------------------------
 for p in "$LIB" "$LIB/people" "$LIB/tools" "$LIB/ideas" "$LIB/sources" \
          02-Sources 03-Concepts 04-Index 03-Index 05-Tasks 04-Tasks; do
@@ -179,16 +217,30 @@ done
 for pair in $RENAMES; do
   legacy="${pair%%:*}" new="${pair#*:}"
   [ -d "$VAULT/$legacy" ] || continue
-  if [ -d "$VAULT/$new" ] && ! only_placeholders "$VAULT/$new"; then
-    printf 'conflict\t%s\t%s\n' "$legacy" "$new" >> "$PLAN"; conflicts=$((conflicts + 1))
-    continue
-  fi
-  if tracked "$legacy" && ! err="$(git -C "$VAULT" mv -n -- "$legacy" "$new" 2>&1)"; then
-    die "refused: git mv $legacy $new would fail: $err" 3
-  fi
-  printf 'rename\t%s\t%s\n' "$legacy" "$new" >> "$PLAN"; renames=$((renames + 1))
+  plan_rename "$legacy" "$new"
   [ "$legacy" = 05-Tasks ] && tasks_rename=1
 done
+# Reports leave the chat folder first, so the VAULT chat rename below finds
+# its path unchanged. Either spelling of the old chat folder may hold them.
+reports_src=""
+for d in 01-Projects/VAULT/conversations/reports "01-Projects/VAULT/$CHAT/reports"; do
+  [ -d "$VAULT/$d" ] || continue
+  if [ -n "$reports_src" ]; then
+    printf 'conflict\t%s\t%s\n' "$d" "$REPORTS" >> "$PLAN"; conflicts=$((conflicts + 1))
+  else
+    reports_src="$d"
+  fi
+done
+[ -z "$reports_src" ] || plan_rename "$reports_src" "$REPORTS"
+OLD_CHATS="$(old_chat_dirs)"
+chat_renames=0
+if [ -n "$OLD_CHATS" ]; then
+  while IFS= read -r d; do
+    plan_rename "$d" "$(dirname "$d")/$CHAT"; chat_renames=$((chat_renames + 1))
+  done <<EOF
+$OLD_CHATS
+EOF
+fi
 QFILES="$(stale_query_files)"
 qcount=0
 [ -z "$QFILES" ] || qcount="$(printf '%s\n' "$QFILES" | wc -l | tr -d ' ')"
@@ -197,6 +249,7 @@ legacy_left=0
 for d in 02-Sources 03-Concepts 04-Index 05-Tasks; do
   if [ -d "$VAULT/$d" ]; then legacy_left=1; fi
 done
+if [ -n "$reports_src" ] || [ "$chat_renames" -gt 0 ]; then legacy_left=1; fi
 if [ "$legacy_left" -eq 0 ] && [ "$qcount" -eq 0 ]; then
   echo "Nothing to migrate: $VAULT is already on the Library v2 layout."
   exit 0
@@ -205,13 +258,13 @@ fi
 warn_external_paths() {
   local plist hits=""
   echo
-  echo "!!! ============================================================== !!!"
-  echo "!!!  05-Tasks/ becomes 04-Tasks/. Anything OUTSIDE this vault that   !!!"
-  echo "!!!  names the old path must be updated by hand, or it stops syncing:!!!"
-  echo "!!!    - task sync daemons (e.g. obsidian-tasks-sync's local daemon) !!!"
-  echo "!!!    - launchd plists, cron jobs, shell aliases and scripts        !!!"
-  echo "!!!    - n8n or other sync path filters that use the vault path      !!!"
-  echo "!!! ============================================================== !!!"
+  echo '!!! ============================================================== !!!'
+  echo '!!!  05-Tasks/ becomes 04-Tasks/. Anything OUTSIDE this vault that   !!!'
+  echo '!!!  names the old path must be updated by hand, or it stops syncing:!!!'
+  echo '!!!    - task sync daemons (e.g. the obsidian-tasks-sync daemon)     !!!'
+  echo '!!!    - launchd plists, cron jobs, shell aliases and scripts        !!!'
+  echo '!!!    - n8n or other sync path filters that use the vault path      !!!'
+  echo '!!! ============================================================== !!!'
   echo "    old: $VAULT/05-Tasks"
   echo "    new: $VAULT/04-Tasks"
   for plist in "$HOME"/Library/LaunchAgents/*.plist; do
@@ -247,7 +300,7 @@ echo "$moves to move, $renames to rename, $qcount with task queries to rewrite, 
 # don't. Report them; never rewrite a note.
 pathlinks="$(cd "$VAULT" && grep -rlE --include='*.md' \
   --exclude-dir=.git --exclude-dir=node_modules --exclude-dir=.obsidian \
-  '\[\[(02-Sources|03-Concepts|04-Index|05-Tasks)/|\]\((\.\./)*(02-Sources|03-Concepts|04-Index|05-Tasks)/' . 2>/dev/null || true)"
+  '\[\[(02-Sources|03-Concepts|04-Index|05-Tasks)/|\]\((\.\./)*(02-Sources|03-Concepts|04-Index|05-Tasks)/|\[\[([^]|]*/)?conversations/|\]\(([^)]*/)?conversations/' . 2>/dev/null || true)"
 pathlinks="$(printf '%s\n' "$pathlinks" | sed '/^$/d; s#^\./##')"
 if [ -n "$pathlinks" ]; then
   n="$(printf '%s\n' "$pathlinks" | wc -l | tr -d ' ')"
@@ -305,6 +358,10 @@ backup() {
 $QFILES
 EOF
     fi
+    # Chat folders and the reports folder under 01-Projects/ that get renamed.
+    while IFS=$'\t' read -r d src dest; do
+      case "$d:$src" in rename:01-Projects/*) set -- "$@" "$name/$src" ;; esac
+    done < "$PLAN"
     OUT="$backup_dir/${name}-backup-library-migration-$(date +%Y%m%d-%H%M%S)-$$.tar.gz"
     [ ! -e "$OUT" ] || die "backup file already exists: $OUT. Nothing was changed." 1
     tar --exclude='.DS_Store' -czf "$OUT" -C "$(dirname "$VAULT")" -- "$@" \
@@ -325,6 +382,10 @@ apply_plan() {
     case "$kind" in
       move) vault_mv "$src" "$dest"; done_moves=$((done_moves + 1)) ;;
       rename)
+        if [ ! -e "$VAULT/$src" ]; then
+          # A chat folder that held nothing but the reports can vanish with them.
+          echo "  skipped: $src is no longer there (it held only what moved before it)"; continue
+        fi
         if [ -d "$VAULT/$dest" ]; then
           # Empty but for placeholders (checked in the plan). Clear it so the
           # rename lands as the folder, not inside it.
@@ -378,6 +439,10 @@ if [ "$tasks_rename" -eq 1 ]; then
   fi
 fi
 
+if [ "$chat_renames" -gt 0 ]; then
+  echo "Chat folders are now named $CHAT/. Skills from an older 2ndBrain-mogging checkout still write"
+  echo "conversations/: run update.sh so they follow."
+fi
 echo
 echo "Done. Review with git status if the vault is a git repo, then commit with a bot prefix,"
 echo "e.g. [bot:mogging-migrate] move the vault onto the Library v2 layout"
