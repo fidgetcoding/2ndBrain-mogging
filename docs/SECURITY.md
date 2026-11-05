@@ -12,10 +12,10 @@ pre-publish checks that every release must pass.
 Please **do not** open a public GitHub issue for suspected security
 vulnerabilities.
 
-- Preferred: open a private advisory via GitHub Security Advisories —
-  <https://github.com/fidgetcoding/2ndBrain-mogging/security/advisories/new>
-- Backup channel: email `operator@example.com` with `[security]` in the
-  subject line.
+- Report it privately through GitHub: open the repo's **Security** tab and
+  choose **Report a vulnerability**, or go straight to
+  <https://github.com/fidgetcoding/2ndBrain-mogging/security/advisories/new>.
+  Only the maintainer sees the report.
 - Expected first response: within **72 hours** on weekdays
 - Please include:
   - A description of the issue and its impact
