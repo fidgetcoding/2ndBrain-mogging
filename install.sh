@@ -1508,11 +1508,6 @@ DEFUDDLE_VERSION="0.19.6"
 SKILLPACK_SKILLS=(obsidian-markdown obsidian-bases obsidian-cli json-canvas defuddle)
 
 install_vault_skill_packs() {
-  if [[ "$WITH_RESEARCH" -eq 1 ]]; then
-    echo "│  Research tier:         ON   (hyperresearch + graphify)      │"
-  else
-    echo "│  Research tier:         OFF  (opt-in via --with-research)    │"
-  fi
   if [[ "$NO_SKILL_PACKS" -eq 1 ]]; then
     log "step 10.75: vault skill packs SKIPPED (--no-skill-packs)"
     return 0
@@ -1932,7 +1927,9 @@ run_doctor() {
 #   step 9.5  apply_claude_md_patch      idempotent CLAUDE.md patch (content-diff; no-op if same)
 #   step 10   install_launchd            scheduled/launchd/*.plist -> ~/Library/LaunchAgents
 #   step 10.5 install_intelligence       (opt-in --with-intelligence) helpers + hooks + pattern store
-#   step 10.6 repair_stale_hooks         rewrite stale $HOME/.claude/helpers hook paths → ${CLAUDE_PROJECT_DIR}
+#   step 10.55 install_vault_guard       (opt-in --with-guard) PreToolUse hook for task IDs + skill scope
+#   step 10.56 install_memory_tier       (opt-in --with-memory) write Claude-Memory/memory-tier.yaml
+#   step 10.6 repair_stale_hooks        rewrite stale $HOME/.claude/helpers hook paths → ${CLAUDE_PROJECT_DIR}
 #                                        (runs always — fixes MODULE_NOT_FOUND spam independent of opt-in)
 #   step 10.7 install_obsidian_mcp       claude mcp add obsidian → vault; opt out w/ --no-obsidian-mcp
 #   step 10.75 install_vault_skill_packs kepano/obsidian-skills @ pinned commit → 5 skills
@@ -2013,6 +2010,11 @@ print_install_summary() {
     echo "│  Memory tier:           ON   (run bin/memory yourself)       │"
   else
     echo "│  Memory tier:           OFF  (opt-in via --with-memory)      │"
+  fi
+  if [[ "$WITH_RESEARCH" -eq 1 ]]; then
+    echo "│  Research tier:         ON   (hyperresearch + graphify)      │"
+  else
+    echo "│  Research tier:         OFF  (opt-in via --with-research)    │"
   fi
   if [[ "$NO_OBSIDIAN_APP" -eq 1 ]]; then
     echo "│  Obsidian.app auto-install: SKIPPED (--no-obsidian-app)     │"
