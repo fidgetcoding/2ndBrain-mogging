@@ -127,7 +127,7 @@ done
 for p in example-project-1 example-project-2 example-project-3 INCUBATOR MISC VAULT/log.md VAULT/REPORTS; do
   if [[ -e "$FAKE_VAULT/01-Projects/$p" ]]; then _fail "seeded but should be made on demand: 01-Projects/$p"; else _pass "not seeded: 01-Projects/$p"; fi
 done
-PROJECTS_LS="$(cd "$FAKE_VAULT/01-Projects" && ls -A | grep -v '^\.DS_Store$' | tr '\n' ' ')"
+PROJECTS_LS="$(cd "$FAKE_VAULT/01-Projects" && find . -mindepth 1 -maxdepth 1 ! -name .DS_Store | sed 's#^\./##' | LC_ALL=C sort | tr '\n' ' ')"
 assert_eq "$PROJECTS_LS" "VAULT " "01-Projects/ holds only VAULT/ after a fresh install"
 
 # ---------------------------------------------------------------------------
