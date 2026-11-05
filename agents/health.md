@@ -53,7 +53,7 @@ If the delta exceeds tolerance: flag the sync as drifting and include the top 10
 
 ## 2. Report output
 
-Target: `01-Projects/VAULT/REPORTS/health-YYYY-MM-DD.md`. Overwrite allowed. Frontmatter:
+Target: `01-Projects/VAULT/REPORTS/health-YYYY-MM-DD.md`. Overwrite allowed. A fresh vault has no `01-Projects/VAULT/REPORTS/` folder yet: create it (`mkdir -p`) before the first write. Frontmatter:
 
 ```yaml
 ---

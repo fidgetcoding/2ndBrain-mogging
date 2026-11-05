@@ -253,9 +253,10 @@ check_npm_cache_ownership() {
 #
 # Hard rule from CLAUDE.md: every project folder under 01-Projects/ must have
 # an index note where filename = foldername (e.g. <ORG-B>/<ORG-B>.md, never
-# <ORG-B>/<ORG-B>-Index.md). Folder renames (e.g. example-project-1 →
-# example-project-2) leave the inner .md unchanged, breaking [[PROJECT]]
-# wikilink resolution. Surface drift, suggest the rename, never auto-rename
+# <ORG-B>/<ORG-B>-Index.md). Folder renames (e.g. PODCAST → SHOW) leave the
+# inner .md unchanged, breaking [[PROJECT]] wikilink resolution. An !ARCHIVE/
+# folder is the exception: its note is <PARENT>-ARCHIVE.md, so any
+# *-ARCHIVE.md inside it counts. Surface drift, suggest the rename, never auto-rename
 # (project index files are owner=human; CLAUDE.md forbids auto-rewrite).
 
 check_project_filename_equals_folder() {
@@ -275,8 +276,19 @@ check_project_filename_equals_folder() {
     # Strip trailing slash → bare folder name
     name="$(basename "$folder")"
     expected_index="${folder%/}/${name}.md"
+    local archive_notes=()
+    if [[ "$name" == '!ARCHIVE' ]]; then
+      shopt -s nullglob
+      archive_notes=( "${folder}"*-ARCHIVE.md )
+      shopt -u nullglob
+    fi
     if [[ -f "$expected_index" ]]; then
       pass "01-Projects/$name/$name.md"
+    elif [[ ${#archive_notes[@]} -gt 0 ]]; then
+      pass "01-Projects/$name/$(basename "${archive_notes[0]}")"
+    elif [[ "$name" == '!ARCHIVE' ]]; then
+      fail "01-Projects/$name/ has no *-ARCHIVE.md note (an archive's note is named after its parent, never !ARCHIVE.md)"
+      local_fail=1
     else
       # Look for any .md inside the folder so we can suggest a rename
       shopt -s nullglob
@@ -338,7 +350,7 @@ check_projects_index_stale_wikilinks() {
     case "$file_target" in
       Projects-Index|Home-Index|Tech-Index|Poetry-Index|Index|TASKS|GITHUB|'<ORG-A>') continue ;;
     esac
-    # Project folders may be nested under grouping hubs (INCUBATOR/, ARCHIVE/,
+    # Project folders may be nested under grouping hubs (!ARCHIVE/, CLIENTS/,
     # CREATIVE/, MINDFULNESS/, …) — the layout the vault CLAUDE.md mandates.
     # Search <target>/<target>.md at folder depth 1-3 under 01-Projects/
     # instead of assuming depth-1. Glob metachars in the target are escaped

@@ -39,7 +39,7 @@ If the count exceeds 15, collapse the mid/low-priority section into a summary li
 
 ## 3. Write the daily report
 
-Target: `01-Projects/VAULT/REPORTS/daily-YYYY-MM-DD.md`. Overwrite allowed (the report regenerates daily). Frontmatter:
+Target: `01-Projects/VAULT/REPORTS/daily-YYYY-MM-DD.md`. Overwrite allowed (the report regenerates daily). A fresh vault has no `01-Projects/VAULT/REPORTS/` folder yet: create it (`mkdir -p`) before the first write. Frontmatter:
 
 ```yaml
 ---
@@ -65,7 +65,7 @@ Body sections in this order:
 
 - Top 5 overdue tasks (one line each, with UUID).
 - Top 3 today events (title + start time).
-- One-line "open threads" derived from the last 3 entries in `01-Projects/VAULT/REPORTS/daily-*.md`.
+- One-line "open threads" derived from the last 3 entries in `01-Projects/VAULT/REPORTS/daily-*.md` (none on a first run; skip the line).
 
 Keep `hot.md` under 2KB. Older entries roll off.
 

@@ -86,7 +86,7 @@ Apply the same alias lookup `/save` uses. Read `Claude-Memory/aliases.yaml`; for
 
 - Title / body matches a known project alias → route to that project's `01-Projects/<project>/notes/` (or an existing project subfolder) with `related: [[<project>]]`.
 - Title / body matches a known person alias → store in the person's home project `notes/` with `related: [[<person>]]`, or in `02-Library/sources/` when the person has no single home project. A note that is a profile of the person themselves goes to `02-Library/people/`.
-- No match → the catch-all project's `notes/` with `tags: [imported, review]` flagged for human triage. The catch-all is the `Claude-Memory/aliases.yaml` project entry whose `aliases` list includes "catch-all"; if no entry has it, `01-Projects/MISC/`. Never the Library.
+- No match → the catch-all project's `notes/` with `tags: [imported, review]` flagged for human triage. The catch-all is the `Claude-Memory/aliases.yaml` project entry whose `aliases` list includes "catch-all"; if no entry has it, `01-Projects/MISC/`. Never the Library. A fresh vault has no catch-all folder yet: make it first, with its hub note and Projects-Index line, the way `/save` does (see **First use of the catch-all** in the `save` skill).
 
 ### 5. Decide destination folder
 

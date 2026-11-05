@@ -57,6 +57,33 @@ Classification procedure:
 4. Return the top candidate plus any candidate with score within 10% of the top — these become the ambiguity set.
 5. If nothing scores, the destination is the catch-all project: the `Claude-Memory/aliases.yaml` project entry whose `aliases` list includes "catch-all"; if no entry has it, `01-Projects/MISC/`. Content never falls through to `02-Library/`, which holds cross-project reference only.
 
+**First use of the catch-all.** A fresh vault has no catch-all folder: the installer only creates `01-Projects/VAULT/`. The first time anything routes to the catch-all and its folder is missing, create it before the write, in the same preview and commit:
+
+1. `<CATCH-ALL>/<CATCH-ALL>.md`, the hub note (filename = folder name), from the stub below. The stub uses the default name `MISC`; swap in the catch-all's own folder name when `aliases.yaml` points elsewhere.
+2. `<CATCH-ALL>/!!conversations/`, which the capture itself lands in.
+3. One line in `03-Index/Projects-Index.md`: `- [[<CATCH-ALL>]] — catch-all: conversations that belong to no single project`.
+
+Each shows as a `create` row in the preview table. If the folder exists but has no hub note, create just the hub note. An existing hub note is never touched.
+
+```markdown
+---
+title: "MISC"
+date: YYYY-MM-DD
+type: project
+tags: [catch-all]
+status: active
+related: [[Projects-Index]]
+---
+
+# MISC
+
+The catch-all project. A conversation that belongs to no single project lands in `!!conversations/` here, never in `02-Library/`. To use a different folder, point the catch-all entry in `Claude-Memory/aliases.yaml` at it.
+
+## Related
+
+- Parent index: [[Projects-Index]]
+```
+
 ### The 50/50 wikilink rule
 
 If the top two candidates score within 10% of each other, the content is AMBIGUOUS. The skill MUST NOT pick one silently. Instead:
@@ -118,7 +145,7 @@ Behavior:
 3. Auto-commit if no flags fire (§3 auto-commit rule); else prompt `y/n/edit`.
 4. On write — choose path by classification (post-2026-05-08 conversations-into-projects restructure):
    - **Project-tied** (alias resolves to a single `01-Projects/<PROJECT>/`): write the full transcript to `01-Projects/<PROJECT>/!!conversations/[<sub>/]<YYYY-MM-DD>-<slug>.md`. **No pointer, no LIT mirror** — the project folder is the sole source of truth. If the project has substructure (e.g. `<ORG-B>/<PROJECT-A>/`, `<ORG-A>/career/`), mirror it under `!!conversations/` (Pattern A flat).
-   - **Cross-cutting** (no single project owner — multi-project strategy threads, generic dictation, vault-spanning topics): write to the catch-all project's `!!conversations/[<sub>/]<YYYY-MM-DD>-<slug>.md`. The catch-all is the `Claude-Memory/aliases.yaml` project entry whose `aliases` list includes "catch-all"; if no entry has it, `01-Projects/MISC/` (so `01-Projects/MISC/!!conversations/` by default). Conversations never go in `02-Library/`.
+   - **Cross-cutting** (no single project owner — multi-project strategy threads, generic dictation, vault-spanning topics): write to the catch-all project's `!!conversations/[<sub>/]<YYYY-MM-DD>-<slug>.md`. The catch-all is the `Claude-Memory/aliases.yaml` project entry whose `aliases` list includes "catch-all"; if no entry has it, `01-Projects/MISC/` (so `01-Projects/MISC/!!conversations/` by default). If the catch-all folder doesn't exist yet, make it first (see **First use of the catch-all** in §2). Conversations never go in `02-Library/`.
    - **Vault-meta** (vault architecture sessions, graph repairs, mogging-pack-dev work): write to `01-Projects/VAULT/!!conversations/[<sub>/]<YYYY-MM-DD>-<slug>.md`. Subfolders: `architecture-sessions/`, `graph-repairs/`, `mogging-pack-dev/`. Scheduled-agent and audit reports are not chats: they live in `01-Projects/VAULT/REPORTS/`, and `/save` never writes there.
    - **Meeting-style captures** (Granola transcripts, multi-stakeholder calls): optionally route under `<PROJECT>/!!conversations/meetings/` for tighter organization.
    - The pre-2026-05-08 dual-write pattern (full transcript in LIT + pointer stub in `01-Conversations/`) is retired. `01-Conversations/` no longer exists.
@@ -291,7 +318,7 @@ Backfill commits use `[bot:save --backfill]` as the prefix so they're still W1-t
 
 ## 14. Non-goals (explicitly out of scope)
 
-- `save` does not write to `01-Projects/*/index.md` files. Project index maintenance is the `wiki` skill's job.
+- `save` does not write to `01-Projects/*/index.md` files. Project index maintenance is the `wiki` skill's job. The one exception is creating the catch-all's hub note when it doesn't exist yet (see **First use of the catch-all**); an existing hub note is never touched.
 - `save` does not touch `04-Tasks/` other than obeying the plugin grammar when the user-provided content happens to land there. It never auto-creates tasks from conversational intent.
 - `save` does not run audits, heals, or contradiction detection — that is also `wiki`.
 - `save` does not touch `.env*`, `.claude/settings.json`, or anything outside the vault tree.

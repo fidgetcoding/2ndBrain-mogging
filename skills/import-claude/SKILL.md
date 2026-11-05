@@ -80,7 +80,7 @@ Emit a summary: `N conversations, grouped into P projects / folders, Q with no p
 Apply the same alias lookup `/save` uses. Read `Claude-Memory/aliases.yaml`; for each conversation:
 
 - If the title, earliest system prompt, or project name matches an alias → route to that project's folder in `01-Projects/<PROJECT>/!!conversations/<sub>/`.
-- If no alias match, or the conversation spans several projects → route to the catch-all project's `!!conversations/UNCATEGORIZED/` and flag for user review. The catch-all is the `Claude-Memory/aliases.yaml` project entry whose `aliases` list includes "catch-all"; if no entry has it, use `01-Projects/MISC/`. Conversations never go in `02-Library/`.
+- If no alias match, or the conversation spans several projects → route to the catch-all project's `!!conversations/UNCATEGORIZED/` and flag for user review. The catch-all is the `Claude-Memory/aliases.yaml` project entry whose `aliases` list includes "catch-all"; if no entry has it, use `01-Projects/MISC/`. Conversations never go in `02-Library/`. A fresh vault has no catch-all folder yet: make it first, with its hub note and Projects-Index line, the way `/save` does (see **First use of the catch-all** in the `save` skill).
 
 Never invent a project folder that doesn't exist in `01-Projects/` without asking first.
 

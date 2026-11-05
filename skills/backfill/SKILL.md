@@ -69,7 +69,7 @@ For each session that clears the `--since` filter and is not already in `backfil
    - Direct `[[PROJECT]]` wikilinks found in the transcript.
    - Aliased entity mentions (`<PERSON-C>` → <ORG-B>/<PROJECT-A>, `<PERSON-H>` → <ORG-D>/<PROJECT-B>, etc.).
    - File-path cues (any edits inside `01-Projects/FOO/` → FOO).
-   - Fallback: the catch-all project, i.e. the `Claude-Memory/aliases.yaml` project entry whose `aliases` list includes "catch-all"; if no entry has it, `01-Projects/MISC/`. Never the Library.
+   - Fallback: the catch-all project, i.e. the `Claude-Memory/aliases.yaml` project entry whose `aliases` list includes "catch-all"; if no entry has it, `01-Projects/MISC/`. Never the Library. A fresh vault has no catch-all folder yet: make it first, with its hub note and Projects-Index line, the way `/save` does (see **First use of the catch-all** in the `save` skill).
 6. **Routing.** Write to `01-Projects/{PROJECT}/!!conversations/YYYY-MM-DD-{slug}.md` where `YYYY-MM-DD` is the session's first-turn timestamp and `{slug}` is a 3–6 word kebab-case summary of the dominant topic.
 
 ### 3. Dedup

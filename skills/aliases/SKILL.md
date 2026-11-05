@@ -169,7 +169,7 @@ Output goes to `aliases-pending.md`. Never overwrites canonical.
 Run as a read-only audit. Each check that fails is reported with a line reference:
 
 1. **No duplicate keys.** Every top-level key under `people:`, `concepts:`, `orgs:`, `projects:` is unique.
-2. **Every `project:` path exists** in `01-Projects/`. Dangling paths are errors.
+2. **Every `project:` path exists** in `01-Projects/`. Dangling paths are errors. The catch-all entry is the one exception: a fresh vault has no catch-all folder until `/save` first routes there, so a missing catch-all path is reported as a note and doesn't fail the check.
 3. **Disambig pairs both have `disambig_note`.** If two entries share a canonical-ish name (<PERSON-C>/<PERSON-B>), both must explain the distinction.
 4. **No cyclic aliases.** An alias cannot point to another alias that points back (or forward-chains back).
 5. **Orphan check.** Every folder under `01-Projects/` must appear under `projects:`. A folder with no `projects:` entry is an orphan and gets surfaced for `--bootstrap` to fill.

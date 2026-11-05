@@ -97,7 +97,7 @@ Intake accepts any of: a URL, a local file path, a pasted blob, a YouTube URL, a
    │ Concept: "rate limit 300/15min"            │ 02-Library/ideas/morgen-rate-limit.md                      │ create  │
    │ Entity: "<PERSON-E>"                       │ 02-Library/people/<person-e>.md                            │ create  │
    │ Index update                               │ 03-Index/Index.md                                          │ append  │
-   │ Log entry                                  │ 01-Projects/VAULT/log.md                                   │ append  │
+   │ Log entry                                  │ 01-Projects/VAULT/log.md (or an existing log under VAULT/) │ append  │
    └────────────────────────────────────────────┴────────────────────────────────────────────────────────────┴─────────┘
 
    Git branch: wiki-add/2026-04-16-<person-e>-morgen-mcp
@@ -158,7 +158,7 @@ If `Claude-Memory/memory-tier.yaml` exists, the vault has the memory tier on. Be
 ### 3.4 Index + log
 
 - `03-Index/Index.md` gets one new line per new concept or entity page, sorted into its topical section.
-- `01-Projects/VAULT/log.md` gets an append-only entry (`03-Index/` holds maps only, never logs, and the vault root holds only `CLAUDE.md`, `AGENTS.md` and `SOUL.md`). Create the file if it's missing:
+- The vault log gets an append-only entry. It defaults to `01-Projects/VAULT/log.md`. If that file is missing, use an existing `log.md` anywhere under `01-Projects/VAULT/` (some vaults keep it in a subfolder such as `VAULT/MISC/`). Create `01-Projects/VAULT/log.md` only when no log exists under `01-Projects/VAULT/`. (`03-Index/` holds maps only, never logs, and the vault root holds only `CLAUDE.md`, `AGENTS.md`, `SOUL.md` and an optional `README.md` guide.) Entry shape:
   ```
   2026-04-16 ADD source=SRC-2026-04-16-<person-e>-morgen-mcp created=2 updated=3 branch=wiki-add/2026-04-16-<person-e>-morgen-mcp
   ```
@@ -192,7 +192,7 @@ Build two in-memory sets:
 
 ### 4.2 Output
 
-Write the report to `01-Projects/VAULT/REPORTS/audit-YYYY-MM-DD.md` (the canonical scheduled-agent reports location per `docs/CLAUDE-MD-PATCH.md §scheduled-agents`; this matches the nightly agent's output path so AUDIT reports live beside nightly-agent outputs and aren't second-sourced under `03-Index/`). Shape:
+Write the report to `01-Projects/VAULT/REPORTS/audit-YYYY-MM-DD.md`, creating `REPORTS/` first if this is the vault's first report (the canonical scheduled-agent reports location per `docs/CLAUDE-MD-PATCH.md §scheduled-agents`; this matches the nightly agent's output path so AUDIT reports live beside nightly-agent outputs and aren't second-sourced under `03-Index/`). Shape:
 
 ```markdown
 ---
@@ -332,7 +332,7 @@ A critical FIND rule: the skill MUST NOT emit a `[[wikilink]]` to a page that is
 
 | Failure                                                | Detection                                | Recovery                                                                 |
 |--------------------------------------------------------|------------------------------------------|--------------------------------------------------------------------------|
-| Source URL returns 404 / paywalled                     | HTTP status                              | Record failure in `01-Projects/VAULT/log.md`, save captured paste/prompt text only, tag `source_status: unreachable`. |
+| Source URL returns 404 / paywalled                     | HTTP status                              | Record failure in the vault log (`01-Projects/VAULT/log.md`, else an existing `log.md` under `01-Projects/VAULT/`, created only when there is none; see §3.4), save captured paste/prompt text only, tag `source_status: unreachable`. |
 | Source is a YouTube URL with no transcript available   | yt-dlp returns empty                     | Offer to run whisper-mcp on the audio as fallback; require explicit `y`. |
 | Target concept page has `owner: human`                 | Frontmatter check before Edit            | Skip the Edit, write a sibling `-wiki.md` file, and link it from Evidence. |
 | `aliases.yaml` missing or malformed                    | YAML parse                                | Abort with clear error; suggest running ADD on a high-level alias source.|

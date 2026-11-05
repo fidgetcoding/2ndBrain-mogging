@@ -42,7 +42,7 @@ Each check produces a list of file-level findings with exact paths and line numb
 
 ## 3. Report output
 
-Target: `01-Projects/VAULT/REPORTS/audit-YYYY-MM-DD.md`. **Append mode** — if the file exists, append a new `## Run <timestamp>` section. This lets multiple audit passes in one day coexist.
+Target: `01-Projects/VAULT/REPORTS/audit-YYYY-MM-DD.md`. **Append mode** — if the file exists, append a new `## Run <timestamp>` section. This lets multiple audit passes in one day coexist. A fresh vault has no `01-Projects/VAULT/REPORTS/` folder yet: create it (`mkdir -p`) before the first write.
 
 Frontmatter (only on file creation):
 

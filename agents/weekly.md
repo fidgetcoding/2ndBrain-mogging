@@ -25,7 +25,7 @@ Triggered by `scheduled/launchd/io.<ORG-A>.mogging.weekly.plist` at 18:00 Americ
 Collect the past 7 days of signal:
 
 1. `Glob` all `01-Projects/VAULT/REPORTS/daily-*.md` where date is within the last 7 days.
-2. `Glob` all `01-Projects/VAULT/REPORTS/audit-*.md` within the same window.
+2. `Glob` all `01-Projects/VAULT/REPORTS/audit-*.md` within the same window. On a new vault either glob can come back empty (or the folder may not exist yet); say so in the report and carry on.
 3. `git log --since="7 days ago" --format="%h %s"` for a commit-level change list, filtered to commits starting with `[bot:wiki-add]`, `[bot:wiki-heal]`, `[bot:wiki-fix]`, `[bot:save]`, `[bot:morning]`, `[bot:nightly]`, `[bot:weekly]`, or `[bot:health]`.
 4. Read the current `Claude-Memory/lint-counter.json` + snapshot from 7 days ago (stored in `Claude-Memory/lint-counter-snapshots/YYYY-MM-DD.json` by the previous weekly run).
 
@@ -41,7 +41,7 @@ Invoke the `emerge` skill in audit-only mode (no writes to concept notes — wee
 
 ## 3. Report output
 
-Target: `01-Projects/VAULT/REPORTS/weekly-YYYY-WW.md`. Overwrite allowed — weekly runs own their file. Frontmatter:
+Target: `01-Projects/VAULT/REPORTS/weekly-YYYY-WW.md`. Overwrite allowed — weekly runs own their file. A fresh vault has no `01-Projects/VAULT/REPORTS/` folder yet: create it (`mkdir -p`) before the first write. Frontmatter:
 
 ```yaml
 ---

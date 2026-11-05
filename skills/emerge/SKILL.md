@@ -156,6 +156,7 @@ Weekly agent config (managed in `~/.claude/hooks/` not here):
 - Command: `/emerge --days 7 --audit`
 - Output: `01-Projects/VAULT/REPORTS/emerge-YYYY-WW.md` (ISO week number)
 - Side effect: appends one-line summary to `01-Projects/VAULT/REPORTS/emerge-log.md` (run ID, cluster count, top cluster name).
+- A fresh vault has no `01-Projects/VAULT/REPORTS/` folder: the first run creates it, and the log with it.
 
 The `--audit` flag means:
 - No interactive prompts.
