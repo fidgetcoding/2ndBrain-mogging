@@ -39,7 +39,7 @@ UUID1="m-0a1b2c3d"
 UUID2="m-4e5f6a7b"
 UUID3="m-8c9d0e1f"
 UUID_LEGACY="3f2b8a60-7c1e-4f8e-9a3b-5d6e7f8a9b0c"
-TASKS_FILE="$VAULT/05-Tasks/TASKS-SAMPLE.md"
+TASKS_FILE="$VAULT/04-Tasks/TASKS-SAMPLE.md"
 cp "$FIX/before.md" "$TASKS_FILE"
 
 expect_pass() {
@@ -87,7 +87,7 @@ BEFORE_COUNT="$(grep -c '🆔' "$TASKS_FILE" | tr -d ' ')"
 
 # A no-op write through the gate.
 cp "$TASKS_FILE" "$TMPROOT/same.md"
-VAULT_DIR="$VAULT" "$SAVE_CMD" write-tasks --target 05-Tasks/TASKS-SAMPLE.md --from "$TMPROOT/same.md" --yes >/dev/null 2>&1
+VAULT_DIR="$VAULT" "$SAVE_CMD" write-tasks --target 04-Tasks/TASKS-SAMPLE.md --from "$TMPROOT/same.md" --yes >/dev/null 2>&1
 
 assert_file "$TASKS_FILE" "tasks file still exists after /save"
 
@@ -115,16 +115,16 @@ assert_eq "$ROGUE" "0" "no rogue UUIDs injected by /save"
 assert_eq "$(md5_of "$TASKS_FILE")" "$BEFORE_MD5" "tasks file byte-identical after a no-op write"
 
 # A broken edit changes nothing on disk.
-VAULT_DIR="$VAULT" "$SAVE_CMD" write-tasks --target 05-Tasks/TASKS-SAMPLE.md --from "$FIX/after-rewritten.md" --yes >/dev/null 2>&1
+VAULT_DIR="$VAULT" "$SAVE_CMD" write-tasks --target 04-Tasks/TASKS-SAMPLE.md --from "$FIX/after-rewritten.md" --yes >/dev/null 2>&1
 assert_eq "$?" "1" "write-tasks refuses a rewritten ID"
 assert_eq "$(md5_of "$TASKS_FILE")" "$BEFORE_MD5" "tasks file untouched after the refusal"
 
 # Declining the prompt changes nothing either.
-printf 'n\n' | VAULT_DIR="$VAULT" "$SAVE_CMD" write-tasks --target 05-Tasks/TASKS-SAMPLE.md --from "$FIX/after-legit-edit.md" >/dev/null 2>&1
+printf 'n\n' | VAULT_DIR="$VAULT" "$SAVE_CMD" write-tasks --target 04-Tasks/TASKS-SAMPLE.md --from "$FIX/after-legit-edit.md" >/dev/null 2>&1
 assert_eq "$(md5_of "$TASKS_FILE")" "$BEFORE_MD5" "tasks file untouched after answering n"
 
 # A good edit lands, keeps the IDs, and leaves a backup behind.
-VAULT_DIR="$VAULT" "$SAVE_CMD" write-tasks --target 05-Tasks/TASKS-SAMPLE.md --from "$FIX/after-legit-edit.md" --yes >/dev/null 2>&1
+VAULT_DIR="$VAULT" "$SAVE_CMD" write-tasks --target 04-Tasks/TASKS-SAMPLE.md --from "$FIX/after-legit-edit.md" --yes >/dev/null 2>&1
 assert_eq "$?" "0" "write-tasks accepts a legitimate edit"
 assert_contains "$TASKS_FILE" "with the receipts" "the edit landed"
 assert_contains "$TASKS_FILE" "🆔 ${UUID2}" "edited task kept its ID"
@@ -133,8 +133,15 @@ assert_eq "$BACKUPS" "1" "a backup was taken before overwriting"
 
 # write-tasks is only for tasks.
 VAULT_DIR="$VAULT" "$SAVE_CMD" write-tasks --target 02-Library/sources/not-tasks.md --from "$FIX/before.md" --yes >/dev/null 2>&1
-assert_eq "$?" "3" "write-tasks refuses a path outside 05-Tasks/"
-if [[ -e "$VAULT/02-Library/sources/not-tasks.md" ]]; then _fail "file written outside 05-Tasks/"; else _pass "nothing written outside 05-Tasks/"; fi
+assert_eq "$?" "3" "write-tasks refuses a path outside 04-Tasks/"
+# A vault not yet on Library v2: tasks under the retired 05-Tasks/ are read-only.
+mkdir -p "$VAULT/05-Tasks"
+cp "$FIX/before.md" "$VAULT/05-Tasks/TASKS-SAMPLE.md"
+VAULT_DIR="$VAULT" "$SAVE_CMD" write-tasks --target 05-Tasks/TASKS-SAMPLE.md --from "$FIX/after-legit-edit.md" --yes >/dev/null 2>&1
+assert_eq "$?" "3" "write-tasks refuses the retired 05-Tasks/"
+assert_eq "$(md5_of "$VAULT/05-Tasks/TASKS-SAMPLE.md")" "$(md5_of "$FIX/before.md")" "the retired 05-Tasks/ file is untouched"
+rm -rf "${VAULT:?}/05-Tasks"
+if [[ -e "$VAULT/02-Library/sources/not-tasks.md" ]]; then _fail "file written outside 04-Tasks/"; else _pass "nothing written outside 04-Tasks/"; fi
 
 # ---------------------------------------------------------------------------
 # The hook, with the same JSON Claude Code feeds it on stdin.
@@ -192,16 +199,16 @@ jq -n --arg f "$TASKS_FILE" --arg i "🆔 $UUID2" '{tool_name:"MultiEdit",tool_i
     {old_string:$i,new_string:"🆔 m-33333333"}]}}' | hook
 assert_eq "$?" "2" "hook blocks a MultiEdit that rewrites an ID in a later edit"
 
-# Outside 05-Tasks/ the UUID rule has nothing to say, and neither does the hook.
+# Outside 04-Tasks/ the UUID rule has nothing to say, and neither does the hook.
 write_json "$VAULT/02-Library/sources/note.md" "$FIX/after-rewritten.md" | hook
-assert_eq "$?" "0" "hook ignores files outside 05-Tasks/"
+assert_eq "$?" "0" "hook ignores files outside 04-Tasks/"
 write_json "/somewhere/else/entirely.md" "$FIX/after-rewritten.md" | hook
 assert_eq "$?" "0" "hook ignores files outside the vault"
 
 # Symlinks can't dodge it.
 ln -s "$TASKS_FILE" "$VAULT/02-Library/sources/alias-to-tasks.md"
 write_json "$VAULT/02-Library/sources/alias-to-tasks.md" "$FIX/after-rewritten.md" | hook
-assert_eq "$?" "2" "hook follows a symlink into 05-Tasks/"
+assert_eq "$?" "2" "hook follows a symlink into 04-Tasks/"
 
 # A hook that can't read its input must not block the session.
 printf 'not json' | hook

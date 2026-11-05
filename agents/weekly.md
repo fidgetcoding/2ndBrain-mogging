@@ -11,7 +11,8 @@ reads:
   - 01-Projects/VAULT/conversations/reports/daily-*.md
   - 02-Library/**/*.md
   - 03-Concepts/**/*.md  # legacy, read-only, only while a vault still has it
-  - 04-Index/**/*.md
+  - 03-Index/**/*.md
+  - 04-Index/**/*.md     # legacy, read-only, only while a vault still has it
   - Claude-Memory/lint-counter.json
 ---
 

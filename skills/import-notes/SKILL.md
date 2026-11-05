@@ -97,7 +97,7 @@ Apply the same alias lookup `/save` uses. Read `Claude-Memory/aliases.yaml`; for
 | A refined, atomic idea in the user's voice | `02-Library/ideas/<slug>.md` with `owner: wiki` + `type: concept` (`02-Library/people/` or `tools/` for a note about one person or one tool, tagged `person` / `tool`) |
 | Tied to a specific active project | `01-Projects/<project>/notes/<slug>.md` (NOT the project index file) |
 | Meeting notes, raw dumps, partially-formed | the matching project's `notes/` (catch-all project when nothing matches) with `tags: [raw, triage]` |
-| A task / todo | **Refuse to auto-write** — point the user at `05-Tasks/` and the Tasks-plugin UUID format |
+| A task / todo | **Refuse to auto-write** — point the user at `04-Tasks/` and the Tasks-plugin UUID format |
 
 Never invent a folder that doesn't exist in `01-Projects/` without asking first.
 
@@ -129,8 +129,8 @@ For each kept note, look for 1-3 atomic ideas that could promote to `02-Library/
 
 ### 8. Backlink updates
 
-- Any new project-mirror folder → update `04-Index/Projects-Index.md`
-- Any new concept → update the relevant topic index in `04-Index/`
+- Any new project-mirror folder → update `03-Index/Projects-Index.md`
+- Any new concept → update the relevant topic index in `03-Index/`
 - Any project-tied note → update `01-Projects/<project>/<project>.md` only via `/tether` (don't touch it directly here)
 
 ### 9. State checkpoint
@@ -155,7 +155,7 @@ Tell the user to run `/tether` next so bidirectional project-note links settle, 
 - **Never** overwrite an existing `owner: human` file.
 - **Never** write inside `01-Projects/<project>/<project>.md` directly.
 - **Never** write into a retired folder (`02-Sources/`, `03-Concepts/`, or the older killed list).
-- **Never** auto-create task files — tasks belong in `05-Tasks/` with the Obsidian Tasks plugin UUID format (see CLAUDE.md).
+- **Never** auto-create task files — tasks belong in `04-Tasks/` with the Obsidian Tasks plugin UUID format (see CLAUDE.md).
 - **Always** dry-run first. Require explicit `yes` before `--apply`.
 - **Always** scrub secrets before writing.
 - Commits use the `[bot:import-notes]` prefix.

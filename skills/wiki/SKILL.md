@@ -1,6 +1,6 @@
 ---
 name: wiki
-description: Add, audit, heal, and find across the 2ndBrain Obsidian vault. Single skill with four branches — ADD ingests sources (URL/file/paste/YouTube/PDF) into the 02-Library (sources → ideas/people/tools) → 04-Index pipeline with discuss-before-write; AUDIT is read-only integrity scan; HEAL applies safe repairs on a dry-run branch; FIND is semantic retrieval with wikilink-cited synthesis. Never writes owner:human files, never touches 01-Projects/*/index or 05-Tasks/.
+description: Add, audit, heal, and find across the 2ndBrain Obsidian vault. Single skill with four branches — ADD ingests sources (URL/file/paste/YouTube/PDF) into the 02-Library (sources → ideas/people/tools) → 03-Index pipeline with discuss-before-write; AUDIT is read-only integrity scan; HEAL applies safe repairs on a dry-run branch; FIND is semantic retrieval with wikilink-cited synthesis. Never writes owner:human files, never touches 01-Projects/*/index or 04-Tasks/.
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash
 hooks:
   PreToolUse:
@@ -37,7 +37,7 @@ These are non-negotiable and apply to every branch below:
 
 1. **Never write files with `owner: human` in their frontmatter.** Read the target file's frontmatter BEFORE any Edit/Write. If `owner: human` is present, route around it (log-only, or create a sibling `-wiki.md` file).
 2. **Never write to `01-Projects/*/<project-name>.md` or any file directly named as a project index.** Project index files are human-curated (per vault rules in `CLAUDE.md`). `wiki` may LINK into them but never mutate them. Scaffolding new projects is explicitly out of scope for this skill.
-3. **Never write anywhere under `05-Tasks/`.** Task state is owned by the Obsidian Tasks plugin and the n8n 2-way sync (Obsidian ↔ Morgen, post-2026-05-04 Notion drop). `wiki` may READ tasks to resolve wikilink targets but never creates, edits, completes, or deletes a task.
+3. **Never write anywhere under `04-Tasks/`.** Task state is owned by the Obsidian Tasks plugin and the n8n 2-way sync (Obsidian ↔ Morgen, post-2026-05-04 Notion drop). `wiki` may READ tasks (and a legacy `05-Tasks/` in a vault not yet on Library v2) to resolve wikilink targets but never creates, edits, completes, or deletes a task.
 
    Rules 1 to 3 have a runnable check. From the vault root, before each Write or Edit: `VAULT_DIR="$PWD" "${CLAUDE_SKILL_DIR}/../../bin/wiki" check --target <path>`. Exit 3 means stop, and it says why. With `install.sh --with-guard` the same check runs as a hook on every Write and Edit once `/wiki` has been invoked, and stays on for the rest of that session.
 4. **Every branch that writes uses its own git branch.** No direct writes to `main`. Branch names below are the contract.
@@ -96,7 +96,7 @@ Intake accepts any of: a URL, a local file path, a pasted blob, a YouTube URL, a
    │ Concept: "first-party MCP"                 │ 02-Library/ideas/first-party-mcp.md                        │ update  │
    │ Concept: "rate limit 300/15min"            │ 02-Library/ideas/morgen-rate-limit.md                      │ create  │
    │ Entity: "<PERSON-E>"                       │ 02-Library/people/<person-e>.md                            │ create  │
-   │ Index update                               │ 04-Index/Index.md                                          │ append  │
+   │ Index update                               │ 03-Index/Index.md                                          │ append  │
    │ Log entry                                  │ log.md                                                     │ append  │
    └────────────────────────────────────────────┴────────────────────────────────────────────────────────────┴─────────┘
 
@@ -140,7 +140,7 @@ Source pages (`02-Library/sources/`, or a project's `notes/`) are strictly evide
 
 Interpretation, synthesis, and the operator-voice live in concept pages (`02-Library/ideas/`, plus `people/` and `tools/` for entities). Source pages are the audit trail. (The pre-mogging `03-Permanent/` folder was collapsed into `03-Concepts/` during the 2026-04-16 refactor. On 2026-11-05 `02-Sources/` and `03-Concepts/` merged into `02-Library/` (Library v2).)
 
-Where an entity page goes: a person → `02-Library/people/` with tag `person`; a tool, app, service, model or library → `02-Library/tools/` with tag `tool`; anything else → `02-Library/ideas/`. All three are `type: concept`. A new page in any of the three needs at least one inbound wikilink from a source (in `02-Library/sources/` or a project's `notes/`) and at least one outbound wikilink to a `04-Index/` map.
+Where an entity page goes: a person → `02-Library/people/` with tag `person`; a tool, app, service, model or library → `02-Library/tools/` with tag `tool`; anything else → `02-Library/ideas/`. All three are `type: concept`. A new page in any of the three needs at least one inbound wikilink from a source (in `02-Library/sources/` or a project's `notes/`) and at least one outbound wikilink to a `03-Index/` map.
 
 ### 3.3 Concept page updates (prefer update)
 
@@ -157,8 +157,8 @@ If `Claude-Memory/memory-tier.yaml` exists, the vault has the memory tier on. Be
 
 ### 3.4 Index + log
 
-- `04-Index/Index.md` gets one new line per new concept or entity page, sorted into its topical section.
-- The vault-root `log.md` gets an append-only entry (`04-Index/` holds maps only, never logs):
+- `03-Index/Index.md` gets one new line per new concept or entity page, sorted into its topical section.
+- The vault-root `log.md` gets an append-only entry (`03-Index/` holds maps only, never logs):
   ```
   2026-04-16 ADD source=SRC-2026-04-16-<person-e>-morgen-mcp created=2 updated=3 branch=wiki-add/2026-04-16-<person-e>-morgen-mcp
   ```
@@ -176,10 +176,10 @@ AUDIT never writes except to a timestamped report. It scans:
 | Orphan pages                | Pages in `02-Library/` (any subfolder) with zero inbound wikilinks from elsewhere in the vault.        |
 | Missing concept pages       | Entities mentioned ≥ 3 times across `02-Library/sources/` and project `notes/` with no page in `02-Library/ideas/`, `people/` or `tools/`. |
 | Unmigrated legacy folders   | `02-Sources/` or `03-Concepts/` still exists. Read them as part of the scan (grandfathered, read-only) and flag: "run scripts/migrate-to-library.sh". |
-| Maps folder holds a report  | A file under `04-Index/` that is an audit, report, log or daily. Flag it; `04-Index/` is maps only. |
+| Maps folder holds a report  | A file under `03-Index/` that is an audit, report, log or daily. Flag it; `03-Index/` is maps only. |
 | Dead wikilinks              | `[[foo]]` where no file `foo.md` (or alias-resolved target) exists.                                    |
 | Missing cross-refs          | Concept A references Concept B, but Concept B has no reverse mention of A.                             |
-| Index consistency           | `04-Index/Index.md` lists a page that no longer exists, or a page that exists but isn't in the index.  |
+| Index consistency           | `03-Index/Index.md` lists a page that no longer exists, or a page that exists but isn't in the index.  |
 | Data gaps                   | Pages with frontmatter fields missing per `./references/wiki-schema.md` (e.g., `source_of_truth` empty). |
 
 ### 4.1 Mechanics
@@ -187,12 +187,12 @@ AUDIT never writes except to a timestamped report. It scans:
 Use `Glob` to enumerate files. Use `Grep` for wikilink/frontmatter extraction (multiline where needed for frontmatter). Do not instantiate an LLM call for any of the above — the detectors are deterministic regex + set-arithmetic on the link graph.
 
 Build two in-memory sets:
-- `pages = { basename → path, frontmatter, wikilinks_out }` for everything under `02-Library/`, `04-Index/`, and project `notes/` folders (plus the legacy `02-Sources/` and `03-Concepts/` when they still exist).
+- `pages = { basename → path, frontmatter, wikilinks_out }` for everything under `02-Library/`, `03-Index/`, and project `notes/` folders (plus the legacy `02-Sources/`, `03-Concepts/` and `04-Index/` when they still exist).
 - `inbound = { basename → [paths that link to it] }` via inversion.
 
 ### 4.2 Output
 
-Write the report to `01-Projects/VAULT/conversations/reports/audit-YYYY-MM-DD.md` (the canonical scheduled-agent reports location per `docs/CLAUDE-MD-PATCH.md §scheduled-agents`; this matches the nightly agent's output path so AUDIT reports live beside nightly-agent outputs and aren't second-sourced under `04-Index/`). Shape:
+Write the report to `01-Projects/VAULT/conversations/reports/audit-YYYY-MM-DD.md` (the canonical scheduled-agent reports location per `docs/CLAUDE-MD-PATCH.md §scheduled-agents`; this matches the nightly agent's output path so AUDIT reports live beside nightly-agent outputs and aren't second-sourced under `03-Index/`). Shape:
 
 ```markdown
 ---
@@ -244,7 +244,7 @@ HEAL is the only branch that mutates the graph outside ADD. It operates in dry-r
 - Merging concept pages (too easy to lose evidence links).
 - Renaming pages (breaks every wikilink pointing at them; must be a deliberate human action).
 - Changing `owner: human` frontmatter.
-- Touching `01-Projects/*/<index>.md` or `05-Tasks/**`.
+- Touching `01-Projects/*/<index>.md` or `04-Tasks/**`.
 - Writing into a retired folder (`02-Sources/`, `03-Concepts/`, or the older killed list). Moving legacy notes out is `scripts/migrate-to-library.sh`'s job, not HEAL's.
 
 ### 5.3 Stub pages
@@ -289,7 +289,7 @@ Strikethrough preserves reader intent ("there was supposed to be a link here") w
 
 1. Create branch: `git checkout -b wiki-heal/2026-04-16` (if vault is a git repo; else skip and operate in-place with a WARN).
 2. Apply all HEAL edits.
-3. Write `01-Projects/VAULT/conversations/reports/heal-plan-2026-04-16.md` summarizing every change (same reports folder as the audit output — never `04-Index/`).
+3. Write `01-Projects/VAULT/conversations/reports/heal-plan-2026-04-16.md` summarizing every change (same reports folder as the audit output — never `03-Index/`).
 4. Commit each category as a separate commit for reviewability:
    - `wiki-heal: stub pages for N missing concepts`
    - `wiki-heal: wrap unlinked concept names`
@@ -346,7 +346,7 @@ A critical FIND rule: the skill MUST NOT emit a `[[wikilink]]` to a page that is
 ## 8. Non-goals (explicitly out of scope)
 
 - `wiki` does not scaffold new projects in `01-Projects/`. Use the documented human workflow in `CLAUDE.md` (`### Project Index Note Rules`).
-- `wiki` does not manage tasks. Tasks live in `05-Tasks/` + Obsidian Tasks plugin + the n8n 2-way sync (Obsidian ↔ Morgen, post-2026-05-04 Notion drop).
+- `wiki` does not manage tasks. Tasks live in `04-Tasks/` + Obsidian Tasks plugin + the n8n 2-way sync (Obsidian ↔ Morgen, post-2026-05-04 Notion drop).
 - `wiki` does not deploy anything, run migrations, or modify `.env*`, `.claude/`, or `node_modules/`.
 - `wiki` does not delete files. Even in HEAL, deletion requires a human.
 - `wiki` does not call external paid services during AUDIT — AUDIT is pure regex + graph arithmetic.

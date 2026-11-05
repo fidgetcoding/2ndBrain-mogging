@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # tests/test_scope_guards.sh
-# /wiki refuses to write into 05-Tasks/.
-# - attempt --target 05-Tasks/INJECTED.md -> rc != 0, TASKS files unchanged
+# /wiki refuses to write into 04-Tasks/.
+# - attempt --target 04-Tasks/INJECTED.md -> rc != 0, TASKS files unchanged
 # - no INJECTED.md exists anywhere in the vault
 # - writing into 02-Library/sources still works (positive control)
 # Plus the ways around it: traversal, symlinks, case, absolute paths, and the other
@@ -26,7 +26,7 @@ trap cleanup EXIT
 
 VAULT="$TMPROOT/vault"
 cp -R "$HERE/fixtures/sample-vault/." "$VAULT/"
-cp "$HERE/fixtures/tasks/before.md" "$VAULT/05-Tasks/TASKS-SAMPLE.md"
+cp "$HERE/fixtures/tasks/before.md" "$VAULT/04-Tasks/TASKS-SAMPLE.md"
 export HOME="$TMPROOT/home"
 unset CLAUDE_HOME
 mkdir -p "$HOME/.claude"
@@ -37,16 +37,16 @@ assert_file "$WIKI_CMD" "bin/wiki exists"
 assert_file "$GUARD" "hooks/vault-guard.sh exists"
 
 # ---------------------------------------------------------------------------
-# Snapshot the 05-Tasks directory BEFORE any wiki invocation.
+# Snapshot the 04-Tasks directory BEFORE any wiki invocation.
 # ---------------------------------------------------------------------------
 TASKS_BEFORE_SNAP="$TMPROOT/tasks.before"
-snapshot_dir "$VAULT/05-Tasks" > "$TASKS_BEFORE_SNAP"
+snapshot_dir "$VAULT/04-Tasks" > "$TASKS_BEFORE_SNAP"
 
 # ---------------------------------------------------------------------------
-# Attempt forbidden target: 05-Tasks/INJECTED.md
+# Attempt forbidden target: 04-Tasks/INJECTED.md
 # Expect non-zero return code.
 # ---------------------------------------------------------------------------
-FORBIDDEN_REL="05-Tasks/INJECTED.md"
+FORBIDDEN_REL="04-Tasks/INJECTED.md"
 
 VAULT_DIR="$VAULT" "$WIKI_CMD" add \
   --title "injected" \
@@ -61,15 +61,15 @@ else
   _fail "wiki returned 0 on forbidden target ($FORBIDDEN_REL)"
 fi
 
-# Each of these resolves into 05-Tasks/ or out of the vault. None may land.
-ln -s "$VAULT/05-Tasks" "$VAULT/02-Library/sources/tasks-link"
-ln -s "$VAULT/05-Tasks/TASKS-SAMPLE.md" "$VAULT/02-Library/sources/file-link.md"
+# Each of these resolves into 04-Tasks/ or out of the vault. None may land.
+ln -s "$VAULT/04-Tasks" "$VAULT/02-Library/sources/tasks-link"
+ln -s "$VAULT/04-Tasks/TASKS-SAMPLE.md" "$VAULT/02-Library/sources/file-link.md"
 for sneaky in \
-  "02-Library/sources/../05-Tasks/INJECTED.md" \
+  "02-Library/sources/../04-Tasks/INJECTED.md" \
   "02-Library/sources/tasks-link/INJECTED.md" \
   "02-Library/sources/file-link.md" \
-  "05-tasks/INJECTED.md" \
-  "$VAULT/05-Tasks/INJECTED.md" \
+  "04-tasks/INJECTED.md" \
+  "$VAULT/04-Tasks/INJECTED.md" \
   "../INJECTED.md" \
   "$TMPROOT/INJECTED.md"
 do
@@ -83,19 +83,19 @@ done
 INJECTED_HITS="$(find "$TMPROOT" -type f -name 'INJECTED.md' | wc -l | tr -d ' ')"
 assert_eq "$INJECTED_HITS" "0" "no INJECTED.md anywhere in vault"
 
-# 05-Tasks snapshot unchanged.
+# 04-Tasks snapshot unchanged.
 TASKS_AFTER_SNAP="$TMPROOT/tasks.after"
-snapshot_dir "$VAULT/05-Tasks" > "$TASKS_AFTER_SNAP"
+snapshot_dir "$VAULT/04-Tasks" > "$TASKS_AFTER_SNAP"
 
 if diff -q "$TASKS_BEFORE_SNAP" "$TASKS_AFTER_SNAP" >/dev/null; then
-  _pass "05-Tasks/ byte-identical after forbidden wiki attempt"
+  _pass "04-Tasks/ byte-identical after forbidden wiki attempt"
 else
-  _fail "05-Tasks/ changed despite scope-guard rejection"
+  _fail "04-Tasks/ changed despite scope-guard rejection"
   diff "$TASKS_BEFORE_SNAP" "$TASKS_AFTER_SNAP" 1>&2 || true
 fi
 
 # Specifically the fixture's TASKS-SAMPLE.md must be unchanged.
-SAMPLE="$VAULT/05-Tasks/TASKS-SAMPLE.md"
+SAMPLE="$VAULT/04-Tasks/TASKS-SAMPLE.md"
 assert_eq "$(md5_of "$SAMPLE")" "$(md5_of "$HERE/fixtures/tasks/before.md")" "TASKS-SAMPLE.md unchanged"
 
 # ---------------------------------------------------------------------------
@@ -110,14 +110,14 @@ for refused in 01-Projects/ACME/ACME.md 02-Library/ideas/mine.md .env .env.local
   VAULT_DIR="$VAULT" "$WIKI_CMD" check --target "$refused" </dev/null >/dev/null 2>&1
   assert_eq "$?" "3" "wiki check refuses $refused"
 done
-for allowed in 01-Projects/ACME/notes.md 02-Library/ideas/compiled.md 02-Library/ideas/new.md 04-Index/Tech-Index.md; do
+for allowed in 01-Projects/ACME/notes.md 02-Library/ideas/compiled.md 02-Library/ideas/new.md 03-Index/Tech-Index.md; do
   VAULT_DIR="$VAULT" "$WIKI_CMD" check --target "$allowed" </dev/null >/dev/null 2>&1
   assert_eq "$?" "0" "wiki check allows $allowed"
 done
 
 # Retired folders (Library v2): a legacy vault may still have them, nothing writes there.
 mkdir -p "$VAULT/02-Sources" "$VAULT/03-Concepts"
-for retired in 02-Sources/SRC-2026-11-05-x.md 03-Concepts/x.md 02-sources/x.md 00-Inbox/x.md 02-Literature/x.md 04-MOC/x.md; do
+for retired in 02-Sources/SRC-2026-11-05-x.md 03-Concepts/x.md 02-sources/x.md 04-Index/Tech-Index.md 05-Tasks/TASKS.md 05-tasks/x.md 00-Inbox/x.md 02-Literature/x.md 04-MOC/x.md; do
   VAULT_DIR="$VAULT" "$WIKI_CMD" check --target "$retired" </dev/null >/dev/null 2>&1
   assert_eq "$?" "3" "wiki check refuses retired $retired"
 done
@@ -185,20 +185,20 @@ assert_contains "$VAULT/$LEGAL_REL" "last_confirmed:" "frontmatter carries last_
 # ---------------------------------------------------------------------------
 wjson() { jq -n --arg f "$1" '{tool_name:"Write",tool_input:{file_path:$f,content:"x"}}'; }
 
-wjson "$VAULT/05-Tasks/INJECTED.md" | "$GUARD" --skill wiki 2>/dev/null
+wjson "$VAULT/04-Tasks/INJECTED.md" | "$GUARD" --skill wiki 2>/dev/null
 assert_eq "$?" "0" "without the opt-in marker the hook does nothing"
 
 printf '%s\n' "$VAULT" > "$HOME/.claude/.mogging-guard"
 
 for skill in wiki autoresearch; do
-  wjson "$VAULT/05-Tasks/INJECTED.md" | "$GUARD" --skill "$skill" 2>/dev/null
-  assert_eq "$?" "2" "/$skill hook blocks a write into 05-Tasks/"
+  wjson "$VAULT/04-Tasks/INJECTED.md" | "$GUARD" --skill "$skill" 2>/dev/null
+  assert_eq "$?" "2" "/$skill hook blocks a write into 04-Tasks/"
 done
-wjson "$VAULT/05-tasks/INJECTED.md" | "$GUARD" --skill wiki 2>/dev/null
+wjson "$VAULT/04-tasks/INJECTED.md" | "$GUARD" --skill wiki 2>/dev/null
 assert_eq "$?" "2" "hook blocks the lowercase spelling too"
 wjson "$VAULT/02-Library/sources/tasks-link/INJECTED.md" | "$GUARD" --skill wiki 2>/dev/null
-assert_eq "$?" "2" "hook follows a symlinked folder into 05-Tasks/"
-wjson "$VAULT/02-Library/sources/../05-Tasks/INJECTED.md" | "$GUARD" --skill wiki 2>/dev/null
+assert_eq "$?" "2" "hook follows a symlinked folder into 04-Tasks/"
+wjson "$VAULT/02-Library/sources/../04-Tasks/INJECTED.md" | "$GUARD" --skill wiki 2>/dev/null
 assert_eq "$?" "2" "hook blocks a path with .. in it"
 wjson "$VAULT/01-Projects/ACME/ACME.md" | "$GUARD" --skill wiki 2>/dev/null
 assert_eq "$?" "2" "hook blocks a project index"
@@ -226,13 +226,13 @@ for skill in wiki autoresearch; do
   ln -s "$REPO_ROOT/skills/$skill" "$HOME/.claude/skills/$skill"
   cmd="$(fm_command "$skill")"
   if [[ -n "$cmd" ]]; then _pass "skills/$skill/SKILL.md declares the hook"; else _fail "skills/$skill/SKILL.md has no hook"; fi
-  wjson "$VAULT/05-Tasks/INJECTED.md" | sh -c "$cmd" 2>/dev/null
-  assert_eq "$?" "2" "/$skill frontmatter command blocks 05-Tasks/ from a real install layout"
+  wjson "$VAULT/04-Tasks/INJECTED.md" | sh -c "$cmd" 2>/dev/null
+  assert_eq "$?" "2" "/$skill frontmatter command blocks 04-Tasks/ from a real install layout"
 done
 # On a plugin install the path isn't there. That must stay silent, not error.
 rm "${HOME:?}/.claude/skills/wiki"
 cmd="$(fm_command wiki)"
-wjson "$VAULT/05-Tasks/INJECTED.md" | sh -c "$cmd" 2>/dev/null
+wjson "$VAULT/04-Tasks/INJECTED.md" | sh -c "$cmd" 2>/dev/null
 assert_eq "$?" "0" "frontmatter command stays quiet when the guard isn't on disk"
 
 assert_report

@@ -118,7 +118,7 @@ For each conversation, extract 1-3 atomic ideas that could become concept notes.
 ### 6. Backlink updates
 
 - Update the project index in `01-Projects/<project>/<project>.md` with a new line under `## Conversations` (create the section if missing).
-- Update `04-Index/Projects-Index.md` if a new project-mirror folder under `01-Projects/<PROJECT>/conversations/` (post-2026-05-08; `01-Projects/<PROJECT>/conversations/` was retired) was created.
+- Update `03-Index/Projects-Index.md` if a new project-mirror folder under `01-Projects/<PROJECT>/conversations/` (post-2026-05-08; `01-Projects/<PROJECT>/conversations/` was retired) was created.
 
 ### 7. State checkpoint
 

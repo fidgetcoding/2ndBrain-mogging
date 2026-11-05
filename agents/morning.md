@@ -8,7 +8,8 @@ writes:
   - 01-Projects/VAULT/conversations/reports/daily-YYYY-MM-DD.md
   - Claude-Memory/hot.md
 reads:
-  - 05-Tasks/**/*.md
+  - 04-Tasks/**/*.md
+  - 05-Tasks/**/*.md   # legacy, read-only, only while a vault is not yet on Library v2
   - Claude-Memory/aliases.yaml
   - Morgen MCP (list_events, list_tasks)
 ---
@@ -28,7 +29,7 @@ If the Morgen API returns HTTP 429 (rate limit), back off 30s and retry once. Se
 
 ## 2. Overdue surface
 
-Cross-reference the overdue list with `05-Tasks/**/*.md` via `Grep` for `🆔 <uuid>`. For each overdue item:
+Cross-reference the overdue list with `04-Tasks/**/*.md` (or `05-Tasks/**/*.md` in a vault not yet migrated to Library v2; read it, never write it) via `Grep` for `🆔 <uuid>`. For each overdue item:
 
 - Source file path + line number.
 - Task text, priority glyph, original due date, days overdue.

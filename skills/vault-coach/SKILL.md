@@ -27,8 +27,8 @@ When the user just installed, or says "set up my brain" / "help me get started":
 Trigger: "I added a folder", "I made a new project", "I'm starting X". **Do NOT let a folder exist without an index MD.** Walk the user through it, asking ONE QUESTION AT A TIME, then auto-draft:
 
 1. **Create the index file with filename = folder name.** `Project-A/Project-A.md` — NEVER `Project-A-Index.md`. The `-Index` suffix breaks `[[Project-A]]` wikilink resolution and silently drifts the project off the graph.
-2. **The index MD must explain** what the folder is, how it functions, what goes in it, and its subfolders — then link **UP** (to `04-Index/Projects-Index.md` and any parent/org hub) AND **DOWN** (to subfolders and key notes). One-way links make islands.
-3. **Register it:** add `[[PROJECT]]` to `04-Index/Projects-Index.md` under the right section (Active / Incubating / Archived). A project not in Projects-Index is orphaned even if its index is perfect.
+2. **The index MD must explain** what the folder is, how it functions, what goes in it, and its subfolders — then link **UP** (to `03-Index/Projects-Index.md` and any parent/org hub) AND **DOWN** (to subfolders and key notes). One-way links make islands.
+3. **Register it:** add `[[PROJECT]]` to `03-Index/Projects-Index.md` under the right section (Active / Incubating / Archived). A project not in Projects-Index is orphaned even if its index is perfect.
 4. **If it's a subfolder:** open the PARENT folder's index MD and add the sub-project to its DOWN section, with a back-link from the child UP to the parent.
 5. **Confirm routing:** tell the user `/save` can now classify chats into `01-Projects/<PROJECT>/conversations/`.
 
@@ -64,7 +64,7 @@ Pulled from the vault contract (`../../vault-template/CLAUDE.md`). Surface the r
 - **Bidirectional tethering** — every `[[wikilink]]` needs a sensible reverse link. (Non-negotiable #1.)
 - **/save daily, /wiki weekly** — capture at the end of every thread, audit/heal once a week.
 - **Markdown over PDF** — when importing material, prefer `.md`; PDFs are opaque to the graph. (`/import-notes` converts via pandoc.)
-- **Folder roles:** `01-Projects/<P>/` = the project's hub note plus `conversations/`, `notes/` (including sources tied to that project) and `assets/`; `02-Library/` = cross-project reference only, in `people/`, `tools/`, `ideas/` (one idea per file) and `sources/` (one note per outside source, with URL); `04-Index/` = maps of content only, link lists not prose, never reports or logs; `05-Tasks/` = optional, calendar-synced via the Obsidian Tasks plugin (never auto-create tasks from chat). The 03 slot is empty on purpose. A vault that still has `02-Sources/` or `03-Concepts/` should run `scripts/migrate-to-library.sh` (dry run first).
+- **Folder roles:** `01-Projects/<P>/` = the project's hub note plus `conversations/`, `notes/` (including sources tied to that project) and `assets/`; `02-Library/` = cross-project reference only, in `people/`, `tools/`, `ideas/` (one idea per file) and `sources/` (one note per outside source, with URL); `03-Index/` = maps of content only, link lists not prose, never reports or logs; `04-Tasks/` = optional, calendar-synced via the Obsidian Tasks plugin (never auto-create tasks from chat). The numbers run 01 to 04 with no gaps. A vault that still has `02-Sources/`, `03-Concepts/`, `04-Index/` or `05-Tasks/` should run `scripts/migrate-to-library.sh` (dry run first).
 - **Migrating Claude.ai / ChatGPT data?** Hand off to `/import-claude` (export zip) or `/import-notes` (Apple Notes, Notion, Evernote, raw files). Both are alias-classified and dry-run-previewed.
 
 ## Invariants
@@ -74,6 +74,6 @@ Pulled from the vault contract (`../../vault-template/CLAUDE.md`). Surface the r
 - Never bulk-write — draft, show, confirm, then write.
 - Never guess an orphan's home when unsure — ask.
 - Never edit `01-Projects/*/<project>.md` index files wholesale on a human's behalf; propose and confirm.
-- Never touch `05-Tasks/` content (use `/save` with UUID preservation).
+- Never touch `04-Tasks/` content (use `/save` with UUID preservation).
 - One question at a time. Always.
 - Automated writes use a `[bot:*]` commit prefix; interactive human-author commits do not.

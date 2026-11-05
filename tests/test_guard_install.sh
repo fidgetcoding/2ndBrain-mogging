@@ -64,10 +64,10 @@ assert_file "$MARKER" "--with-guard writes the marker"
 assert_eq "$(cd -P "$(head -n1 "$MARKER")" && pwd -P)" "$(cd -P "$VAULT" && pwd -P)" "the marker holds the vault path"
 
 # The hook, run the way settings.json says to run it, against a real task file.
-mkdir -p "$VAULT/05-Tasks"
-cp "$HERE/fixtures/tasks/before.md" "$VAULT/05-Tasks/TASKS-SAMPLE.md"
+mkdir -p "$VAULT/04-Tasks"
+cp "$HERE/fixtures/tasks/before.md" "$VAULT/04-Tasks/TASKS-SAMPLE.md"
 CMD="$(jq -r '[(.hooks.PreToolUse // [])[].hooks[]?.command // "" | select(contains("hooks/vault-guard.sh"))][0]' "$SETTINGS")"
-jq -n --arg f "$VAULT/05-Tasks/TASKS-SAMPLE.md" --rawfile c "$HERE/fixtures/tasks/after-rewritten.md" \
+jq -n --arg f "$VAULT/04-Tasks/TASKS-SAMPLE.md" --rawfile c "$HERE/fixtures/tasks/after-rewritten.md" \
   '{tool_name:"Write",tool_input:{file_path:$f,content:$c}}' | bash -c "$CMD" 2>/dev/null
 assert_eq "$?" "2" "the installed hook blocks a rewritten ID"
 

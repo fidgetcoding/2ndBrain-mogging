@@ -4,7 +4,7 @@
 # the vault path. Exit 2 blocks the tool call and shows Claude the reason. Any
 # other exit lets it through, so a broken hook can't wedge a session.
 #
-#   vault-guard.sh               the UUID rule, on every edit under 05-Tasks/
+#   vault-guard.sh               the UUID rule, on every edit under 04-Tasks/
 #   vault-guard.sh --skill wiki  plus that skill's scope rules. /wiki and
 #                                /autoresearch register this from their
 #                                frontmatter. Claude Code keeps a skill's hooks

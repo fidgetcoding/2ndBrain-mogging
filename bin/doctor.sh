@@ -306,12 +306,14 @@ check_project_filename_equals_folder() {
 # flagging it for the human first").
 
 check_projects_index_stale_wikilinks() {
-  info "checking 04-Index/Projects-Index.md for stale wikilinks"
+  info "checking 03-Index/Projects-Index.md for stale wikilinks"
   if [[ -z "$VAULT_PATH" ]]; then
     info "no vault path discovered; skipping"
     return 0
   fi
-  local index_file="$VAULT_PATH/04-Index/Projects-Index.md"
+  local index_file="$VAULT_PATH/03-Index/Projects-Index.md"
+  # A vault not yet on Library v2 still keeps it in 04-Index/; read it there.
+  [[ -f "$index_file" ]] || index_file="$VAULT_PATH/04-Index/Projects-Index.md"
   if [[ ! -f "$index_file" ]]; then
     info "$index_file not found; skipping"
     return 0

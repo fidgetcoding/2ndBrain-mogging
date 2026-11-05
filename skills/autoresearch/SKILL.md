@@ -32,7 +32,7 @@ Structured web research for the 2ndBrain vault. Decomposes a topic into angles, 
 Before burning any web calls, Grep the vault for adjacent notes.
 
 1. Slugify topic into candidate filenames.
-2. Grep `02-Library/` (all four subfolders), project `notes/` folders, and `04-Index/Index.md` for the slug and its top-3 synonyms. In a legacy vault, also grep `02-Sources/` and `03-Concepts/` if they still exist (read-only; suggest `scripts/migrate-to-library.sh`).
+2. Grep `02-Library/` (all four subfolders), project `notes/` folders, and `03-Index/Index.md` for the slug and its top-3 synonyms. In a legacy vault, also grep `02-Sources/` and `03-Concepts/` if they still exist (read-only; suggest `scripts/migrate-to-library.sh`).
 3. If 3+ notes match with recent mtime (<90 days), surface: `vault has N adjacent notes — proceed / refine / abort?`
 4. If user picks `refine`, narrow the topic to the missing gap and restart Round 0.
 5. If user picks `abort`, exit without network calls.
@@ -109,7 +109,7 @@ Per concept → `02-Library/ideas/{slug}.md` (create or update):
 - YAML frontmatter: `type: concept`, `owner: wiki` (new notes only — never overwrite an existing `owner: human` note; propose a diff instead).
 - Declarative present tense. Explain the concept as if to a colleague.
 - Every factual claim carries an inline citation `(Source: [[SRC-YYYY-MM-DD-{slug}]])` and a confidence label.
-- Dense wikilinks to sibling concepts and upstream indexes in `04-Index/`.
+- Dense wikilinks to sibling concepts and upstream indexes in `03-Index/`.
 - Update existing notes — do not duplicate. Append new facts under a `## Updates {date}` subheading if the concept exists.
 
 Per entity (person, org, tool, place) → update wikilinks across all affected notes. If a stub is missing, create it with `type: concept`, `owner: wiki`: a person at `02-Library/people/{entity-slug}.md` (tag `person`), a tool at `02-Library/tools/{entity-slug}.md` (tag `tool`), anything else (org, place) at `02-Library/ideas/{entity-slug}.md`. Do NOT create an `entities/` subdirectory — the folder contract has no such subtree.
@@ -120,7 +120,7 @@ Master synthesis → `02-Library/ideas/{topic-slug}.md`:
 - The narrative answer to the original question.
 - Cites every `SRC-*` source note used.
 - Ends with a `## Open Questions` section and any `> [!gap]` callouts lifted from Round 2/3.
-- Links back to the relevant `04-Index/<Topic>-Index.md` and prepends a line to `01-Projects/VAULT/conversations/reports/autoresearch-log.md` (`04-Index/` holds maps only, never logs).
+- Links back to the relevant `03-Index/<Topic>-Index.md` and prepends a line to `01-Projects/VAULT/conversations/reports/autoresearch-log.md` (`03-Index/` holds maps only, never logs).
 - Lands flat in `02-Library/ideas/` — do NOT write to `02-Library/ideas/synthesis/`, which is not part of the folder contract.
 
 ## Writing Rules
@@ -133,7 +133,7 @@ Master synthesis → `02-Library/ideas/{topic-slug}.md`:
 
 ## Post-Loop Housekeeping
 
-1. Update `04-Index/Index.md` — add the synthesis note under the topic's taxonomy branch, create a new branch if needed.
+1. Update `03-Index/Index.md` — add the synthesis note under the topic's taxonomy branch, create a new branch if needed.
 2. Prepend a one-line entry to `01-Projects/VAULT/conversations/reports/autoresearch-log.md`: `{date} {topic-slug} — N sources, M concepts, {gap-count} gaps`.
 3. If `Claude-Memory/hot.md` exists, refresh its cache block for this topic (most-recent 5 concepts + synthesis link).
 4. If the topic touches an existing project, link the synthesis from the project index's **Related** section.
@@ -153,7 +153,7 @@ Mandatory for every WebFetch call — no exceptions:
 
 ## Commit Hygiene
 
-When a vault sync commits `/autoresearch` output, the commit message MUST start with `[bot:autoresearch]`. This matches the `05-Tasks/` sync filter and prevents W1 from re-ingesting research runs as tasks.
+When a vault sync commits `/autoresearch` output, the commit message MUST start with `[bot:autoresearch]`. This matches the `04-Tasks/` sync filter and prevents W1 from re-ingesting research runs as tasks.
 
 ## Failure Modes
 

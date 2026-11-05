@@ -174,9 +174,9 @@ ADRs are the one branch with a rigid template. Ask:
 
 Write to `Claude-Memory/adr/ADR-<nnn>-<slug>.md`. Auto-link in `Claude-Memory/adr/INDEX.md`. If `superseded`, also link the new ADR from the old one (bidirectional tether per vault rules).
 
-## 8. Obsidian Tasks plugin syntax (05-Tasks writes)
+## 8. Obsidian Tasks plugin syntax (04-Tasks writes)
 
-Anything the skill emits into `05-Tasks/` (any branch, any path under that prefix) MUST obey the plugin grammar — the operator's entire task pipeline is downstream of this file's exact shape.
+Anything the skill emits into `04-Tasks/` (any branch, any path under that prefix) MUST obey the plugin grammar — the operator's entire task pipeline is downstream of this file's exact shape.
 
 Required grammar:
 
@@ -194,10 +194,10 @@ On edit of an existing task line, the skill MUST preserve the `🆔 m-XXXXXXXX` 
 
 On create of a new task line, leave the 🆔 off. W1 mints `m-XXXXXXXX` on its next sync and appends it as the final trailing token. W1's parser only matches `m-[0-9a-f]{8}`, so a self-minted UUIDv4 is silently ignored and the task strands in Obsidian.
 
-Every edit under `05-Tasks/` goes through the gate. From the vault root:
+Every edit under `04-Tasks/` goes through the gate. A vault not yet on Library v2 keeps its tasks in `05-Tasks/`: read them there, but write nothing until `scripts/migrate-to-library.sh` has renamed the folder (the gate refuses the retired path). From the vault root:
 
 ```bash
-VAULT_DIR="$PWD" "${CLAUDE_SKILL_DIR}/../../bin/save" write-tasks --target 05-Tasks/<file>.md --from <edited copy>
+VAULT_DIR="$PWD" "${CLAUDE_SKILL_DIR}/../../bin/save" write-tasks --target 04-Tasks/<file>.md --from <edited copy>
 ```
 
 It previews the diff, asks, backs up, and writes. It refuses, and writes nothing, if an ID was rewritten, dropped, duplicated, swapped between tasks, or self-minted. Use `bin/save check-tasks --before <old> --after <new>` to check without writing. On a plugin install with no `bin/` on disk, apply the same rule by hand.
@@ -292,7 +292,7 @@ Backfill commits use `[bot:save --backfill]` as the prefix so they're still W1-t
 ## 14. Non-goals (explicitly out of scope)
 
 - `save` does not write to `01-Projects/*/index.md` files. Project index maintenance is the `wiki` skill's job.
-- `save` does not touch `05-Tasks/` other than obeying the plugin grammar when the user-provided content happens to land there. It never auto-creates tasks from conversational intent.
+- `save` does not touch `04-Tasks/` other than obeying the plugin grammar when the user-provided content happens to land there. It never auto-creates tasks from conversational intent.
 - `save` does not run audits, heals, or contradiction detection — that is also `wiki`.
 - `save` does not touch `.env*`, `.claude/settings.json`, or anything outside the vault tree.
 

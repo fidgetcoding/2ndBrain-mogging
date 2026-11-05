@@ -19,7 +19,7 @@ This doc tells Claude **where to put things** when you run `/import-claude`, `/i
 
 ## Folder routing (the 5-folder map)
 
-This is the post-mogging vault layout. On 2026-11-05 `02-Sources/` and `03-Concepts/` merged into `02-Library/` (Library v2). The 03 slot is intentionally empty; `04-Index/` and `05-Tasks/` keep their numbers. The folders below are the only writable targets — the skills will refuse to write anywhere else without explicit user confirmation.
+This is the post-mogging vault layout. On 2026-11-05 (Library v2) `02-Sources/` and `03-Concepts/` merged into `02-Library/`, `04-Index/` became `03-Index/`, and `05-Tasks/` became `04-Tasks/`, so the numbers run 01 to 04 with no gaps. The folders below are the only writable targets — the skills will refuse to write anywhere else without explicit user confirmation.
 
 ### `01-Projects/<PROJECT>/conversations/` (post-2026-05-08; `01-Projects/<PROJECT>/conversations/` was retired) — full-fidelity chat captures
 
@@ -50,13 +50,13 @@ Things that belong to no single project. Four subfolders:
 
 `02-Sources/` and `03-Concepts/` are retired. Skills read them if a legacy vault still has them and never write there. `scripts/migrate-to-library.sh` moves them into `02-Library/sources/` and `02-Library/ideas/`.
 
-### `04-Index/` — maps of content (navigation hubs)
+### `03-Index/` — maps of content (navigation hubs)
 
 - Group and link related concepts into a topic map.
 - Filename: `<Topic>-Index.md` (e.g. `Tech-Index.md`, `Poetry-Index.md`).
 - Also lives here: `Map.canvas` if you build one.
 - Maps only. No reports, audits, logs, or dailies: `/wiki audit` output goes to `01-Projects/VAULT/conversations/reports/audit-YYYY-MM-DD.md`.
-- No content lives in `04-Index/` beyond structure + wikilinks — don't dump prose here.
+- No content lives in `03-Index/` beyond structure + wikilinks — don't dump prose here.
 
 ### `01-Projects/` — active work
 
@@ -66,7 +66,7 @@ Things that belong to no single project. Four subfolders:
 - `INCUBATOR/` is the staging lane for ideas not yet formal project folders.
 - **Never auto-rewrite a project index file.** Add backlinks via `/tether` proposals; let the human merge.
 
-### `05-Tasks/` — Obsidian Tasks plugin area
+### `04-Tasks/` — Obsidian Tasks plugin area
 
 - One `TASKS-<AREA>.md` per project area (mirrors `01-Projects/`).
 - Tasks use the Obsidian Tasks plugin syntax + a stable `🆔 <uuid>` per task.
@@ -93,8 +93,8 @@ Things that belong to no single project. Four subfolders:
 | A person | `02-Library/people/<name>.md` | `type: concept`, `tags: [person]` |
 | A tool, app, service, model, or library | `02-Library/tools/<name>.md` | `type: concept`, `tags: [tool]` |
 | Notes tied to a specific active project | `01-Projects/<project>/notes/<slug>.md` | `type: source` or `concept`, `related: [[<project>]]` |
-| A new topic grouping that clusters 3+ concepts | `04-Index/<Topic>-Index.md` | `type: index` |
-| A task / todo | **Not auto-written.** User writes it in `05-Tasks/` with Tasks-plugin syntax + UUID. | — |
+| A new topic grouping that clusters 3+ concepts | `03-Index/<Topic>-Index.md` | `type: index` |
+| A task / todo | **Not auto-written.** User writes it in `04-Tasks/` with Tasks-plugin syntax + UUID. | — |
 | Raw unclear dumps | the catch-all project (`01-Projects/MISC/notes/`) with `tags: [raw, triage]` | flag for human review |
 
 ---
@@ -158,6 +158,6 @@ Once `/import-claude` or `/import-notes` finishes, run these in order:
 
 1. `/tether` — audits bidirectional project links and fixes orphans.
 2. `/connect` — proposes `[[wikilinks]]` between notes that share concepts but don't link yet.
-3. `/wiki audit` — writes a dated audit report to `04-Index/audit-YYYY-MM-DD.md` so you can see what still needs a human pass.
+3. `/wiki audit` — writes a dated audit report to `03-Index/audit-YYYY-MM-DD.md` so you can see what still needs a human pass.
 
 This replaces the old monolithic "wire the vault" step with three targeted skills you can run on demand.

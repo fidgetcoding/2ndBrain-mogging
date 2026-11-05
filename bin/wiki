@@ -86,7 +86,7 @@ $body"; then
       02-library/ideas/*) type=concept ;;
       02-library/people/*) type=concept; tags="[person]" ;;
       02-library/tools/*) type=concept; tags="[tool]" ;;
-      04-index/*) type=index ;;
+      03-index/*) type=index ;;
       *) type=source ;;
     esac
     esc_title="$(printf '%s' "$title" | jq -Rs .)"

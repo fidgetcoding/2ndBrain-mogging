@@ -44,12 +44,12 @@ The more you save, the more it understands where things go — *as long as the i
 │   ├── tools/      #   one note per tool, app, or service
 │   ├── ideas/      #   your own ideas, in your words, distilled from sources
 │   └── sources/    #   literature — things NOT tied to a project
-├── 04-Index/       # navigation — teaches the brain how to operate itself
-├── 05-Tasks/       # tasks (optional)
+├── 03-Index/       # navigation — teaches the brain how to operate itself
+├── 04-Tasks/       # tasks (optional)
 └── Claude-Memory/  # aliases + memory (leave it alone)
 ```
 
-There's no `03-` folder on purpose. `02-Sources/` and `03-Concepts/` merged into `02-Library/` on 2026-11-05, and `04-Index/` and `05-Tasks/` kept their numbers. If your vault still has the old two folders, `scripts/migrate-to-library.sh` moves them for you (it previews first).
+The numbers run 01 to 04 with no gaps. On 2026-11-05 `02-Sources/` and `03-Concepts/` merged into `02-Library/`, `04-Index/` became `03-Index/`, and `05-Tasks/` became `04-Tasks/`. If your vault still has the old folders, `scripts/migrate-to-library.sh` moves and renames them for you (it previews first).
 
 ### `01-Projects/` — your actual work
 
@@ -76,11 +76,11 @@ Things that are worth remembering but **not tied to a project**. Four shelves:
 
 Saved chats never go here. A chat that isn't about one project goes to your catch-all project's `conversations/` (`01-Projects/MISC/` unless you picked another).
 
-### `04-Index/` — navigation
+### `03-Index/` — navigation
 
 This is the layer that **teaches your second brain how to operate itself.** Maps of content, the `Projects-Index`, the graph map. Maps only: audit reports and logs live under `01-Projects/VAULT/conversations/reports/`, not here. When you add a project, this is where you register it.
 
-### `05-Tasks/` — tasks (optional)
+### `04-Tasks/` — tasks (optional)
 
 Only useful if you sync your Obsidian tasks to a calendar through an API. Most new users don't need it — skip it until you do.
 
@@ -106,7 +106,7 @@ Say you're starting a project called **Project-A**, and inside it you want a **r
 
 1. **Create the folder.** `01-Projects/Project-A/`
 2. **Create its index `.md`.** `01-Projects/Project-A/Project-A.md` — filename equals folder name. Describe what Project-A is, what goes in it, and how it relates to other folders.
-3. **Register it in the index.** Add `[[Project-A]]` to `04-Index/Projects-Index.md`.
+3. **Register it in the index.** Add `[[Project-A]]` to `03-Index/Projects-Index.md`.
 4. **If it's a subfolder, update the parent.** Create `01-Projects/Project-A/research/research.md`, then edit `Project-A.md` to mention the `research/` subfolder.
 5. **Link up and down.** `Project-A.md` links **up** (to `Projects-Index` / its parent) and **down** (to its subfolders and key notes). `research.md` links back up to `Project-A`.
 

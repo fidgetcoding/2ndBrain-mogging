@@ -91,7 +91,7 @@ assert_eq "$FIRST_RC" "0" "install.sh exits 0 on first run"
 # ---------------------------------------------------------------------------
 # Canonical folders (5, plus 02-Library's four and the catch-all project).
 # ---------------------------------------------------------------------------
-for d in 01-Projects 02-Library 02-Library/people 02-Library/tools 02-Library/ideas 02-Library/sources 04-Index 05-Tasks Claude-Memory 01-Projects/MISC/conversations; do
+for d in 01-Projects 02-Library 02-Library/people 02-Library/tools 02-Library/ideas 02-Library/sources 03-Index 04-Tasks Claude-Memory 01-Projects/MISC/conversations; do
   assert_dir "$FAKE_VAULT/$d" "canonical folder created: $d"
 done
 # Library v2 retired these; a fresh install must not create them.
@@ -254,7 +254,7 @@ assert_eq "$COUNT_USER_STOP2" "1" "user Stop hook still preserved after re-insta
 assert_json_valid "$SETTINGS" "settings.json still valid after re-install"
 
 # Folders still present (didn't get wiped).
-for d in 01-Projects 02-Library 04-Index 05-Tasks Claude-Memory; do
+for d in 01-Projects 02-Library 03-Index 04-Tasks Claude-Memory; do
   assert_dir "$FAKE_VAULT/$d" "folder still present after re-install: $d"
 done
 

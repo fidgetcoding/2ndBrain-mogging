@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# bin/save: the gate /save goes through for anything under 05-Tasks/.
+# bin/save: the gate /save goes through for anything under 04-Tasks/.
 # It does not capture conversations, that part is the skill. It answers one
 # question: does this edit keep every task ID byte-for-byte?
 #
 #   save check-tasks --before FILE --after FILE
 #       Exit 0 if the edit keeps the ID rule, 1 with the reasons if not.
-#   save write-tasks --target 05-Tasks/X.md --from FILE [--yes] [--vault PATH]
+#   save write-tasks --target 04-Tasks/X.md --from FILE [--yes] [--vault PATH]
 #       The same check against what is on disk, then a preview and a prompt, then
-#       a backup and the write. Refuses anything outside 05-Tasks/.
+#       a backup and the write. Refuses anything outside 04-Tasks/.
 set -u
 
 SELF="$0"
@@ -61,7 +61,7 @@ case "$cmd" in
     regime="${verdict%% *}"
     rel="${verdict#* }"
     if [ "$regime" != "SYNC" ]; then
-      echo "refused: write-tasks only writes under 05-Tasks/, and $rel is not." >&2
+      echo "refused: write-tasks only writes under 04-Tasks/, and $rel is not." >&2
       exit 3
     fi
     work="$(mktemp -d -t mogging-save.XXXXXX)" || exit 1

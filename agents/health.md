@@ -9,7 +9,8 @@ writes:
 reads:
   - vault root symlinks
   - .obsidian/plugins/ (existence check only, no content read)
-  - 05-Tasks/**/*.md (count only)
+  - 04-Tasks/**/*.md (count only)
+  - 05-Tasks/**/*.md (count only; legacy, only while a vault is not yet on Library v2)
   - Morgen MCP (list_tasks, count)
   - n8n last execution timestamp (via n8n MCP or cached)
 ---
@@ -22,7 +23,7 @@ Triggered by `scheduled/launchd/io.<ORG-A>.mogging.health.plist` at 21:00 Americ
 
 ### Gate A — Symlinks resolve
 
-The live vault has a handful of project symlinks (e.g., the `05-Tasks/obsidian-tasks-sync` git submodule → a repo elsewhere on disk; or any repo submoduled under `01-Projects/<ORG-C>/GITHUB/<ORG-A>-REPOS/`). A broken symlink creates ghost paths in `Glob` output and confuses every downstream skill.
+The live vault has a handful of project symlinks (e.g., the `04-Tasks/obsidian-tasks-sync` git submodule → a repo elsewhere on disk; or any repo submoduled under `01-Projects/<ORG-C>/GITHUB/<ORG-A>-REPOS/`). A broken symlink creates ghost paths in `Glob` output and confuses every downstream skill.
 
 Check: `find <vault-root> -maxdepth 5 -type l` and `test -e` each target. Report count of broken vs. resolved.
 
@@ -44,7 +45,7 @@ If stale: flag + suggest the user check the n8n dashboard. There's also a `Sync-
 
 ### Gate D — Morgen ↔ Obsidian task-count parity
 
-Pull the Morgen task count (`list_tasks` with `limit=500` per `reference_morgen_api_pagination`). Pull the Obsidian task count via `Grep -c` on `^- \[ \]` across `05-Tasks/**/*.md` plus an aggregated scan of inline tasks in the project subtrees.
+Pull the Morgen task count (`list_tasks` with `limit=500` per `reference_morgen_api_pagination`). Pull the Obsidian task count via `Grep -c` on `^- \[ \]` across `04-Tasks/**/*.md` plus an aggregated scan of inline tasks in the project subtrees.
 
 The counts should match within ±5 (the in-flight tolerance covers tasks written to Obsidian in the last 30 minutes that haven't round-tripped through W1 to Morgen yet, per the operator's `feedback_task_state_source_of_truth` rule).
 

@@ -6,7 +6,7 @@ allowed-tools: Read, Write, Glob, Grep
 
 # /canvas
 
-Scripted authoring for Obsidian Canvas files. The canvas format is stable JSON (Canvas 1.0) — this skill treats canvases as a view layer over the vault, never mutating source notes. Every node gets a collision-proof ID, every write re-reads the canvas first to prevent dupes, and the central `04-Index/Map.canvas` gets a deterministic Fibonacci-spiral layout so the graph stays legible as it grows.
+Scripted authoring for Obsidian Canvas files. The canvas format is stable JSON (Canvas 1.0) — this skill treats canvases as a view layer over the vault, never mutating source notes. Every node gets a collision-proof ID, every write re-reads the canvas first to prevent dupes, and the central `03-Index/Map.canvas` gets a deterministic Fibonacci-spiral layout so the graph stays legible as it grows.
 
 ## Invocation
 
@@ -20,11 +20,11 @@ Running bare `/canvas` reports status: total canvases, per-canvas node counts, z
 
 ### /canvas new `<name>`
 
-Create `04-Index/canvases/{name}.canvas` with an empty `{ "nodes": [], "edges": [] }` skeleton. Reject if the file already exists — the caller must delete or pick a new name. Name is slugified (kebab-case, ASCII-only).
+Create `03-Index/canvases/{name}.canvas` with an empty `{ "nodes": [], "edges": [] }` skeleton. Reject if the file already exists — the caller must delete or pick a new name. Name is slugified (kebab-case, ASCII-only).
 
 ### /canvas add image `<path-or-url>`
 
-- If `<path>` is an `https://` URL, download to `04-Index/canvases/.imports/{slug}-{ts}.{ext}` (scheme whitelist, 5 MB cap, 30 s timeout). The pre-mogging `06-Assets/` folder was killed on 2026-04-16 in favor of Obsidian's default attachment handling — canvas-scoped downloads now sit next to the canvas files themselves.
+- If `<path>` is an `https://` URL, download to `03-Index/canvases/.imports/{slug}-{ts}.{ext}` (scheme whitelist, 5 MB cap, 30 s timeout). The pre-mogging `06-Assets/` folder was killed on 2026-04-16 in favor of Obsidian's default attachment handling — canvas-scoped downloads now sit next to the canvas files themselves.
 - If `<path>` is a local vault-relative path, verify it resolves inside the vault (reject directory traversal) and reference it directly — no copy needed.
 - Read image dimensions; size the node aspect-ratio-aware, capped at 600 × 800. Small images (<200 px side) get upscaled to 300 px minimum so they're readable.
 - Auto-layout: append at `max_x + 40` of the target zone (default: active canvas root).
@@ -91,11 +91,11 @@ If no zone is active, use the canvas root with an implicit bounding box computed
 
 Overflow protection: if a zone fills past 8 rows without an explicit resize, emit a warning and ask the caller whether to auto-expand the zone height or create a sibling zone.
 
-## Central Hub: 04-Index/Map.canvas
+## Central Hub: 03-Index/Map.canvas
 
 `Map.canvas` is the single-entry visual index for the vault. Layout is a Fibonacci spiral using the golden angle `137.5°` so nodes never align into readable rings (visually cleaner, scales without collision up to ~500 nodes).
 
-- Central node: `04-Index/Index.md`, size 400 × 200, positioned at origin.
+- Central node: `03-Index/Index.md`, size 400 × 200, positioned at origin.
 - Radiating nodes: Index files (`*-Index.md` — e.g. `Home-Index`, `Projects-Index`, `Poetry-Index`, `Tech-Index`). The legacy `MOC-*.md` shape was killed in the 2026-04-16 mogging; skills emit `[[*-Index]]` only. Each sits at radius `r = base + step * sqrt(i)` and angle `theta = i * 137.5° (rad)` for node index `i`.
 - Edges: Index → every MOC, undirected style (Obsidian ignores direction visually but stores it).
 - Rebuild is idempotent: running `/canvas map-rebuild` reads the current vault MOC set, diffs against existing Map.canvas nodes, and only adds/removes — existing nodes keep their IDs and computed positions.
@@ -109,15 +109,15 @@ Constants: `base = 260`, `step = 220`. Tuning these should be discussed with the
 - **Reject path traversal.** `../` sequences and absolute paths outside the vault fail validation.
 - **URL downloads** follow the same scheme whitelist and SSRF block list as `/autoresearch`. Images over 5 MB are rejected rather than truncated.
 - **Atomic writes.** Write to `{path}.tmp`, fsync, then rename. A crashed write never leaves a half-valid canvas on disk.
-- **Backups.** Before any `map-rebuild` or bulk operation (>10 node ops), copy the target canvas to `04-Index/canvases/.backups/{name}-{iso-date}.canvas`.
+- **Backups.** Before any `map-rebuild` or bulk operation (>10 node ops), copy the target canvas to `03-Index/canvases/.backups/{name}-{iso-date}.canvas`.
 
 ## Status Report (`/canvas`)
 
 Bare `/canvas` returns a compact report, per canvas file:
 
 ```
-04-Index/Map.canvas          43 nodes (38 file, 3 group, 2 text) · 57 edges · 0 TODOs
-04-Index/canvases/research.canvas  12 nodes (8 file, 4 text) · 6 edges · 2 TODOs
+03-Index/Map.canvas          43 nodes (38 file, 3 group, 2 text) · 57 edges · 0 TODOs
+03-Index/canvases/research.canvas  12 nodes (8 file, 4 text) · 6 edges · 2 TODOs
 ```
 
 "TODOs" = text nodes whose content starts with `TODO:`, `FIXME:`, or `?:`. Useful for spotting stale scratch cards the next time you open the canvas.
@@ -126,7 +126,7 @@ Bare `/canvas` returns a compact report, per canvas file:
 
 - **Ambiguous note match** → emit candidate list, abort. Never pin a guess.
 - **ID collision after 5 suffix attempts** → abort with the existing IDs in the error; this indicates the timestamp source is broken.
-- **Invalid JSON Canvas** → abort, leave the original file untouched, dump the rejected payload to `04-Index/canvases/.rejected/{ts}.json` for debugging.
+- **Invalid JSON Canvas** → abort, leave the original file untouched, dump the rejected payload to `03-Index/canvases/.rejected/{ts}.json` for debugging.
 - **Vault path outside root** → abort with the attempted path in the error.
 - **URL download fails SSRF or size check** → abort that add, continue the rest of a batch if any.
 
@@ -143,6 +143,6 @@ Bare `/canvas` returns a compact report, per canvas file:
 /canvas
 ```
 
-Result: one new canvas at `04-Index/canvases/research-scratch.canvas` with two zones, two pinned notes, two text cards, and a reported 1 TODO in the status line.
+Result: one new canvas at `03-Index/canvases/research-scratch.canvas` with two zones, two pinned notes, two text cards, and a reported 1 TODO in the status line.
 
 The skill stays tight: canvases are cheap, deterministic, and never lie about what's on disk.

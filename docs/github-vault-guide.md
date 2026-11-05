@@ -10,7 +10,7 @@ Your Obsidian vault is your knowledge base. Your GitHub repos are where the actu
 
 ## Lookup order
 
-1. **Obsidian vault first.** Search `01-Projects/`, `02-Library/`, `04-Index/`, etc.
+1. **Obsidian vault first.** Search `01-Projects/`, `02-Library/`, `03-Index/`, etc.
 2. **GitHub repos second.** If the vault doesn't have it, check the corresponding GitHub repo via `gh` CLI.
 
 ## Connecting projects to repos

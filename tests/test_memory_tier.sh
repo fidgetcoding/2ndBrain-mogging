@@ -97,8 +97,8 @@ owner: wiki
 still a record
 EOF
 # The sync's files are never in scope, wherever they sit.
-cp "$HERE/fixtures/tasks/before.md" "$VAULT/05-Tasks/TASKS-SAMPLE.md"
-TASKS_MD5="$(md5_of "$VAULT/05-Tasks/TASKS-SAMPLE.md")"
+cp "$HERE/fixtures/tasks/before.md" "$VAULT/04-Tasks/TASKS-SAMPLE.md"
+TASKS_MD5="$(md5_of "$VAULT/04-Tasks/TASKS-SAMPLE.md")"
 
 state_of() { mem list --state "$2" 2>/dev/null | grep -qxF "02-Library/ideas/$1.md"; }
 expect_state() {
@@ -181,7 +181,7 @@ assert_eq "$(md5_of "$VAULT/02-Library/ideas/human-old.md")" "$HUMAN_MD5" "owner
 assert_eq "$(md5_of "$VAULT/02-Library/ideas/no-owner-old.md")" "$NOOWNER_MD5" "unowned note untouched"
 assert_eq "$(md5_of "$VAULT/02-Library/ideas/fresh.md")" "$FRESH_MD5" "fresh note untouched"
 assert_eq "$(md5_of "$VAULT/02-Library/ideas/foundational.md")" "$FOUNDATIONAL_MD5" "foundational note untouched"
-assert_eq "$(md5_of "$VAULT/05-Tasks/TASKS-SAMPLE.md")" "$TASKS_MD5" "05-Tasks/ untouched"
+assert_eq "$(md5_of "$VAULT/04-Tasks/TASKS-SAMPLE.md")" "$TASKS_MD5" "04-Tasks/ untouched"
 assert_not_contains "$VAULT/02-Library/sources/SRC-old.md" "memory_state" "source note untouched"
 
 BACKUPS="$(find "$VAULT/Claude-Memory/backups" -type f -name '*stale.md.bak' | wc -l | tr -d ' ')"
@@ -217,17 +217,17 @@ assert_eq "$?" "3" "confirm refuses an owner: human note"
 assert_eq "$(md5_of "$VAULT/02-Library/ideas/human-old.md")" "$HUMAN_MD5" "and leaves it alone"
 mem confirm 02-Library/ideas/no-owner-old.md --apply >/dev/null 2>&1
 assert_eq "$?" "3" "confirm refuses a note with no owner"
-mem confirm 05-Tasks/TASKS-SAMPLE.md --apply >/dev/null 2>&1
-assert_eq "$?" "3" "confirm refuses 05-Tasks/"
-mem record 05-Tasks/TASKS-SAMPLE.md --claim x --apply >/dev/null 2>&1
-assert_eq "$?" "3" "record refuses 05-Tasks/"
-mem confirm "02-Library/ideas/../05-Tasks/TASKS-SAMPLE.md" --apply >/dev/null 2>&1
+mem confirm 04-Tasks/TASKS-SAMPLE.md --apply >/dev/null 2>&1
+assert_eq "$?" "3" "confirm refuses 04-Tasks/"
+mem record 04-Tasks/TASKS-SAMPLE.md --claim x --apply >/dev/null 2>&1
+assert_eq "$?" "3" "record refuses 04-Tasks/"
+mem confirm "02-Library/ideas/../04-Tasks/TASKS-SAMPLE.md" --apply >/dev/null 2>&1
 assert_eq "$?" "3" "confirm refuses a path with .. in it"
 mem confirm "$TMPROOT/outside.md" --apply >/dev/null 2>&1
 assert_eq "$?" "3" "confirm refuses a path outside the vault"
 mem confirm 02-Library/ideas/not-there.md --apply >/dev/null 2>&1
 assert_eq "$?" "2" "confirm on a missing note is a usage error"
-assert_eq "$(md5_of "$VAULT/05-Tasks/TASKS-SAMPLE.md")" "$TASKS_MD5" "05-Tasks/ still untouched"
+assert_eq "$(md5_of "$VAULT/04-Tasks/TASKS-SAMPLE.md")" "$TASKS_MD5" "04-Tasks/ still untouched"
 
 # ---------------------------------------------------------------------------
 # promote: held for long enough AND linked from enough notes. Both are required.

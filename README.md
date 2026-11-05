@@ -147,7 +147,7 @@ cd 2ndBrain-mogging
 | `--with-memory` | off | Turn on the memory tier for this vault. See [Memory tier](#memory-tier-opt-in) below. |
 | `--skip-tests` | off | Skip the onboarding test suite at the end. |
 | `--merge-stop` | off | Replace the existing Stop hook instead of jq-merging onto it. |
-| `--no-seed-vault` | off | Skip seeding the 5-folder vault layout from `vault-template/`. By default the installer copies in any of `01-Projects/{example-project-1, example-project-2, example-project-3, INCUBATOR, MISC}/`, `02-Library/{people, tools, ideas, sources}/`, `04-Index/Projects-Index.md`, `05-Tasks/`, `Claude-Memory/`, `CLAUDE.md`, `AGENTS.md` that are missing. Existing files are never overwritten. |
+| `--no-seed-vault` | off | Skip seeding the 5-folder vault layout from `vault-template/`. By default the installer copies in any of `01-Projects/{example-project-1, example-project-2, example-project-3, INCUBATOR, MISC}/`, `02-Library/{people, tools, ideas, sources}/`, `03-Index/Projects-Index.md`, `04-Tasks/`, `Claude-Memory/`, `CLAUDE.md`, `AGENTS.md` that are missing. Existing files are never overwritten. |
 | `--with-intelligence` | off | Install the self-learning tier. See [Self-learning tier](#self-learning-tier-opt-in) below. |
 | `--symlink` | off | With `--with-intelligence`: symlink helpers instead of hardlinking. |
 
@@ -171,9 +171,9 @@ Five skills from [`kepano/obsidian-skills`](https://github.com/kepano/obsidian-s
 
 | Skill | What it does | Why the vault pack needs it |
 |---|---|---|
-| `obsidian-markdown` | Wikilinks, embeds, callouts, properties | Every note in `02-Library/` and `04-Index/` is written in Obsidian Flavored Markdown. Without this an agent emits plain CommonMark and the graph quietly loses edges. |
+| `obsidian-markdown` | Wikilinks, embeds, callouts, properties | Every note in `02-Library/` and `03-Index/` is written in Obsidian Flavored Markdown. Without this an agent emits plain CommonMark and the graph quietly loses edges. |
 | `obsidian-bases` | `.base` files — views, filters, formulas | Base files are code, not prose; guessing the schema corrupts them. |
-| `json-canvas` | `.canvas` files — nodes, edges, groups | `04-Index/Map.canvas` is one. |
+| `json-canvas` | `.canvas` files — nodes, edges, groups | `03-Index/Map.canvas` is one. |
 | `obsidian-cli` | Live vault operations | Needs the **Obsidian 1.12.7+** installer. On older Obsidian it installs but stays inert — that is expected, not a failed install. |
 | `defuddle` | Web page → clean markdown | The capture front door for `/wiki add` and `/save --source`. |
 
@@ -265,12 +265,12 @@ BRAIN/
 │   ├── tools/           #   one note per tool, app, service, model, library
 │   ├── ideas/           #   one idea per note, densely linked. The graph lives here.
 │   └── sources/         #   articles, videos, podcasts, book notes no single project owns
-├── 04-Index/            # Maps of Content — navigation hubs only, never reports
-├── 05-Tasks/            # Obsidian Tasks plugin area files. Optional 2-way Morgen sync via task-maxxing (Notion dropped 2026-05-04).
+├── 03-Index/            # Maps of Content — navigation hubs only, never reports
+├── 04-Tasks/            # Obsidian Tasks plugin area files. Optional 2-way Morgen sync via task-maxxing (Notion dropped 2026-05-04).
 └── Claude-Memory/       # Symlink to ~/.claude/projects/<vault>/memory — aliases.yaml + auto-memory shards
 ```
 
-There's no 03. `02-Sources/` and `03-Concepts/` merged into `02-Library/`, and `04-Index/` and `05-Tasks/` kept their numbers because the task sync is wired to that path. A source that belongs to one project goes in that project's `notes/`, not the Library. A conversation with no single project goes to the catch-all project, `01-Projects/MISC/`.
+The numbers run 01 to 04 with no gaps: `02-Sources/` and `03-Concepts/` merged into `02-Library/`, `04-Index/` became `03-Index/`, and `05-Tasks/` became `04-Tasks/`. A source that belongs to one project goes in that project's `notes/`, not the Library. A conversation with no single project goes to the catch-all project, `01-Projects/MISC/`.
 
 ### `01-Projects/` in detail — example layout
 
@@ -308,7 +308,7 @@ If you're coming from an older second-brain kit, you'll notice these are gone:
 - `01-Fleeting/` → retired. Fleeting notes are just concepts you haven't written down yet. Inline capture plus same-day promotion beats shuffling markdown between folders.
 - `05-Templates/` → retired. Templates belong in the plugin layer, not in your graph. The `2ndbrain-mogging` skills carry them now.
 - `06-Assets/` → retired. Obsidian's attachment defaults handle assets in place; a centralized assets folder exists mostly to make your graph view lie to you about which notes are "connected."
-- `02-Sources/` + `03-Concepts/` → merged into `02-Library/` (people, tools, ideas, sources) on 2026-11-05. Already have them? `bash scripts/migrate-to-library.sh --vault ~/MyVault` shows the move, and `--apply` does it. See [`MIGRATION.md`](MIGRATION.md).
+- `02-Sources/` + `03-Concepts/` → merged into `02-Library/` (people, tools, ideas, sources) on 2026-11-05. The same day `04-Index/` became `03-Index/` and `05-Tasks/` became `04-Tasks/`, so the numbers run with no gaps. Already have the old folders? `bash scripts/migrate-to-library.sh --vault ~/MyVault` shows the move, and `--apply` does it (`git mv` in a git vault, so a tasks submodule follows). If a sync daemon or launchd job points at `05-Tasks/` by path, update it after. See [`MIGRATION.md`](MIGRATION.md).
 
 Deep rationale for each skill is in [`PHILOSOPHY.md`](PHILOSOPHY.md).
 
@@ -328,8 +328,8 @@ The skills are instructions to a model, and a model can forget an instruction. T
 
 Pass `--with-guard` and `hooks/vault-guard.sh` runs them as a Claude Code hook, so a broken edit gets blocked before it lands:
 
-- **Task IDs.** Any Write or Edit under `05-Tasks/` that rewrites, drops, duplicates, swaps or invents a 🆔 is refused. A new task with no 🆔 is fine, because W1 mints it on the next sync.
-- **Scope.** Once `/wiki` or `/autoresearch` runs, Claude Code keeps that skill's hook for the rest of the session. It refuses writes to `05-Tasks/`, project indexes and `owner: human` notes. So after a `/wiki` run, start a new session to edit tasks.
+- **Task IDs.** Any Write or Edit under `04-Tasks/` that rewrites, drops, duplicates, swaps or invents a 🆔 is refused. A new task with no 🆔 is fine, because W1 mints it on the next sync.
+- **Scope.** Once `/wiki` or `/autoresearch` runs, Claude Code keeps that skill's hook for the rest of the session. It refuses writes to `04-Tasks/`, project indexes and `owner: human` notes. So after a `/wiki` run, start a new session to edit tasks.
 
 It's off by default because it can refuse an edit you actually asked for. Removing or moving a task under the guard is a job for you in Obsidian. It covers Claude's Write and Edit tools only, so a shell command in Bash can still change a file.
 
@@ -349,7 +349,7 @@ bin/memory record 02-Library/ideas/x.md --claim "v0.2.0 is out" --replaces "v0.1
 bin/memory when 2026-05-01            # what the vault held as true that day
 ```
 
-It's a date rule and a link count. It doesn't read your notes, so it can't tell you a claim is wrong, only how long it's been since anyone said it was right. It never rewrites `owner: human` notes or anything under `05-Tasks/`, and nothing runs it for you. [`PHILOSOPHY.md`](PHILOSOPHY.md#bi-temporal-facts-the-small-version) has the rules and the list of what it doesn't do.
+It's a date rule and a link count. It doesn't read your notes, so it can't tell you a claim is wrong, only how long it's been since anyone said it was right. It never rewrites `owner: human` notes or anything under `04-Tasks/`, and nothing runs it for you. [`PHILOSOPHY.md`](PHILOSOPHY.md#bi-temporal-facts-the-small-version) has the rules and the list of what it doesn't do.
 
 ---
 
@@ -396,7 +396,7 @@ Run these three in order (they're all quick):
 ```
 /tether        # audit and fix bidirectional project-note links
 /connect       # propose wikilinks between notes that share concepts
-/wiki audit    # write a dated audit report to 04-Index/audit-YYYY-MM-DD.md
+/wiki audit    # write a dated audit report to 03-Index/audit-YYYY-MM-DD.md
 ```
 
 That's it. Your vault is wired.

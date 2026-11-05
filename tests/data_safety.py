@@ -423,7 +423,7 @@ class SafetyTests(unittest.TestCase):
         stop = settings['hooks']['Stop'][0]['hooks'][0]['command']
         self.run_cmd('bash', '-c', stop, ok=0)
         guard = settings['hooks']['PreToolUse'][0]['hooks'][0]['command']
-        target = self.note('05-Tasks/fixture.md', '- [ ] Existing 🆔 m-12345678\n')
+        target = self.note('04-Tasks/fixture.md', '- [ ] Existing 🆔 m-12345678\n')
         self.run_cmd('bash', '-c', guard, input=json.dumps({'tool_name': 'Write',
                      'tool_input': {'file_path': str(target), 'content': '- [ ] Existing\n'}}), ok=2)
         self.run_cmd('bash', checkout / 'uninstall.sh', '--vault', self.vault, ok=0)
@@ -486,7 +486,7 @@ exit 92
     def test_task_edit_refuses_changes_after_preview(self):
         import select
         import time
-        target = self.note('05-Tasks/fixture.md', '- [ ] Original 🆔 m-12345678\n')
+        target = self.note('04-Tasks/fixture.md', '- [ ] Original 🆔 m-12345678\n')
         proposal = self.root / 'proposal.md'
         proposal.write_text('- [ ] Proposed 🆔 m-12345678\n')
         process = subprocess.Popen(['bash', str(REPO / 'bin/save'), 'write-tasks',

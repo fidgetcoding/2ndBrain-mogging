@@ -113,8 +113,8 @@ Options:
   --verbose            Verbose logging (does NOT echo settings.json contents)
   --merge-stop         Replace any existing Stop hook with ours instead of append
   --no-seed-vault      Skip seeding the 5-folder vault layout from vault-template/.
-                       Default is to copy missing folders (01-Projects/, 02-Library/, 04-Index/,
-                       05-Tasks/, Claude-Memory/ placeholder, CLAUDE.md,
+                       Default is to copy missing folders (01-Projects/, 02-Library/, 03-Index/,
+                       04-Tasks/, Claude-Memory/ placeholder, CLAUDE.md,
                        AGENTS.md) into --vault. Existing files are never
                        overwritten — the seed is strictly additive.
   --with-intelligence  Install the self-learning tier (helpers/ + 5 hook types
@@ -462,7 +462,7 @@ seed_vault_from_template() {
   fi
 
   local copied=0 skipped=0
-  # Top-level dirs (01-Projects, 02-Library, 04-Index, 05-Tasks) — copy each if absent.
+  # Top-level dirs (01-Projects, 02-Library, 03-Index, 04-Tasks) — copy each if absent.
   # `cp -R` preserves nested empty dirs and .gitkeep files from the template,
   # which matters because git-clone drops truly-empty dirs but we want the
   # 5-folder layout (and 02-Library's people/tools/ideas/sources) to render
@@ -476,6 +476,14 @@ seed_vault_from_template() {
     local dest="$VAULT/$rel"
     if [[ -e "$dest" || -L "$dest" ]]; then
       vlog "seed skip (exists): $rel"
+      skipped=$((skipped + 1))
+      continue
+    fi
+    # A vault not yet on Library v2 keeps its maps and tasks under the old
+    # numbers. Seeding the new folders beside them would block the rename, so
+    # leave them for scripts/migrate-to-library.sh.
+    if [[ ( "$rel" == "03-Index" && -d "$VAULT/04-Index" ) || ( "$rel" == "04-Tasks" && -d "$VAULT/05-Tasks" ) ]]; then
+      vlog "seed skip (legacy folder present): $rel"
       skipped=$((skipped + 1))
       continue
     fi
@@ -498,13 +506,14 @@ seed_vault_from_template() {
 
   log "seeded $copied top-level entries from vault-template/ ($skipped already present)"
 
-  # Library v2 (2026-11-05) retired 02-Sources/ and 03-Concepts/. The seed is
-  # additive, so an existing vault keeps them until the user migrates. Say so.
+  # Library v2 (2026-11-05) retired 02-Sources/ and 03-Concepts/ and renumbered
+  # 04-Index/ and 05-Tasks/. The seed is additive, so an existing vault keeps
+  # them until the user migrates. Say so.
   local legacy
-  for legacy in 02-Sources 03-Concepts; do
+  for legacy in 02-Sources 03-Concepts 04-Index 05-Tasks; do
     if [[ -d "$VAULT/$legacy" ]]; then
       warn "$legacy/ is a retired folder (Library v2). Skills read it but no longer write there."
-      warn "  move it into 02-Library/ with: bash $REPO_ROOT/scripts/migrate-to-library.sh --vault \"$VAULT\"   (dry run; add --apply)"
+      warn "  migrate it with: bash $REPO_ROOT/scripts/migrate-to-library.sh --vault \"$VAULT\"   (dry run; add --apply)"
     fi
   done
 }
@@ -1182,7 +1191,7 @@ install_intelligence() {
 #     no-op without it, which is also what makes the hook declared in the /wiki
 #     and /autoresearch frontmatter opt-in.
 #   - a PreToolUse entry in settings.json, so the UUID rule runs on every edit
-#     under 05-Tasks/ whichever skill made it, or none.
+#     under 04-Tasks/ whichever skill made it, or none.
 
 install_vault_guard() {
   if [[ "$WITH_GUARD" -ne 1 ]]; then
@@ -1443,11 +1452,11 @@ install_obsidian_mcp() {
 # What lands and why it belongs to the VAULT pack specifically:
 #
 #   obsidian-markdown   wikilinks / embeds / callouts / properties — the format
-#                       every note in 02-Library and 04-Index is
+#                       every note in 02-Library and 03-Index is
 #                       written in. Without it agents emit plain CommonMark and
 #                       the graph silently loses edges.
 #   obsidian-bases      .base files (views, filters, formulas)
-#   json-canvas         .canvas files — 04-Index/Map.canvas is one
+#   json-canvas         .canvas files — 03-Index/Map.canvas is one
 #   obsidian-cli        live vault operations. Requires the Obsidian 1.12.7+
 #                       installer; on older Obsidian it installs but stays
 #                       inert. That is expected, not a broken install.
