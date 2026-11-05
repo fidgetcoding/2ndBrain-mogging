@@ -7,8 +7,8 @@ This doc tells Claude **where to put things** when you run `/import-claude`, `/i
 ## General rules (apply to every skill that writes)
 
 1. **Read every file before categorizing it.** Don't sort by filename alone. Open the content.
-2. **One concept per note in `03-Concepts/`.** If a source covers multiple ideas, split them into separate concept notes and link them.
-3. **Always write in the user's own words.** Factual notes (`02-Sources/`) summarize — never copy-paste long passages.
+2. **One idea per note in `02-Library/ideas/`.** If a source covers multiple ideas, split them into separate concept notes and link them.
+3. **Always write in the user's own words.** Factual notes (`02-Library/sources/`, or a project's `notes/`) summarize — never copy-paste long passages.
 4. **Link everything.** Every note should connect to at least one other note or index.
 5. **Bidirectional links are mandatory.** If A links to B, B must link back to A. `/tether` will fix drift if you forget.
 6. **Never put wikilinks inside tables.** Use bullet lists instead — Obsidian's graph can't see links inside table cells.
@@ -17,9 +17,9 @@ This doc tells Claude **where to put things** when you run `/import-claude`, `/i
 
 ---
 
-## Folder routing (the 7-folder map)
+## Folder routing (the 5-folder map)
 
-This is the post-mogging vault layout. The folders below are the only writable targets — the skills will refuse to write anywhere else without explicit user confirmation.
+This is the post-mogging vault layout. On 2026-11-05 `02-Sources/` and `03-Concepts/` merged into `02-Library/` (Library v2). The 03 slot is intentionally empty; `04-Index/` and `05-Tasks/` keep their numbers. The folders below are the only writable targets — the skills will refuse to write anywhere else without explicit user confirmation.
 
 ### `01-Projects/<PROJECT>/conversations/` (post-2026-05-08; `01-Projects/<PROJECT>/conversations/` was retired) — full-fidelity chat captures
 
@@ -28,34 +28,41 @@ This is the post-mogging vault layout. The folders below are the only writable t
 - Filename: `YYYY-MM-DD-<slug>.md`.
 - Frontmatter: `type: conversation`, `owner: human` — blocks future auto-mutation.
 - A `VAULT/` subtree holds vault-about-vault captures (conversations *about* the system itself).
+- Cross-cutting chats (no single project) go to the catch-all project's `conversations/` — `01-Projects/MISC/conversations/` by default, or whichever project `aliases.yaml` marks as the catch-all. Conversations never go in the Library.
 
-### `02-Sources/` — external inputs, factual-only
+### `02-Library/` — cross-project reference only
 
-- Articles, videos, book notes, podcasts, PDFs, conversation mirrors from `01-Projects/<PROJECT>/conversations/` (post-2026-05-08; `01-Projects/<PROJECT>/conversations/` was retired).
-- Naming: `SRC-<YYYY-MM-DD>-<slug>.md` for external sources, `LIT-<slug>.md` for conversation mirrors (grandfathered).
-- Must include the source URL or reference.
-- **Factual-only.** Interpretation lives in `03-Concepts/`. If you catch yourself writing "I think X means Y," that sentence belongs in a concept note, not here.
-- Typical `owner: wiki` (skills can update) unless it's a conversation LIT-mirror (those are `owner: human`).
+Things that belong to no single project. Four subfolders:
 
-### `03-Concepts/` — refined atomic notes
+- `02-Library/sources/` — external inputs, factual-only. Articles, videos, book notes, podcasts, PDFs that aren't tied to one project. A source tied to one project goes in that project's `notes/` instead (it keeps `type: source`).
+  - Naming: `SRC-<YYYY-MM-DD>-<slug>.md` for external sources, `LIT-<slug>.md` (grandfathered). The old `LIT-conversation-*` mirror pattern is retired: write no new mirrors.
+  - Must include the source URL or reference.
+  - **Factual-only.** Interpretation lives in `02-Library/ideas/`. If you catch yourself writing "I think X means Y," that sentence belongs in a concept note, not here.
+  - Typical `owner: wiki` (skills can update). Legacy conversation LIT-mirrors that moved here keep `owner: human`.
+- `02-Library/ideas/` — refined atomic notes (what `03-Concepts/` held).
+  - One clear idea per note, densely linked.
+  - Written in complete sentences as if explaining to someone else — not headline fragments.
+  - Filename: `brief-concept-name.md`.
+  - Grandfathered `owner: human` notes exist (pre-mogging). **Never auto-edit those.** New concept stubs created by skills get `owner: wiki`.
+  - This folder is the graph. If it's sparse, the graph is sparse.
+- `02-Library/people/` — one note per person. `type: concept`, tag `person`.
+- `02-Library/tools/` — one note per tool, app, service, model, or library. `type: concept`, tag `tool`.
 
-- One clear idea per note, densely linked.
-- Written in complete sentences as if explaining to someone else — not headline fragments.
-- Filename: `brief-concept-name.md`.
-- Grandfathered `owner: human` notes exist (pre-mogging). **Never auto-edit those.** New concept stubs created by skills get `owner: wiki`.
-- This folder is the graph. If it's sparse, the graph is sparse.
+`02-Sources/` and `03-Concepts/` are retired. Skills read them if a legacy vault still has them and never write there. `scripts/migrate-to-library.sh` moves them into `02-Library/sources/` and `02-Library/ideas/`.
 
 ### `04-Index/` — maps of content (navigation hubs)
 
 - Group and link related concepts into a topic map.
 - Filename: `<Topic>-Index.md` (e.g. `Tech-Index.md`, `Poetry-Index.md`).
-- Also lives here: `audit-YYYY-MM-DD.md` output from `/wiki audit`, and `Map.canvas` if you build one.
+- Also lives here: `Map.canvas` if you build one.
+- Maps only. No reports, audits, logs, or dailies: `/wiki audit` output goes to `01-Projects/VAULT/conversations/reports/audit-YYYY-MM-DD.md`.
 - No content lives in `04-Index/` beyond structure + wikilinks — don't dump prose here.
 
 ### `01-Projects/` — active work
 
 - One folder per active project. The folder name matches the index filename exactly (`FOO/FOO.md`, never `FOO/FOO-Index.md`).
-- Subfolders for `content/`, `misc-building/`, `GITHUB/`, etc. are up to each project — use whatever makes sense, as long as the project's top-level index links them.
+- `conversations/` holds the project's saved chats, `notes/` holds everything written for it (including project-specific sources), and `assets/` holds images, PDFs, and media.
+- Other subfolders (`content/`, `misc-building/`, `GITHUB/`, etc.) are up to each project — use whatever makes sense, as long as the project's top-level index links them.
 - `INCUBATOR/` is the staging lane for ideas not yet formal project folders.
 - **Never auto-rewrite a project index file.** Add backlinks via `/tether` proposals; let the human merge.
 
@@ -79,13 +86,16 @@ This is the post-mogging vault layout. The folders below are the only writable t
 | If the incoming note is… | Send it to… | Frontmatter hints |
 |---|---|---|
 | A full chat transcript (Claude / ChatGPT / voice memo) | `01-Projects/<PROJECT>/conversations/<sub>/YYYY-MM-DD-<slug>.md` | `type: conversation`, `owner: human` |
-| A summary of that chat (factual) | `02-Sources/LIT-conversation-<slug>-<date>.md` | `type: source`, `owner: human` |
-| A summary of an article, video, podcast, or paper | `02-Sources/SRC-<YYYY-MM-DD>-<slug>.md` | `type: source`, `source: <url>` |
-| A refined atomic idea in the user's voice | `03-Concepts/<slug>.md` | `type: concept`, `owner: wiki` (new) or `human` (user-written) |
-| Notes tied to a specific active project | `01-Projects/<project>/<subfolder>/<slug>.md` | `type: source` or `concept`, `related: [[<project>]]` |
+| A cross-cutting chat (no single project) | `01-Projects/MISC/conversations/YYYY-MM-DD-<slug>.md` (the catch-all project) | `type: conversation`, `owner: human` |
+| A summary of an article, video, podcast, or paper (cross-project) | `02-Library/sources/SRC-<YYYY-MM-DD>-<slug>.md` | `type: source`, `source: <url>` |
+| A source tied to one project | `01-Projects/<project>/notes/SRC-<YYYY-MM-DD>-<slug>.md` | `type: source`, `related: [[<project>]]` |
+| A refined atomic idea in the user's voice | `02-Library/ideas/<slug>.md` | `type: concept`, `owner: wiki` (new) or `human` (user-written) |
+| A person | `02-Library/people/<name>.md` | `type: concept`, `tags: [person]` |
+| A tool, app, service, model, or library | `02-Library/tools/<name>.md` | `type: concept`, `tags: [tool]` |
+| Notes tied to a specific active project | `01-Projects/<project>/notes/<slug>.md` | `type: source` or `concept`, `related: [[<project>]]` |
 | A new topic grouping that clusters 3+ concepts | `04-Index/<Topic>-Index.md` | `type: index` |
 | A task / todo | **Not auto-written.** User writes it in `05-Tasks/` with Tasks-plugin syntax + UUID. | — |
-| Raw unclear dumps | `02-Sources/` with `tags: [raw, triage]` | flag for human review |
+| Raw unclear dumps | the catch-all project (`01-Projects/MISC/notes/`) with `tags: [raw, triage]` | flag for human review |
 
 ---
 

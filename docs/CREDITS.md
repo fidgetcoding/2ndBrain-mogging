@@ -10,7 +10,7 @@
 - **License:** not formally stated; public gist, treated as reference / fair use. I do not copy verbatim code from the gist into this pack.
 - **What I took:**
   - The compilation-over-retrieval thesis (core rationale in `PHILOSOPHY.md`)
-  - The Sources → Wiki primitive (original Karpathy shape: Inbox → Sources → Wiki; mapped in this pack to `02-Sources/` → `03-Concepts/`, with the Inbox stage retired in the 2026-04-16 mogging — inbox residue is routed through `/save` rather than a persistent folder)
+  - The Sources → Wiki primitive (original Karpathy shape: Inbox → Sources → Wiki; mapped in this pack to `02-Library/sources/` → `02-Library/ideas/` (first `02-Sources/` → `03-Concepts/`, merged into `02-Library/` on 2026-11-05), with the Inbox stage retired in the 2026-04-16 mogging — inbox residue is routed through `/save` rather than a persistent folder)
   - The source-first frontmatter convention (required `url`/`source` on every literature note)
   - The "lose-the-wiki is recoverable from Sources" invariant (enforced in `/wiki` and `/autoresearch`)
   - The thesis quotation used verbatim in `PHILOSOPHY.md` and `docs/foundations/01-karpathy-canonical.md`
@@ -55,7 +55,7 @@
 - **Source:** https://github.com/NicholasSpisak/second-brain
 - **License:** check repository. No code is copied verbatim.
 - **What I took:**
-  - The source-page template for literature entries (mapped in this pack to `02-Sources/`; upstream used `02-Literature/`)
+  - The source-page template for literature entries (mapped in this pack to `02-Library/sources/`; upstream used `02-Literature/`)
   - The discuss-before-write etiquette (reinforces the Jens version)
   - The factual-content-in-Sources-only rule
   - The prefer-update-over-create rule
@@ -76,7 +76,7 @@
 
 - **Source:** `rohitg00/LLM-Wiki-v2` on GitHub (repo since deleted — link dead as of 2026-06-12; attribution preserved).
 - **License:** check repository.
-- **What I took:** the template-per-output-type idea, applied narrowly to source notes in `02-Sources/` (the pack's equivalent of the upstream `02-Literature/` folder). The broader template catalog was not adopted.
+- **What I took:** the template-per-output-type idea, applied narrowly to source notes in `02-Library/sources/` (the pack's equivalent of the upstream `02-Literature/` folder). The broader template catalog was not adopted.
 
 ### huytieu — COG (Chain-of-Going)
 

@@ -10,7 +10,7 @@ Your Obsidian vault is your knowledge base. Your GitHub repos are where the actu
 
 ## Lookup order
 
-1. **Obsidian vault first.** Search `01-Projects/`, `03-Concepts/`, `04-Index/`, etc.
+1. **Obsidian vault first.** Search `01-Projects/`, `02-Library/`, `04-Index/`, etc.
 2. **GitHub repos second.** If the vault doesn't have it, check the corresponding GitHub repo via `gh` CLI.
 
 ## Connecting projects to repos
@@ -56,7 +56,7 @@ Once connected, you can tell Claude things like:
 
 - "Check the `<ORG-D>` repo for the latest README and update my vault."
 - "Pull the spec from the `<ORG-D>` repo into my project notes."
-- "Search my GitHub repos for anything about authentication and put the hits into `03-Concepts/`."
+- "Search my GitHub repos for anything about authentication and put the hits into `02-Library/ideas/`."
 
 Claude uses `gh` to grab what it needs and routes the content through the normal write rules (see [PARSING-GUIDE.md](PARSING-GUIDE.md)) — no special case for GitHub-sourced content.
 

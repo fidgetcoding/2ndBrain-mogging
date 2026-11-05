@@ -39,39 +39,46 @@ The more you save, the more it understands where things go — *as long as the i
 ```
 ~/MyVault/
 ├── 01-Projects/    # one folder per project you actually work on
-├── 02-Sources/     # literature — things NOT tied to a project
-├── 03-Concepts/    # your own ideas, in your words, distilled from sources
+├── 02-Library/     # reference that belongs to no single project
+│   ├── people/     #   one note per person
+│   ├── tools/      #   one note per tool, app, or service
+│   ├── ideas/      #   your own ideas, in your words, distilled from sources
+│   └── sources/    #   literature — things NOT tied to a project
 ├── 04-Index/       # navigation — teaches the brain how to operate itself
 ├── 05-Tasks/       # tasks (optional)
 └── Claude-Memory/  # aliases + memory (leave it alone)
 ```
 
+There's no `03-` folder on purpose. `02-Sources/` and `03-Concepts/` merged into `02-Library/` on 2026-11-05, and `04-Index/` and `05-Tasks/` kept their numbers. If your vault still has the old two folders, `scripts/migrate-to-library.sh` moves them for you (it previews first).
+
 ### `01-Projects/` — your actual work
 
-One folder per project. Each project folder contains a `conversations/` subfolder, and **every saved Claude chat about that project lands there.**
+One folder per project. Each project folder contains a `conversations/` subfolder, and **every saved Claude chat about that project lands there.** Notes written for the project, including sources that only matter to it, go in its `notes/` subfolder.
 
 ```
 01-Projects/
 └── Project-A/
     ├── Project-A.md       ← index note (filename = folder name)
     ├── conversations/     ← every /save'd chat about Project-A
+    ├── notes/             ← notes and sources written for Project-A
     └── research/          ← a subfolder you added
         └── research.md    ← its own index note
 ```
 
-### `02-Sources/` — literature
+### `02-Library/` — reference, not tied to a project
 
-Things that are worth remembering but **not tied to a project**. A cool fact. Something someone told you. A useful process worth keeping.
+Things that are worth remembering but **not tied to a project**. Four shelves:
 
-Example: there's no project for "a friend you talked to." But if someone tells you something interesting about coding, that's a source — it goes in `02-Sources/`.
+- **`sources/` — literature.** A cool fact. Something someone told you. A useful process worth keeping. Example: there's no project for "a friend you talked to." But if someone tells you something interesting about coding, that's a source — it goes in `02-Library/sources/`.
+- **`ideas/` — your ideas.** One idea per note, in your own words, linked to related notes. This is where a source turns into your own understanding: you read something in `02-Library/sources/`, then write the idea that matters as a concept note in `02-Library/ideas/`.
+- **`people/`** — one note per person.
+- **`tools/`** — one note per tool, app, service, model, or library.
 
-### `03-Concepts/` — your ideas
-
-One idea per note, in your own words, linked to related notes. This is where a source turns into your own understanding: you read something in `02-Sources/`, then write the idea that matters as a concept note.
+Saved chats never go here. A chat that isn't about one project goes to your catch-all project's `conversations/` (`01-Projects/MISC/` unless you picked another).
 
 ### `04-Index/` — navigation
 
-This is the layer that **teaches your second brain how to operate itself.** Maps of content, the `Projects-Index`, the graph map. When you add a project, this is where you register it.
+This is the layer that **teaches your second brain how to operate itself.** Maps of content, the `Projects-Index`, the graph map. Maps only: audit reports and logs live under `01-Projects/VAULT/conversations/reports/`, not here. When you add a project, this is where you register it.
 
 ### `05-Tasks/` — tasks (optional)
 
@@ -121,7 +128,7 @@ If your folders and index files are set up so projects "understand each other," 
 
 ## Keeping Claude-Memory lean
 
-One file in `Claude-Memory/` is worth maintaining: **`MEMORY.md`** — a symlink to `~/.claude/projects/<your-vault>/memory/MEMORY.md`. This is **not** a normal note. It's the index Claude **auto-loads at the start of every session**, and each line is a one-line pointer to a deeper topic file in that same `memory/` folder. (Don't confuse it with anything in `02-Sources/` or `03-Concepts/` — this is Claude's own memory index.)
+One file in `Claude-Memory/` is worth maintaining: **`MEMORY.md`** — a symlink to `~/.claude/projects/<your-vault>/memory/MEMORY.md`. This is **not** a normal note. It's the index Claude **auto-loads at the start of every session**, and each line is a one-line pointer to a deeper topic file in that same `memory/` folder. (Don't confuse it with anything in `02-Library/` — this is Claude's own memory index.)
 
 **Keep it under ~18 KB.** The hard ceiling is ~24 KB; 18 is the target so you have headroom.
 

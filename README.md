@@ -27,7 +27,7 @@ More: [ESSENCE.md](ESSENCE.md) · [EVOLUTION.md](EVOLUTION.md)
 | [Install Obsidian (auto)](#install-obsidian-first) | Setup | Auto-installed by the installer; manual download is the fallback | ~1 min |
 | [Install the mogging pack](#install-the-mogging-pack) | Setup | Clone, dry-run, apply | ~2 min |
 | [The 13 skills](#the-13-skills) | Reference | Every slash command in plain English | ~3 min |
-| [Vault structure](#vault-structure) | Reference | The 6-folder layout, with example projects | ~2 min |
+| [Vault structure](#vault-structure) | Reference | The 5-folder layout, with example projects | ~2 min |
 | [Self-learning tier](#self-learning-tier-opt-in) | Optional | Turns the pack into a pattern-graph that gets smarter as you go | ~1 min |
 | [Bring your existing stuff in](#bring-your-existing-stuff-in-optional) | Optional | Import Claude / ChatGPT conversations + Apple Notes / OneNote / Notion / Evernote | ~3 min |
 | [Credits](#credits) | Meta | The 5 originals I mogged | — |
@@ -55,7 +55,7 @@ So: we went from maxxing to absolutely **mogging** everybody.
 
 ## What you get
 
-- **The 6-folder vault-mogging layout** — the contract you install against, pre-wired to the skills below.
+- **The 5-folder vault-mogging layout** — the contract you install against, pre-wired to the skills below.
 - **13 Claude Code skills** (10 core + 2 optional importers + a `/vault-coach` onboarding guide) that read + write against that layout with a shared alias dictionary + dry-run previews.
 - **Four scheduled agents** (morning / nightly / weekly / health) that audit the vault in the background so you don't have to.
 - **An opt-in self-learning tier** from **[FidgetFlo](https://github.com/fidgetcoding/fidgetflo)** (my MIT-licensed fork of [ruvnet's `ruflo@v3.5.80`](https://github.com/ruvnet/ruflo/tree/v3.5.80), made better) — a pattern-graph that makes routing smarter the longer you use the vault.
@@ -147,11 +147,11 @@ cd 2ndBrain-mogging
 | `--with-memory` | off | Turn on the memory tier for this vault. See [Memory tier](#memory-tier-opt-in) below. |
 | `--skip-tests` | off | Skip the onboarding test suite at the end. |
 | `--merge-stop` | off | Replace the existing Stop hook instead of jq-merging onto it. |
-| `--no-seed-vault` | off | Skip seeding the 6-folder vault layout from `vault-template/`. By default the installer copies in any of `01-Projects/<PROJECT>/conversations/`, `02-Sources/`, `03-Concepts/`, `04-Index/Projects-Index.md`, `01-Projects/{example-project-1, example-project-2, example-project-3, INCUBATOR}/`, `05-Tasks/`, `Claude-Memory/`, `CLAUDE.md`, `AGENTS.md` that are missing. Existing files are never overwritten. |
+| `--no-seed-vault` | off | Skip seeding the 5-folder vault layout from `vault-template/`. By default the installer copies in any of `01-Projects/{example-project-1, example-project-2, example-project-3, INCUBATOR, MISC}/`, `02-Library/{people, tools, ideas, sources}/`, `04-Index/Projects-Index.md`, `05-Tasks/`, `Claude-Memory/`, `CLAUDE.md`, `AGENTS.md` that are missing. Existing files are never overwritten. |
 | `--with-intelligence` | off | Install the self-learning tier. See [Self-learning tier](#self-learning-tier-opt-in) below. |
 | `--symlink` | off | With `--with-intelligence`: symlink helpers instead of hardlinking. |
 
-On `--apply`, the installer, in order: validates the vault path, **seeds the 6-folder vault layout from `vault-template/` (any folder/file already in your vault is left untouched)**, backs up `~/.claude/settings.json`, jq-merges the Stop hook (never overwrites), symlinks skills + commands + agents into `~/.claude/`, symlinks `$VAULT/Claude-Memory/` to Claude Code's per-project memory dir, patches the canonical post-mogging contract block into your vault's `CLAUDE.md` (backs up the old one to `$VAULT/Claude-Memory/backups/<timestamp>/` first — idempotent marker block, never duplicates), installs the launchd plists (unless `--no-launchd`), installs the self-learning tier if `--with-intelligence` was passed, **registers the `obsidian-mcp` server with Claude Code pointed at your vault** (unless `--no-obsidian-mcp`), **installs the 5 third-party vault skill packs at a pinned upstream commit** (unless `--no-skill-packs`), **writes `~/.claude/.mogging-vault` so cli-maxxing's statusline can light up the 🧠 Brain² indicator** (unless `--no-statusline-brain`), runs the onboarding tests (unless `--skip-tests`), and finally runs `bin/doctor.sh` to sanity-check the install.
+On `--apply`, the installer, in order: validates the vault path, **seeds the 5-folder vault layout from `vault-template/` (any folder/file already in your vault is left untouched)**, backs up `~/.claude/settings.json`, jq-merges the Stop hook (never overwrites), symlinks skills + commands + agents into `~/.claude/`, symlinks `$VAULT/Claude-Memory/` to Claude Code's per-project memory dir, patches the canonical post-mogging contract block into your vault's `CLAUDE.md` (backs up the old one to `$VAULT/Claude-Memory/backups/<timestamp>/` first — idempotent marker block, never duplicates), installs the launchd plists (unless `--no-launchd`), installs the self-learning tier if `--with-intelligence` was passed, **registers the `obsidian-mcp` server with Claude Code pointed at your vault** (unless `--no-obsidian-mcp`), **installs the 5 third-party vault skill packs at a pinned upstream commit** (unless `--no-skill-packs`), **writes `~/.claude/.mogging-vault` so cli-maxxing's statusline can light up the 🧠 Brain² indicator** (unless `--no-statusline-brain`), runs the onboarding tests (unless `--skip-tests`), and finally runs `bin/doctor.sh` to sanity-check the install.
 
 ### Data preservation and updates
 
@@ -171,13 +171,13 @@ Five skills from [`kepano/obsidian-skills`](https://github.com/kepano/obsidian-s
 
 | Skill | What it does | Why the vault pack needs it |
 |---|---|---|
-| `obsidian-markdown` | Wikilinks, embeds, callouts, properties | Every note in `02-Sources/`, `03-Concepts/`, `04-Index/` is written in Obsidian Flavored Markdown. Without this an agent emits plain CommonMark and the graph quietly loses edges. |
+| `obsidian-markdown` | Wikilinks, embeds, callouts, properties | Every note in `02-Library/` and `04-Index/` is written in Obsidian Flavored Markdown. Without this an agent emits plain CommonMark and the graph quietly loses edges. |
 | `obsidian-bases` | `.base` files — views, filters, formulas | Base files are code, not prose; guessing the schema corrupts them. |
 | `json-canvas` | `.canvas` files — nodes, edges, groups | `04-Index/Map.canvas` is one. |
 | `obsidian-cli` | Live vault operations | Needs the **Obsidian 1.12.7+** installer. On older Obsidian it installs but stays inert — that is expected, not a failed install. |
 | `defuddle` | Web page → clean markdown | The capture front door for `/wiki add` and `/save --source`. |
 
-**Why `defuddle` matters enough to be a default:** `WebFetch` runs a page through a small model and hands back a lossy summary — a 12,500-word source comes back as roughly 20 lines, and the prompt is not honored. That is exactly the failure the `02-Sources/` contract exists to prevent, since a source note is supposed to be the source of truth for what a page actually said. Defuddle strips nav/ads/clutter and returns the full body.
+**Why `defuddle` matters enough to be a default:** `WebFetch` runs a page through a small model and hands back a lossy summary — a 12,500-word source comes back as roughly 20 lines, and the prompt is not honored. That is exactly the failure the `02-Library/sources/` contract exists to prevent, since a source note is supposed to be the source of truth for what a page actually said. Defuddle strips nav/ads/clutter and returns the full body.
 
 The skill shells out to a `defuddle` binary, so the installer also runs `npm install -g defuddle`. If npm is missing or the install fails you get a warning and a manual command, not a hard failure. Existing skill directories are preserved during install. On uninstall, only packs carrying this checkout’s ownership marker are moved into recovery backups; independently installed packs stay in place. The `defuddle` CLI is **left in place** — it is a shared global binary you may use outside the vault, and the uninstaller tells you the command to remove it yourself.
 
@@ -199,7 +199,7 @@ Two pipx tools that read and write **inside** the vault, which is why they live 
 **The Python pin is not optional.** `hyperresearch` declares `requires-python >=3.11,<3.14`. A plain `pipx install` picks whatever interpreter pipx defaults to — currently 3.14 on Homebrew — and pipx **installs it anyway with only a warning**. Nothing breaks at install time; it breaks later at fetch time, where `crawl4ai` is broken on 3.14. The installer therefore hunts for `python3.13` → `python3.12` → `python3.11` and pins to the first one it finds. No interpreter in that range means hyperresearch is skipped with a `brew install python@3.13` pointer rather than installed broken. `graphify` needs no pin (`>=3.10`).
 
 > [!WARNING]
-> **Never run `/graphify` against your vault root.** A mature vault contains embedded git clones and `node_modules`; the crawl balloons into tens of gigabytes. Always scope it to a subtree — `/graphify "$VAULT/03-Concepts"`, `/graphify "$VAULT/02-Sources"`. Keep `graphify-out/` out of git and out of the Obsidian graph. The installer prints this same warning on the way out.
+> **Never run `/graphify` against your vault root.** A mature vault contains embedded git clones and `node_modules`; the crawl balloons into tens of gigabytes. Always scope it to a subtree — `/graphify "$VAULT/02-Library/ideas"`, `/graphify "$VAULT/02-Library/sources"`. Keep `graphify-out/` out of git and out of the Obsidian graph. The installer prints this same warning on the way out.
 
 ### Obsidian MCP
 
@@ -255,17 +255,22 @@ All thirteen are auto-namespaced under the `2ndbrain-mogging` plugin. Both `/sav
 
 ## Vault structure
 
-The post-mogging 6-folder layout. This is what the installer creates (and what every skill is hard-wired to target):
+The post-mogging 5-folder layout ("Library", since 2026-11-05). This is what the installer creates (and what every skill is hard-wired to target):
 
 ```
 BRAIN/
 ├── 01-Projects/         # Active work. One folder per project. /save output now lives in `<PROJECT>/conversations/` (post-2026-05-08 restructure absorbed the old top-level `01-Conversations/`).
-├── 02-Sources/          # External inputs — articles, videos, podcasts, book notes, cross-cutting LIT conversation mirrors
-├── 03-Concepts/         # Atomic concepts — one idea per note, densely linked. The graph lives here.
-├── 04-Index/            # Maps of Content — navigation hubs + audits
+├── 02-Library/          # Cross-project reference only: things that belong to no single project
+│   ├── people/          #   one note per person
+│   ├── tools/           #   one note per tool, app, service, model, library
+│   ├── ideas/           #   one idea per note, densely linked. The graph lives here.
+│   └── sources/         #   articles, videos, podcasts, book notes no single project owns
+├── 04-Index/            # Maps of Content — navigation hubs only, never reports
 ├── 05-Tasks/            # Obsidian Tasks plugin area files. Optional 2-way Morgen sync via task-maxxing (Notion dropped 2026-05-04).
 └── Claude-Memory/       # Symlink to ~/.claude/projects/<vault>/memory — aliases.yaml + auto-memory shards
 ```
+
+There's no 03. `02-Sources/` and `03-Concepts/` merged into `02-Library/`, and `04-Index/` and `05-Tasks/` kept their numbers because the task sync is wired to that path. A source that belongs to one project goes in that project's `notes/`, not the Library. A conversation with no single project goes to the catch-all project, `01-Projects/MISC/`.
 
 ### `01-Projects/` in detail — example layout
 
@@ -275,6 +280,8 @@ Each project gets its own folder. The folder name **equals** the index filename 
 01-Projects/
 ├── example-project-1/
 │   ├── example-project-1.md    ← index note (filename = folder name)
+│   ├── conversations/           ← /save captures about this project
+│   ├── notes/                   ← everything written for it, incl. its own sources
 │   ├── content/                 ← write-ups, specs, decks, session logs
 │   ├── misc-building/           ← experiments, tools, plugins built for this project
 │   └── GITHUB/                  ← cloned repos tied to this project
@@ -286,19 +293,22 @@ Each project gets its own folder. The folder name **equals** the index filename 
 │   ├── example-project-3.md
 │   └── <any subfolders you want>
 │
-└── INCUBATOR/                   ← staging lane for ideas not yet full projects
+├── INCUBATOR/                   ← staging lane for ideas not yet full projects
+│
+└── MISC/                        ← catch-all: conversations that belong to no single project
 ```
 
-The subfolders inside each project are **up to you**. Use whatever makes sense — the skills don't require a specific layout below the project's index note. The `content/` + `misc-building/` + `GITHUB/` pattern is what I use personally; yours might be `research/` + `drafts/` + `deliverables/`. Whatever works.
+The subfolders inside each project are **up to you**. Use whatever makes sense — the skills only write to `conversations/` and `notes/` below the project's index note. The `content/` + `misc-building/` + `GITHUB/` pattern is what I use personally; yours might be `research/` + `drafts/` + `deliverables/`. Whatever works.
 
 ### What the retired folders were
 
 If you're coming from an older second-brain kit, you'll notice these are gone:
 
-- `00-Inbox/` → retired. `/save` and `/wiki add` write directly to `02-Sources/` with a dry-run preview first. The inbox stage was a tax you paid every single capture for the luxury of triaging later, which you never did.
+- `00-Inbox/` → retired. `/save` and `/wiki add` write straight to where a note belongs (`02-Library/` or the project) with a dry-run preview first. The inbox stage was a tax you paid every single capture for the luxury of triaging later, which you never did.
 - `01-Fleeting/` → retired. Fleeting notes are just concepts you haven't written down yet. Inline capture plus same-day promotion beats shuffling markdown between folders.
 - `05-Templates/` → retired. Templates belong in the plugin layer, not in your graph. The `2ndbrain-mogging` skills carry them now.
 - `06-Assets/` → retired. Obsidian's attachment defaults handle assets in place; a centralized assets folder exists mostly to make your graph view lie to you about which notes are "connected."
+- `02-Sources/` + `03-Concepts/` → merged into `02-Library/` (people, tools, ideas, sources) on 2026-11-05. Already have them? `bash scripts/migrate-to-library.sh --vault ~/MyVault` shows the move, and `--apply` does it. See [`MIGRATION.md`](MIGRATION.md).
 
 Deep rationale for each skill is in [`PHILOSOPHY.md`](PHILOSOPHY.md).
 
@@ -334,8 +344,8 @@ export VAULT_DIR=~/MyVault
 bin/memory status                     # what's fresh, stale, decayed. Read-only.
 bin/memory decay                      # dry run. Add --apply to write.
 bin/memory promote                    # dry run. Add --apply to write.
-bin/memory confirm 03-Concepts/x.md --apply
-bin/memory record 03-Concepts/x.md --claim "v0.2.0 is out" --replaces "v0.1.7 is current" --asof 2026-06-20 --apply
+bin/memory confirm 02-Library/ideas/x.md --apply
+bin/memory record 02-Library/ideas/x.md --claim "v0.2.0 is out" --replaces "v0.1.7 is current" --asof 2026-06-20 --apply
 bin/memory when 2026-05-01            # what the vault held as true that day
 ```
 
@@ -357,7 +367,7 @@ If you've been keeping notes somewhere else, you don't have to abandon them. The
    bash scripts/import-claude.sh
    ```
    It unzips the export into `<vault>/.import-staging/<timestamp>-claude/` and prints the next step.
-3. **Inside Claude Code, run `/import-claude`** — scan first, dry-run, then apply. Each conversation becomes a full-fidelity capture in `01-Projects/<PROJECT>/conversations/` (post-2026-05-08; the old top-level `01-Conversations/` was retired), a factual LIT-mirror in `02-Sources/`, and (where ideas repeat) a concept stub in `03-Concepts/`.
+3. **Inside Claude Code, run `/import-claude`** — scan first, dry-run, then apply. Each conversation becomes a full-fidelity capture in `01-Projects/<PROJECT>/conversations/` (post-2026-05-08; the old top-level `01-Conversations/` was retired; a chat with no single project goes to `01-Projects/MISC/conversations/`), and (where ideas repeat) an idea stub in `02-Library/ideas/`.
 
 ### Apple Notes / OneNote / Notion / Evernote / raw files → vault
 
@@ -404,7 +414,7 @@ This pack was extracted from a live operator's personal vault. Real names and pr
 This pack is an amalgamation — not an invention. The best ideas are all borrowed; what I did was test them side-by-side and throw out what didn't earn its keep. In alphabetical order:
 
 - **AgriciDaniel** ([`claude-obsidian`](https://github.com/AgriciDaniel/claude-obsidian)) — the conversation-capture hygiene and the `owner: wiki` vs `owner: human` discipline that makes skills safe to run against live notes.
-- **eugeniu** ([`obsidian-second-brain`](https://github.com/eugeniughelbur/obsidian-second-brain)) — the concept-atomization rules that keep `03-Concepts/` from becoming a dumping ground.
+- **eugeniu** ([`obsidian-second-brain`](https://github.com/eugeniughelbur/obsidian-second-brain)) — the concept-atomization rules that keep `02-Library/ideas/` from becoming a dumping ground.
 - **Jens Heitmann** ([`ai-second-brain-skills`](https://github.com/NulightJens/ai-second-brain-skills)) — the original folder structure I modded to death, and the taste-making starting point.
 - **Karpathy** ([`LLM Wiki` gist](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f)-era second brain) — the wiki-style synthesis pattern that became `/wiki` and `/emerge`.
 - **NicholasSpisak** ([`second-brain`](https://github.com/NicholasSpisak/second-brain)) — the Canvas-scratchpad pattern that became `/canvas`.
