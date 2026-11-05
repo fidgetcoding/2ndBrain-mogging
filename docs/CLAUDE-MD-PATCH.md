@@ -1,8 +1,8 @@
 # CLAUDE.md Patch — 2ndBrain-mogging
 
-This document contains the **canonical text** that `2ndBrain-mogging` appends to a vault's `CLAUDE.md` during install (via `install.sh --apply`) or via `/aliases update-claudemd`. The installer (or the Phase B10 agent in a `/rswarm*` vault refactor) reads this file and writes the exact block below between the marker pair, verbatim, so every vault running the plugin carries the same post-mogging contract.
+This document contains the **canonical text** that `2ndBrain-mogging` appends to a vault's `CLAUDE.md` during install (`install.sh --apply`, which `update.sh` also runs). The installer reads this file and writes the exact block below between the marker pair, verbatim, so every vault running the plugin carries the same post-mogging contract.
 
-This file is the source of truth for the patch. Edit this file first, then re-run the installer or `/aliases update-claudemd` — never hand-edit the markers in a live vault.
+This file is the source of truth for the patch. Edit this file first, then re-run the installer (or `update.sh`) — never hand-edit the markers in a live vault.
 
 ## Contract
 
@@ -108,16 +108,16 @@ Per-type additions are documented in the plugin's `references/wiki-schema.md`.
 | `/import-notes` | One-shot import existing notes (Apple Notes, OneNote, Notion, Evernote, raw `.md` / `.docx` / `.pptx` / `.xlsx` / `.html`); pandoc under the hood, dry-run preview. |
 | `/vault-coach` | Coach the user through setting up + maintaining the vault. Auto-loads post-install and on new-folder/new-project; enforces index-note-per-folder, Projects-Index registration, bidirectional tethering, one-question-at-a-time. Live counterpart to `docs/MAINTAINING-YOUR-BRAIN.md`. |
 
-Local installs use **hardlinks** (preferred) or symlinks — `install.sh --apply` hardlinks by default. Editing either side edits both. If a skill file ever drifts, the mogging repo is the source of truth.
+`install.sh --apply` symlinks each skill, command and agent from the plugin checkout into `~/.claude/` (a hand-made hardlink works the same way), so editing either side edits both. If a skill file ever drifts, the mogging repo is the source of truth.
 
 ### 4 scheduled agents (audit-only by default)
 
 | Agent | When | Writes to | Purpose |
 |---|---|---|---|
-| `morning` | 08:00 local | `01-Projects/VAULT/REPORTS/MORNING-<date>.md` (opt-in) | Review yesterday's transcripts, flag unsaved content. |
-| `nightly` | 22:00 local | `01-Projects/VAULT/REPORTS/NIGHTLY-<date>.md` | `/tether` audit + `/connect` suggestions. |
-| `weekly` | Friday 18:00 | `01-Projects/VAULT/REPORTS/WEEKLY-<date>.md` | `/emerge` pass over `02-Library/`. |
-| `health` | Sunday 21:00 | `01-Projects/VAULT/REPORTS/HEALTH-<date>.md` | Broken wikilinks, orphan files, missing frontmatter. |
+| `morning` | 08:00 local | `01-Projects/VAULT/REPORTS/daily-YYYY-MM-DD.md` + `Claude-Memory/hot.md` | Today's Morgen events plus overdue and due-today tasks. |
+| `nightly` | 22:00 local | `01-Projects/VAULT/REPORTS/audit-YYYY-MM-DD.md` + `Claude-Memory/lint-counter.json` | `/wiki audit` over `02-Library/` and `03-Index/`. |
+| `weekly` | Friday 18:00 | `01-Projects/VAULT/REPORTS/weekly-YYYY-WW.md` | `/emerge --days 7 --audit` week in review, with the 7-day audit trend. |
+| `health` | Sunday 21:00 | `01-Projects/VAULT/REPORTS/health-YYYY-MM-DD.md` | Symlinks, Obsidian plugins, n8n sync freshness, Morgen↔Obsidian task parity. |
 
 Scheduled agents are audit-only by default. Any write-capable scheduled agent requires explicit opt-in via its plist. Every scheduled write carries commit prefix `[bot:<agent>]` so the n8n 2-way sync's loop-prevention skips it. (Notion was dropped from the sync stack on 2026-05-04 — `task-maxxing` is now Obsidian ↔ Morgen only; the W3 worker is a no-op stub.)
 
@@ -197,14 +197,15 @@ The plugin enforces these invariants on every write. Violations abort the write 
 
 ## How the installer applies this
 
-`install.sh --apply` (or the Phase B10 agent in a `/rswarm*` vault refactor):
+`install.sh --apply` (step 9.5, `apply_claude_md_patch`):
 
-1. Reads the source file at `docs/CLAUDE-MD-PATCH.md` in this repo.
-2. Reads the vault's `CLAUDE.md` (at `$VAULT/CLAUDE.md`). If absent, creates it with a single trailing newline, then proceeds.
-3. If the vault's `CLAUDE.md` already contains `<!-- 2ndbrain-mogging:start -->`, replaces everything between the two markers (inclusive) with the new block. If not, appends a single blank line followed by the entire block from this doc.
-4. Does NOT touch any text outside the markers.
-5. Runs `python3 -c "import yaml; yaml.safe_load(open('$VAULT/Claude-Memory/aliases.yaml'))"` to verify the registry is valid after the patch.
-6. Commits the vault as `[bot:mogging-install] apply CLAUDE.md patch` so n8n W1 skips re-ingesting it.
+1. Reads the block between the two markers in `docs/CLAUDE-MD-PATCH.md` in this repo.
+2. Leaves a symlinked `$VAULT/CLAUDE.md` alone (patch it at its source), and stops with exit code 41 if the file's markers are unbalanced.
+3. If the vault has no `CLAUDE.md`, starts one with a short `# CLAUDE.md` header.
+4. Removes any existing block (the `<!-- 2ndbrain-mogging:* -->` pair, or the legacy `<!-- mogging:* -->` pair from v0.1.2 and earlier), then appends a single blank line and the new block. Text outside the markers is kept byte-for-byte.
+5. Writes only when the result differs from the current file, and backs the old file up to `$VAULT/Claude-Memory/backups/<timestamp>/CLAUDE.md.bak` first.
+
+The installer doesn't commit. If the vault is a git repo, commit with a bot prefix (e.g. `[bot:mogging-install] apply CLAUDE.md patch`) so n8n W1 skips re-ingesting it.
 
 Re-running the installer is safe and idempotent — the marker pair guarantees the block is replaced, not duplicated.
 
@@ -215,4 +216,4 @@ When a future release changes plugin semantics:
 1. Edit the fenced code block above. Keep the markers intact and unchanged.
 2. Bump `version` in `Claude-Memory/aliases.yaml` if the registry shape changes.
 3. Add a `CHANGELOG.md` entry noting the patch change and what the marker block now contains.
-4. Re-run `install.sh --apply` (or `/aliases update-claudemd`) in every vault that has the plugin installed — the installer reads this file and rewrites the marker block verbatim.
+4. Re-run `install.sh --apply` (or `update.sh`) in every vault that has the plugin installed — the installer reads this file and rewrites the marker block verbatim.
