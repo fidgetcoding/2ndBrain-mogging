@@ -82,8 +82,8 @@ FLOW:
 
 NOTES ON BEHAVIOR:
     - Nothing is moved, copied, or deleted by this script today.
-    - The /import-notes skill does the actual categorization into 02-Sources/,
-      03-Concepts/, 01-Projects/, etc., and asks before writing.
+    - The /import-notes skill does the actual categorization into 02-Library/,
+      01-Projects/, etc., and asks before writing.
     - --source is recommended but not strictly required for the legacy
       multi-location scan. Passing --kind without --source is a usage error.
 
@@ -216,7 +216,8 @@ echo ""
 # 1. Resolve the vault
 # -----------------------------------------------------------------------------
 is_mogged_vault() {
-    [ -d "$1/02-Sources" ] && [ -d "$1/01-Projects" ] && [ -f "$1/CLAUDE.md" ]
+    # 02-Library/ since Library v2; a not-yet-migrated vault still has 02-Sources/.
+    { [ -d "$1/02-Library" ] || [ -d "$1/02-Sources" ]; } && [ -d "$1/01-Projects" ] && [ -f "$1/CLAUDE.md" ]
 }
 
 VAULT_SOURCE="auto-discovery"
@@ -251,11 +252,11 @@ if [ -z "$VAULT_PATH" ]; then
             if is_mogged_vault "$CANDIDATE"; then
                 VAULT_CANDIDATES+=("$CANDIDATE")
             fi
-        done < <(find "$HOME/Desktop" "$HOME/Documents" -maxdepth 5 -name "02-Sources" -type d 2>/dev/null)
+        done < <(find "$HOME/Desktop" "$HOME/Documents" -maxdepth 5 \( -name "02-Library" -o -name "02-Sources" \) -type d 2>/dev/null)
     fi
 
     if [ "${#VAULT_CANDIDATES[@]}" -eq 0 ]; then
-        fail "Couldn't find a mogged vault (needs 02-Sources/, 01-Projects/, CLAUDE.md). Install 2ndBrain-mogging first, or pass --vault /absolute/path/to/vault."
+        fail "Couldn't find a mogged vault (needs 02-Library/, 01-Projects/, CLAUDE.md). Install 2ndBrain-mogging first, or pass --vault /absolute/path/to/vault."
     elif [ "${#VAULT_CANDIDATES[@]}" -eq 1 ]; then
         VAULT_PATH="${VAULT_CANDIDATES[0]}"
         info "Auto-discovered vault: $VAULT_PATH"
@@ -287,7 +288,7 @@ if [ -z "$VAULT_PATH" ]; then
 fi
 
 if [ -z "$VAULT_PATH" ] || ! is_mogged_vault "$VAULT_PATH"; then
-    fail "Vault path '$VAULT_PATH' is not a mogged vault (missing 02-Sources/, 01-Projects/, or CLAUDE.md)."
+    fail "Vault path '$VAULT_PATH' is not a mogged vault (missing 02-Library/, 01-Projects/, or CLAUDE.md)."
 fi
 
 success "Vault: $VAULT_PATH  (source: $VAULT_SOURCE)"
@@ -411,8 +412,8 @@ echo ""
 echo "  …and point it at the folder holding your exports. The skill will:"
 echo "    - Convert non-markdown files via pandoc / xlsx2csv"
 echo "    - Validate each file (skip empty / corrupt)"
-echo "    - Route factual content into 02-Sources/"
-echo "    - Split atomic ideas into 03-Concepts/"
+echo "    - Route cross-project factual content into 02-Library/sources/"
+echo "    - Split atomic ideas into 02-Library/ideas/"
 echo "    - Tether project-tied material into 01-Projects/<project>/"
 echo "    - Ask you before touching anything (dry-run preview first)"
 echo ""

@@ -160,7 +160,8 @@ echo ""
 #    Priority: --vault flag > VAULT_PATH env > auto-discovery
 # -----------------------------------------------------------------------------
 is_mogged_vault() {
-    [ -d "$1/02-Sources" ] && [ -d "$1/01-Projects" ] && [ -f "$1/CLAUDE.md" ]
+    # 02-Library/ since Library v2; a not-yet-migrated vault still has 02-Sources/.
+    { [ -d "$1/02-Library" ] || [ -d "$1/02-Sources" ]; } && [ -d "$1/01-Projects" ] && [ -f "$1/CLAUDE.md" ]
 }
 
 VAULT_SOURCE="auto-discovery"
@@ -188,7 +189,7 @@ if [ -z "$VAULT_PATH" ]; then
         fi
     done
 
-    # Fallback: scan up to depth 5 in Desktop/Documents for a 02-Sources marker
+    # Fallback: scan up to depth 5 in Desktop/Documents for a 02-Library (or legacy 02-Sources) marker
     if [ "${#VAULT_CANDIDATES[@]}" -eq 0 ]; then
         while IFS= read -r found; do
             [ -n "$found" ] || continue
@@ -196,11 +197,11 @@ if [ -z "$VAULT_PATH" ]; then
             if is_mogged_vault "$CANDIDATE"; then
                 VAULT_CANDIDATES+=("$CANDIDATE")
             fi
-        done < <(find "$HOME/Desktop" "$HOME/Documents" -maxdepth 5 -name "02-Sources" -type d 2>/dev/null)
+        done < <(find "$HOME/Desktop" "$HOME/Documents" -maxdepth 5 \( -name "02-Library" -o -name "02-Sources" \) -type d 2>/dev/null)
     fi
 
     if [ "${#VAULT_CANDIDATES[@]}" -eq 0 ]; then
-        fail "Couldn't find a mogged vault (needs 02-Sources/, 01-Projects/, CLAUDE.md). Install 2ndBrain-mogging first, or pass --vault /absolute/path/to/vault."
+        fail "Couldn't find a mogged vault (needs 02-Library/, 01-Projects/, CLAUDE.md). Install 2ndBrain-mogging first, or pass --vault /absolute/path/to/vault."
     elif [ "${#VAULT_CANDIDATES[@]}" -eq 1 ]; then
         VAULT_PATH="${VAULT_CANDIDATES[0]}"
         info "Auto-discovered vault: $VAULT_PATH"
@@ -232,7 +233,7 @@ if [ -z "$VAULT_PATH" ]; then
 fi
 
 if [ -z "$VAULT_PATH" ] || ! is_mogged_vault "$VAULT_PATH"; then
-    fail "Vault path '$VAULT_PATH' is not a mogged vault (missing 02-Sources/, 01-Projects/, or CLAUDE.md)."
+    fail "Vault path '$VAULT_PATH' is not a mogged vault (missing 02-Library/, 01-Projects/, or CLAUDE.md)."
 fi
 
 success "Vault: $VAULT_PATH  (source: $VAULT_SOURCE)"
@@ -374,8 +375,8 @@ echo ""
 echo "  …and point it at the staging path above. The skill will:"
 echo "    - Sort conversations by their source Claude Project (or topic)"
 echo "    - Route each into 01-Projects/<PROJECT>/conversations/<sub>/ as full-fidelity captures"
-echo "    - Mirror each as a factual LIT-* note in 02-Sources/"
-echo "    - Spawn linked concept stubs in 03-Concepts/ where ideas repeat"
+echo "    - Send cross-cutting chats to the catch-all project (01-Projects/MISC/ by default)"
+echo "    - Spawn linked idea stubs in 02-Library/ideas/ where ideas repeat"
 echo "    - Update 04-Index/ + 01-Projects/<project>/ backlinks"
 echo ""
 echo "  If you prefer manual control, /backfill handles the same payload as a"

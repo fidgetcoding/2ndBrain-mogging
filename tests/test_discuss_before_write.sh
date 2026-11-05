@@ -53,9 +53,9 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# Case 2: user types 'y' -> file is created under 02-Sources/.
+# Case 2: user types 'y' -> file is created under 02-Library/sources/.
 # ---------------------------------------------------------------------------
-TARGET_REL="02-Sources/LIT-confirm-write.md"
+TARGET_REL="02-Library/sources/LIT-confirm-write.md"
 rm -f "${VAULT:?}/${TARGET_REL:?}"
 printf 'y\n' | VAULT_DIR="$VAULT" "$WIKI_CMD" add \
   --title "confirm-write" \
@@ -68,7 +68,7 @@ assert_file "$VAULT/$TARGET_REL" "file created after 'y' response"
 # ---------------------------------------------------------------------------
 # Case 3: --yes flag bypasses prompt (no stdin needed).
 # ---------------------------------------------------------------------------
-TARGET_REL2="02-Sources/LIT-auto-yes.md"
+TARGET_REL2="02-Library/sources/LIT-auto-yes.md"
 rm -f "${VAULT:?}/${TARGET_REL2:?}"
 VAULT_DIR="$VAULT" "$WIKI_CMD" add \
   --title "auto-yes" \
@@ -82,7 +82,7 @@ assert_file "$VAULT/$TARGET_REL2" "file created when --yes is passed"
 YES_OUT="$(VAULT_DIR="$VAULT" "$WIKI_CMD" add \
   --title "auto-yes-2" \
   --body "no prompt" \
-  --target "02-Sources/LIT-auto-yes-2.md" \
+  --target "02-Library/sources/LIT-auto-yes-2.md" \
   --yes </dev/null 2>&1 || true)"
 if echo "$YES_OUT" | grep -qi 'confirm\|proceed?\|(y/n)'; then
   _fail "--yes still emitted a confirmation prompt"
@@ -93,7 +93,7 @@ fi
 # ---------------------------------------------------------------------------
 # Case 4: no answer at all is a no. A closed stdin must not write.
 # ---------------------------------------------------------------------------
-TARGET_REL3="02-Sources/LIT-no-answer.md"
+TARGET_REL3="02-Library/sources/LIT-no-answer.md"
 VAULT_DIR="$VAULT" "$WIKI_CMD" add \
   --title "no-answer" \
   --body "stdin is closed" \
@@ -111,7 +111,7 @@ fi
 PROMPT_OUT="$(printf 'n\n' | VAULT_DIR="$VAULT" "$WIKI_CMD" add \
   --title "preview-me" \
   --body "visible before the prompt" \
-  --target "02-Sources/LIT-preview.md" 2>&1 || true)"
+  --target "02-Library/sources/LIT-preview.md" 2>&1 || true)"
 if printf '%s' "$PROMPT_OUT" | grep -q '(y/n)'; then
   _pass "without --yes it asks"
 else

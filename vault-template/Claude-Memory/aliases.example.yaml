@@ -31,10 +31,13 @@ projects:
   INCUBATOR:
     path: 01-Projects/INCUBATOR
     aliases: ["incubator", "staging", "idea bucket"]
-  # Catch-all: content that matches no other project routes here. Keep one
-  # catch-all entry so /save always has a valid fallback destination.
-  MISC-CLAUDE:
-    path: 01-Projects/MISC-CLAUDE
+  # Catch-all: content that matches no other project routes here, including
+  # cross-cutting conversations (they go to its conversations/, never to
+  # 02-Library/). Skills find it by the "catch-all" alias. Keep exactly one
+  # entry with that alias so /save always has a valid fallback destination;
+  # with none, they fall back to 01-Projects/MISC/.
+  MISC:
+    path: 01-Projects/MISC
     aliases: ["misc", "miscellaneous", "uncategorized", "catch-all"]
 
 # People → canonical name + home project. Populate with `/aliases --edit`.

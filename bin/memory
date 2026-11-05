@@ -104,8 +104,10 @@ PROMOTE_INBOUND="$(conf promote_inbound 3)"
 # ---- reading -----------------------------------------------------------------
 # One row per note with a frontmatter block:
 # path, type, owner, asof, seen, durability, stored state, title.
+# 02-Library/ holds the ideas, people and tools (Library v2). A legacy 03-Concepts/
+# is retired and never written, so it is left out until it has been migrated.
 scan_notes() {
-  ( cd "$vault" && for d in 03-Concepts 04-Index; do
+  ( cd "$vault" && for d in 02-Library 04-Index; do
       [ -d "$d" ] || continue
       find "$d" \( -type d \( -iname node_modules -o -iname .git -o -name graphify-out \) -prune \) -o -type f -name '*.md' -exec awk '
         function val(line, key) {
@@ -254,6 +256,9 @@ case "$cmd" in
   status)
     rows="$(classify)"
     printf 'Memory tier report for %s, as of %s\n' "$vault" "$today"
+    for d in 02-Sources 03-Concepts; do
+      [ -d "$vault/$d" ] && printf 'Note: %s/ is a retired folder and is not scanned. scripts/migrate-to-library.sh moves it into 02-Library/.\n' "$d"
+    done
     printf 'Rules: expiring goes stale at %sd and decays at %sd. Durable is %sx that. Foundational never decays.\n\n' "$STALE_DAYS" "$DECAY_DAYS" "$DURABLE_MULT"
     for s in fresh stale decayed undated; do
       n="$(printf '%s\n' "$rows" | awk -F '\t' -v s="$s" 'NF && $9 == s { c++ } END { print c + 0 }')"

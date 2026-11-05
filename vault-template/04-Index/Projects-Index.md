@@ -18,6 +18,7 @@ The map of active projects in this vault. Every project folder in `01-Projects/`
 ## Staging
 
 - [[INCUBATOR]] — ideas that aren't formal projects yet
+- [[MISC]] — catch-all: conversations that belong to no single project
 
 ## How to add a new project
 

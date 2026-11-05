@@ -58,18 +58,18 @@ cp "$REPO_ROOT/vault-template/Claude-Memory/memory-tier.example.yaml" "$VAULT/Cl
 # Fixtures. Today is 2026-11-01: 60 days back is 09-02, 180 back is 05-05, 540 back
 # is 2025-05-10.
 # ---------------------------------------------------------------------------
-note 03-Concepts/fresh.md            wiki  2026-10-20
-note 03-Concepts/edge-fresh.md       wiki  2026-09-02
-note 03-Concepts/edge-stale.md       wiki  2026-09-01
-note 03-Concepts/stale.md            llm   2026-07-01
-note 03-Concepts/decayed.md          wiki  2026-01-15
-note 03-Concepts/durable-ok.md       wiki  2026-07-01 "durability: durable"
-note 03-Concepts/durable-stale.md    wiki  2026-01-15 "durability: durable"
-note 03-Concepts/foundational.md     wiki  2020-01-01 "durability: foundational"
-note 03-Concepts/human-old.md        human 2026-01-15
-note 03-Concepts/no-owner-old.md     ""    2026-01-15
-note 03-Concepts/seenat-wins.md      wiki  2026-01-15 "seenat: 2026-10-30"
-cat > "$VAULT/03-Concepts/undated.md" <<'EOF'
+note 02-Library/ideas/fresh.md            wiki  2026-10-20
+note 02-Library/ideas/edge-fresh.md       wiki  2026-09-02
+note 02-Library/ideas/edge-stale.md       wiki  2026-09-01
+note 02-Library/ideas/stale.md            llm   2026-07-01
+note 02-Library/ideas/decayed.md          wiki  2026-01-15
+note 02-Library/ideas/durable-ok.md       wiki  2026-07-01 "durability: durable"
+note 02-Library/ideas/durable-stale.md    wiki  2026-01-15 "durability: durable"
+note 02-Library/ideas/foundational.md     wiki  2020-01-01 "durability: foundational"
+note 02-Library/ideas/human-old.md        human 2026-01-15
+note 02-Library/ideas/no-owner-old.md     ""    2026-01-15
+note 02-Library/ideas/seenat-wins.md      wiki  2026-01-15 "seenat: 2026-10-30"
+cat > "$VAULT/02-Library/ideas/undated.md" <<'EOF'
 ---
 title: "undated"
 type: concept
@@ -78,7 +78,7 @@ owner: wiki
 no dates at all
 EOF
 # Records can't go stale, whatever their age.
-cat > "$VAULT/02-Sources/SRC-old.md" <<'EOF'
+cat > "$VAULT/02-Library/sources/SRC-old.md" <<'EOF'
 ---
 title: "old source"
 date: 2020-01-01
@@ -87,7 +87,7 @@ owner: wiki
 ---
 a capture of what an article said
 EOF
-cat > "$VAULT/03-Concepts/a-source-in-the-wrong-place.md" <<'EOF'
+cat > "$VAULT/02-Library/ideas/a-source-in-the-wrong-place.md" <<'EOF'
 ---
 title: "misfiled"
 date: 2020-01-01
@@ -100,7 +100,7 @@ EOF
 cp "$HERE/fixtures/tasks/before.md" "$VAULT/05-Tasks/TASKS-SAMPLE.md"
 TASKS_MD5="$(md5_of "$VAULT/05-Tasks/TASKS-SAMPLE.md")"
 
-state_of() { mem list --state "$2" 2>/dev/null | grep -qxF "03-Concepts/$1.md"; }
+state_of() { mem list --state "$2" 2>/dev/null | grep -qxF "02-Library/ideas/$1.md"; }
 expect_state() {
   if state_of "$1" "$2"; then _pass "$1 is $2"; else _fail "$1 should be $2"; fi
 }
@@ -122,18 +122,18 @@ expect_state undated undated
 if mem list --state decayed | grep -q "a-source-in-the-wrong-place"; then
   _fail "a type: source note must never decay"
 else
-  _pass "a type: source note is out of scope, even in 03-Concepts/"
+  _pass "a type: source note is out of scope, even in 02-Library/ideas/"
 fi
 mem list --state nonsense >/dev/null 2>&1
 assert_eq "$?" "2" "an unknown state is a usage error"
 
 # Across a leap day: 2028-02-28 to 2028-04-28 is 60 days, and 04-29 is 61.
-note 03-Concepts/leap.md wiki 2028-02-28
+note 02-Library/ideas/leap.md wiki 2028-02-28
 VAULT_DIR="$VAULT" "$MEM" list --state fresh --today 2028-04-28 | grep -q "leap.md"
 assert_eq "$?" "0" "60 days across a leap day is still fresh"
 VAULT_DIR="$VAULT" "$MEM" list --state stale --today 2028-04-29 | grep -q "leap.md"
 assert_eq "$?" "0" "61 days across a leap day is stale"
-rm -f "${VAULT:?}/03-Concepts/leap.md"
+rm -f "${VAULT:?}/02-Library/ideas/leap.md"
 
 # ---------------------------------------------------------------------------
 # status is read-only.
@@ -144,7 +144,7 @@ STATUS_OUT="$(mem status)"
 assert_eq "$?" "0" "status exits 0"
 snapshot_dir "$VAULT" > "$SNAP.2"
 if diff -q "$SNAP.1" "$SNAP.2" >/dev/null; then _pass "status changes nothing"; else _fail "status changed the vault"; fi
-if printf '%s' "$STATUS_OUT" | grep -q "03-Concepts/decayed.md: last seen 2026-01-15, 290 days ago"; then
+if printf '%s' "$STATUS_OUT" | grep -q "02-Library/ideas/decayed.md: last seen 2026-01-15, 290 days ago"; then
   _pass "status names the note, the date and the age"
 else
   _fail "status output: $STATUS_OUT"
@@ -157,32 +157,32 @@ DRY="$(mem decay)"
 assert_eq "$?" "0" "decay dry run exits 0"
 snapshot_dir "$VAULT" > "$SNAP.3"
 if diff -q "$SNAP.1" "$SNAP.3" >/dev/null; then _pass "decay without --apply writes nothing"; else _fail "decay dry run wrote"; fi
-if printf '%s' "$DRY" | grep -q "would: 03-Concepts/stale.md"; then _pass "dry run says what it would do"; else _fail "dry run output: $DRY"; fi
-if printf '%s' "$DRY" | grep -q "propose: 03-Concepts/human-old.md"; then _pass "owner: human gets a proposal"; else _fail "no proposal for human note"; fi
-if printf '%s' "$DRY" | grep -q "propose: 03-Concepts/no-owner-old.md"; then _pass "a note with no owner gets a proposal"; else _fail "no proposal for unowned note"; fi
+if printf '%s' "$DRY" | grep -q "would: 02-Library/ideas/stale.md"; then _pass "dry run says what it would do"; else _fail "dry run output: $DRY"; fi
+if printf '%s' "$DRY" | grep -q "propose: 02-Library/ideas/human-old.md"; then _pass "owner: human gets a proposal"; else _fail "no proposal for human note"; fi
+if printf '%s' "$DRY" | grep -q "propose: 02-Library/ideas/no-owner-old.md"; then _pass "a note with no owner gets a proposal"; else _fail "no proposal for unowned note"; fi
 
-BODY_BEFORE="$(body_of "$VAULT/03-Concepts/stale.md")"
-HUMAN_MD5="$(md5_of "$VAULT/03-Concepts/human-old.md")"
-NOOWNER_MD5="$(md5_of "$VAULT/03-Concepts/no-owner-old.md")"
-FRESH_MD5="$(md5_of "$VAULT/03-Concepts/fresh.md")"
-FOUNDATIONAL_MD5="$(md5_of "$VAULT/03-Concepts/foundational.md")"
+BODY_BEFORE="$(body_of "$VAULT/02-Library/ideas/stale.md")"
+HUMAN_MD5="$(md5_of "$VAULT/02-Library/ideas/human-old.md")"
+NOOWNER_MD5="$(md5_of "$VAULT/02-Library/ideas/no-owner-old.md")"
+FRESH_MD5="$(md5_of "$VAULT/02-Library/ideas/fresh.md")"
+FOUNDATIONAL_MD5="$(md5_of "$VAULT/02-Library/ideas/foundational.md")"
 
 mem decay --apply >/dev/null
 assert_eq "$?" "0" "decay --apply exits 0"
 
-assert_contains "$VAULT/03-Concepts/stale.md" "memory_state: stale" "stale note marked"
-assert_contains "$VAULT/03-Concepts/stale.md" "needs_review: true" "stale note flagged for review"
-assert_contains "$VAULT/03-Concepts/decayed.md" "memory_state: decayed" "decayed note marked"
-assert_contains "$VAULT/03-Concepts/durable-stale.md" "memory_state: stale" "durable note past its window marked stale"
-assert_eq "$(body_of "$VAULT/03-Concepts/stale.md")" "$BODY_BEFORE" "the body is byte-for-byte unchanged"
-if fm_of "$VAULT/03-Concepts/stale.md" | grep -q "^owner: llm$"; then _pass "other frontmatter kept"; else _fail "frontmatter damaged"; fi
+assert_contains "$VAULT/02-Library/ideas/stale.md" "memory_state: stale" "stale note marked"
+assert_contains "$VAULT/02-Library/ideas/stale.md" "needs_review: true" "stale note flagged for review"
+assert_contains "$VAULT/02-Library/ideas/decayed.md" "memory_state: decayed" "decayed note marked"
+assert_contains "$VAULT/02-Library/ideas/durable-stale.md" "memory_state: stale" "durable note past its window marked stale"
+assert_eq "$(body_of "$VAULT/02-Library/ideas/stale.md")" "$BODY_BEFORE" "the body is byte-for-byte unchanged"
+if fm_of "$VAULT/02-Library/ideas/stale.md" | grep -q "^owner: llm$"; then _pass "other frontmatter kept"; else _fail "frontmatter damaged"; fi
 
-assert_eq "$(md5_of "$VAULT/03-Concepts/human-old.md")" "$HUMAN_MD5" "owner: human note untouched"
-assert_eq "$(md5_of "$VAULT/03-Concepts/no-owner-old.md")" "$NOOWNER_MD5" "unowned note untouched"
-assert_eq "$(md5_of "$VAULT/03-Concepts/fresh.md")" "$FRESH_MD5" "fresh note untouched"
-assert_eq "$(md5_of "$VAULT/03-Concepts/foundational.md")" "$FOUNDATIONAL_MD5" "foundational note untouched"
+assert_eq "$(md5_of "$VAULT/02-Library/ideas/human-old.md")" "$HUMAN_MD5" "owner: human note untouched"
+assert_eq "$(md5_of "$VAULT/02-Library/ideas/no-owner-old.md")" "$NOOWNER_MD5" "unowned note untouched"
+assert_eq "$(md5_of "$VAULT/02-Library/ideas/fresh.md")" "$FRESH_MD5" "fresh note untouched"
+assert_eq "$(md5_of "$VAULT/02-Library/ideas/foundational.md")" "$FOUNDATIONAL_MD5" "foundational note untouched"
 assert_eq "$(md5_of "$VAULT/05-Tasks/TASKS-SAMPLE.md")" "$TASKS_MD5" "05-Tasks/ untouched"
-assert_not_contains "$VAULT/02-Sources/SRC-old.md" "memory_state" "source note untouched"
+assert_not_contains "$VAULT/02-Library/sources/SRC-old.md" "memory_state" "source note untouched"
 
 BACKUPS="$(find "$VAULT/Claude-Memory/backups" -type f -name '*stale.md.bak' | wc -l | tr -d ' ')"
 if [[ "$BACKUPS" -ge 1 ]]; then _pass "a backup was taken before the rewrite"; else _fail "no backup taken"; fi
@@ -194,69 +194,69 @@ assert_eq "$SECOND" "" "decay is idempotent"
 # ---------------------------------------------------------------------------
 # confirm brings a note back, and decay then clears the mark on its own.
 # ---------------------------------------------------------------------------
-mem confirm 03-Concepts/decayed.md >/dev/null
-assert_contains "$VAULT/03-Concepts/decayed.md" "memory_state: decayed" "confirm without --apply writes nothing"
-mem confirm 03-Concepts/decayed.md --apply >/dev/null
+mem confirm 02-Library/ideas/decayed.md >/dev/null
+assert_contains "$VAULT/02-Library/ideas/decayed.md" "memory_state: decayed" "confirm without --apply writes nothing"
+mem confirm 02-Library/ideas/decayed.md --apply >/dev/null
 assert_eq "$?" "0" "confirm --apply exits 0"
-assert_contains "$VAULT/03-Concepts/decayed.md" "seenat: $TODAY" "confirm stamps seenat"
-assert_contains "$VAULT/03-Concepts/decayed.md" "last_confirmed: $TODAY" "confirm stamps last_confirmed"
-assert_not_contains "$VAULT/03-Concepts/decayed.md" "memory_state" "confirm clears the mark"
+assert_contains "$VAULT/02-Library/ideas/decayed.md" "seenat: $TODAY" "confirm stamps seenat"
+assert_contains "$VAULT/02-Library/ideas/decayed.md" "last_confirmed: $TODAY" "confirm stamps last_confirmed"
+assert_not_contains "$VAULT/02-Library/ideas/decayed.md" "memory_state" "confirm clears the mark"
 expect_state decayed fresh
 
 # A note confirmed by hand, with the mark still on it.
-sed -e "s/^last_confirmed: .*/last_confirmed: $TODAY/" "$VAULT/03-Concepts/stale.md" > "$TMPROOT/s.md"
-cp "$TMPROOT/s.md" "$VAULT/03-Concepts/stale.md"
+sed -e "s/^last_confirmed: .*/last_confirmed: $TODAY/" "$VAULT/02-Library/ideas/stale.md" > "$TMPROOT/s.md"
+cp "$TMPROOT/s.md" "$VAULT/02-Library/ideas/stale.md"
 mem decay --apply >/dev/null
-assert_not_contains "$VAULT/03-Concepts/stale.md" "memory_state" "decay clears the mark once a note is seen again"
+assert_not_contains "$VAULT/02-Library/ideas/stale.md" "memory_state" "decay clears the mark once a note is seen again"
 
 # ---------------------------------------------------------------------------
 # The regimes hold for direct commands too.
 # ---------------------------------------------------------------------------
-mem confirm 03-Concepts/human-old.md --apply >/dev/null 2>&1
+mem confirm 02-Library/ideas/human-old.md --apply >/dev/null 2>&1
 assert_eq "$?" "3" "confirm refuses an owner: human note"
-assert_eq "$(md5_of "$VAULT/03-Concepts/human-old.md")" "$HUMAN_MD5" "and leaves it alone"
-mem confirm 03-Concepts/no-owner-old.md --apply >/dev/null 2>&1
+assert_eq "$(md5_of "$VAULT/02-Library/ideas/human-old.md")" "$HUMAN_MD5" "and leaves it alone"
+mem confirm 02-Library/ideas/no-owner-old.md --apply >/dev/null 2>&1
 assert_eq "$?" "3" "confirm refuses a note with no owner"
 mem confirm 05-Tasks/TASKS-SAMPLE.md --apply >/dev/null 2>&1
 assert_eq "$?" "3" "confirm refuses 05-Tasks/"
 mem record 05-Tasks/TASKS-SAMPLE.md --claim x --apply >/dev/null 2>&1
 assert_eq "$?" "3" "record refuses 05-Tasks/"
-mem confirm "03-Concepts/../05-Tasks/TASKS-SAMPLE.md" --apply >/dev/null 2>&1
+mem confirm "02-Library/ideas/../05-Tasks/TASKS-SAMPLE.md" --apply >/dev/null 2>&1
 assert_eq "$?" "3" "confirm refuses a path with .. in it"
 mem confirm "$TMPROOT/outside.md" --apply >/dev/null 2>&1
 assert_eq "$?" "3" "confirm refuses a path outside the vault"
-mem confirm 03-Concepts/not-there.md --apply >/dev/null 2>&1
+mem confirm 02-Library/ideas/not-there.md --apply >/dev/null 2>&1
 assert_eq "$?" "2" "confirm on a missing note is a usage error"
 assert_eq "$(md5_of "$VAULT/05-Tasks/TASKS-SAMPLE.md")" "$TASKS_MD5" "05-Tasks/ still untouched"
 
 # ---------------------------------------------------------------------------
 # promote: held for long enough AND linked from enough notes. Both are required.
 # ---------------------------------------------------------------------------
-mkdir -p "$VAULT/02-Sources"
-note 03-Concepts/held-up.md        wiki  2026-10-25 "asof: 2026-03-01"
-note 03-Concepts/held-unlinked.md  wiki  2026-10-25 "asof: 2026-03-01"
-note 03-Concepts/new-but-linked.md wiki  2026-10-25 "asof: 2026-10-01"
-note 03-Concepts/human-held.md     human 2026-10-25 "asof: 2026-03-01"
+mkdir -p "$VAULT/02-Library/sources"
+note 02-Library/ideas/held-up.md        wiki  2026-10-25 "asof: 2026-03-01"
+note 02-Library/ideas/held-unlinked.md  wiki  2026-10-25 "asof: 2026-03-01"
+note 02-Library/ideas/new-but-linked.md wiki  2026-10-25 "asof: 2026-10-01"
+note 02-Library/ideas/human-held.md     human 2026-10-25 "asof: 2026-03-01"
 for i in 1 2 3; do
-  printf 'see [[held-up]] and [[Held-Up|again]] and [[new-but-linked#a-heading]] and [[human-held]]\n' > "$VAULT/02-Sources/linker-$i.md"
+  printf 'see [[held-up]] and [[Held-Up|again]] and [[new-but-linked#a-heading]] and [[human-held]]\n' > "$VAULT/02-Library/sources/linker-$i.md"
 done
-printf 'I link to myself: [[held-unlinked]] [[held-unlinked]] [[held-unlinked]]\n' >> "$VAULT/03-Concepts/held-unlinked.md"
+printf 'I link to myself: [[held-unlinked]] [[held-unlinked]] [[held-unlinked]]\n' >> "$VAULT/02-Library/ideas/held-unlinked.md"
 
 PROMO="$(mem promote)"
-if printf '%s' "$PROMO" | grep -q "would: 03-Concepts/held-up.md: durable, held for 238 days with 3 inbound links"; then
+if printf '%s' "$PROMO" | grep -q "would: 02-Library/ideas/held-up.md: durable, held for 238 days with 3 inbound links"; then
   _pass "promote names what qualifies and why"
 else
   _fail "promote output: $PROMO"
 fi
-assert_not_contains "$VAULT/03-Concepts/held-up.md" "durability" "promote without --apply writes nothing"
+assert_not_contains "$VAULT/02-Library/ideas/held-up.md" "durability" "promote without --apply writes nothing"
 if printf '%s' "$PROMO" | grep -q "held-unlinked"; then _fail "self-links must not count as inbound"; else _pass "self-links don't count"; fi
 if printf '%s' "$PROMO" | grep -q "new-but-linked"; then _fail "a young note must not promote"; else _pass "a young note doesn't promote, however linked"; fi
-if printf '%s' "$PROMO" | grep -q "propose: 03-Concepts/human-held.md"; then _pass "owner: human gets a proposal"; else _fail "no proposal for human note"; fi
+if printf '%s' "$PROMO" | grep -q "propose: 02-Library/ideas/human-held.md"; then _pass "owner: human gets a proposal"; else _fail "no proposal for human note"; fi
 
-HUMAN_HELD_MD5="$(md5_of "$VAULT/03-Concepts/human-held.md")"
+HUMAN_HELD_MD5="$(md5_of "$VAULT/02-Library/ideas/human-held.md")"
 mem promote --apply >/dev/null
-assert_contains "$VAULT/03-Concepts/held-up.md" "durability: durable" "promote --apply marks it durable"
-assert_eq "$(md5_of "$VAULT/03-Concepts/human-held.md")" "$HUMAN_HELD_MD5" "owner: human note untouched"
+assert_contains "$VAULT/02-Library/ideas/held-up.md" "durability: durable" "promote --apply marks it durable"
+assert_eq "$(md5_of "$VAULT/02-Library/ideas/human-held.md")" "$HUMAN_HELD_MD5" "owner: human note untouched"
 expect_state held-up fresh
 if mem promote | grep -q "held-up"; then _fail "a durable note promoted twice"; else _pass "promote is idempotent"; fi
 if mem promote | grep -q "foundational"; then _fail "promote must never reach foundational"; else _pass "foundational is only ever set by a human"; fi
@@ -264,8 +264,8 @@ if mem promote | grep -q "foundational"; then _fail "promote must never reach fo
 # ---------------------------------------------------------------------------
 # What was true when.
 # ---------------------------------------------------------------------------
-note 03-Concepts/morgen.md wiki 2026-04-14
-N=03-Concepts/morgen.md
+note 02-Library/ideas/morgen.md wiki 2026-04-14
+N=02-Library/ideas/morgen.md
 
 mem record "$N" --claim 'Morgen MCP is at v0.1.7' --asof 2026-04-14 >/dev/null
 assert_not_contains "$VAULT/$N" "bi-temporal" "record without --apply writes nothing"
@@ -307,15 +307,15 @@ mem when 2026-01-01 --note "$N" > "$TMPROOT/when4"
 assert_contains "$TMPROOT/when4" "Nothing in the vault" "before any claim, it says so"
 
 # A note with no claim list answers with its one date.
-note 03-Concepts/plain.md wiki 2026-10-01 "asof: 2026-02-01"
-mem when 2026-03-01 --note 03-Concepts/plain.md > "$TMPROOT/when5"
+note 02-Library/ideas/plain.md wiki 2026-10-01 "asof: 2026-02-01"
+mem when 2026-03-01 --note 02-Library/ideas/plain.md > "$TMPROOT/when5"
 assert_contains "$TMPROOT/when5" "whole note, as of 2026-02-01" "a plain note answers at the note level"
-mem when 2026-01-15 --note 03-Concepts/plain.md > "$TMPROOT/when6"
+mem when 2026-01-15 --note 02-Library/ideas/plain.md > "$TMPROOT/when6"
 assert_contains "$TMPROOT/when6" "Nothing in the vault" "and not before its date"
 
 # Across the whole vault, reading owner: human notes is fine.
 mem when 2026-05-01 > "$TMPROOT/when7"
-assert_contains "$TMPROOT/when7" "03-Concepts/human-old.md" "when reads human-owned notes"
+assert_contains "$TMPROOT/when7" "02-Library/ideas/human-old.md" "when reads human-owned notes"
 mem when not-a-date >/dev/null 2>&1
 assert_eq "$?" "2" "when rejects a bad date"
 
@@ -350,5 +350,16 @@ assert_eq "$?" "0" "the tier runs on an installed vault"
 printf 'stale_days: 7\n' > "$IVAULT/Claude-Memory/memory-tier.yaml"
 run_install --with-memory
 assert_contains "$IVAULT/Claude-Memory/memory-tier.yaml" "stale_days: 7" "re-install keeps my thresholds"
+
+# A legacy 03-Concepts/ is retired: never scanned or written, and status says so.
+note 03-Concepts/legacy-decayed.md wiki 2026-01-15
+LEGACY_MD5="$(md5_of "$VAULT/03-Concepts/legacy-decayed.md")"
+LEGACY_OUT="$(mem status)"
+if printf '%s' "$LEGACY_OUT" | grep -q "03-Concepts/legacy-decayed.md"; then _fail "status scanned the retired 03-Concepts/"; else _pass "status skips the retired 03-Concepts/"; fi
+if printf '%s' "$LEGACY_OUT" | grep -q "03-Concepts/ is a retired folder"; then _pass "status points at the migration"; else _fail "no retired-folder note: $LEGACY_OUT"; fi
+mem decay --apply >/dev/null 2>&1
+assert_eq "$(md5_of "$VAULT/03-Concepts/legacy-decayed.md")" "$LEGACY_MD5" "decay --apply leaves the retired 03-Concepts/ alone"
+mem confirm 03-Concepts/legacy-decayed.md --apply >/dev/null 2>&1
+assert_eq "$?" "3" "confirm refuses a note in a retired folder"
 
 assert_report

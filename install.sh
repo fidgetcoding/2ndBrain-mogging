@@ -112,8 +112,8 @@ Options:
   --skip-tests         Skip running tests/test_onboarding.sh
   --verbose            Verbose logging (does NOT echo settings.json contents)
   --merge-stop         Replace any existing Stop hook with ours instead of append
-  --no-seed-vault      Skip seeding the 6-folder vault layout from vault-template/.
-                       Default is to copy missing folders (02-Sources/, 03-Concepts/, 04-Index/, 01-Projects/,
+  --no-seed-vault      Skip seeding the 5-folder vault layout from vault-template/.
+                       Default is to copy missing folders (01-Projects/, 02-Library/, 04-Index/,
                        05-Tasks/, Claude-Memory/ placeholder, CLAUDE.md,
                        AGENTS.md) into --vault. Existing files are never
                        overwritten — the seed is strictly additive.
@@ -439,7 +439,7 @@ validate_vault() {
 }
 
 # ---- step 3.5: seed vault from vault-template/ ------------------------------
-# For a freshly-created Obsidian vault (empty folder), copy the 6-folder layout
+# For a freshly-created Obsidian vault (empty folder), copy the 5-folder layout
 # + CLAUDE.md + AGENTS.md + Projects-Index + example projects out of
 # vault-template/ into $VAULT. Strictly additive — existing files/folders are
 # never overwritten. Skipped entirely with --no-seed-vault or if $VAULT is unset
@@ -462,10 +462,11 @@ seed_vault_from_template() {
   fi
 
   local copied=0 skipped=0
-  # Top-level dirs (02-Sources, 03-Concepts, 04-Index, 01-Projects, 05-Tasks) — copy each if absent.
+  # Top-level dirs (01-Projects, 02-Library, 04-Index, 05-Tasks) — copy each if absent.
   # `cp -R` preserves nested empty dirs and .gitkeep files from the template,
   # which matters because git-clone drops truly-empty dirs but we want the
-  # 6-folder layout to render even before any notes land in it.
+  # 5-folder layout (and 02-Library's people/tools/ideas/sources) to render
+  # even before any notes land in it.
   while IFS= read -r -d '' entry; do
     local rel="${entry#"$src"/}"
     # macOS litters vault-template with .DS_Store files during local editing;
@@ -496,6 +497,16 @@ seed_vault_from_template() {
   done < <(find "$src" -mindepth 1 -maxdepth 1 -print0)
 
   log "seeded $copied top-level entries from vault-template/ ($skipped already present)"
+
+  # Library v2 (2026-11-05) retired 02-Sources/ and 03-Concepts/. The seed is
+  # additive, so an existing vault keeps them until the user migrates. Say so.
+  local legacy
+  for legacy in 02-Sources 03-Concepts; do
+    if [[ -d "$VAULT/$legacy" ]]; then
+      warn "$legacy/ is a retired folder (Library v2). Skills read it but no longer write there."
+      warn "  move it into 02-Library/ with: bash $REPO_ROOT/scripts/migrate-to-library.sh --vault \"$VAULT\"   (dry run; add --apply)"
+    fi
+  done
 }
 
 # ---- step 4: backup settings.json -------------------------------------------
@@ -1432,7 +1443,7 @@ install_obsidian_mcp() {
 # What lands and why it belongs to the VAULT pack specifically:
 #
 #   obsidian-markdown   wikilinks / embeds / callouts / properties — the format
-#                       every note in 02-Sources, 03-Concepts and 04-Index is
+#                       every note in 02-Library and 04-Index is
 #                       written in. Without it agents emit plain CommonMark and
 #                       the graph silently loses edges.
 #   obsidian-bases      .base files (views, filters, formulas)
@@ -1444,7 +1455,7 @@ install_obsidian_mcp() {
 #                       door for `/wiki add` and `/save --source`: WebFetch
 #                       runs a page through a small model and returns a lossy
 #                       summary (a 12.5k-word source comes back as ~20 lines),
-#                       which is exactly the failure the 02-Sources contract
+#                       which is exactly the failure the 02-Library/sources contract
 #                       exists to prevent. Needs the npm CLI, installed below.
 #
 # Upstream: kepano/obsidian-skills (MIT) — Obsidian's founder, so these track
@@ -1637,8 +1648,8 @@ install_research_tier() {
   log "  NOTE: never run /graphify against your vault ROOT."
   log "  A real vault contains embedded clones and node_modules; the crawl"
   log "  explodes. Scope every run to a subtree, e.g.:"
-  log "      /graphify \"$VAULT/03-Concepts\""
-  log "      /graphify \"$VAULT/02-Sources\""
+  log "      /graphify \"$VAULT/02-Library/ideas\""
+  log "      /graphify \"$VAULT/02-Library/sources\""
   log "  Keep graphify-out/ out of git and out of the Obsidian graph."
   log ""
 }
@@ -1870,7 +1881,7 @@ run_doctor() {
 #   step 1    preflight                  claude + jq/git/bash + osascript + version gate
 #   step 1.5  ensure_obsidian_app        macOS: brew install --cask obsidian if missing; opt out w/ --no-obsidian-app
 #   step 2/3  validate_vault             --apply requires --vault; auto-creates the directory if missing
-#   step 3.5  seed_vault_from_template   additive copy of 6-folder layout + template files
+#   step 3.5  seed_vault_from_template   additive copy of 5-folder layout + template files
 #   step 4    backup_settings            timestamped ~/.claude/.backups/<ts>/settings.json
 #   step 5    merge_stop_hook            jq-merge Stop hook (append | replace | skip-if-present)
 #   step 6    symlink_dir "skills"       ~/.claude/skills/<name> -> repo/skills/<name>

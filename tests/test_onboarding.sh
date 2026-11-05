@@ -89,10 +89,14 @@ assert_eq "$FIRST_RC" "0" "install.sh exits 0 on first run"
 [[ "${VERBOSE:-0}" == "1" ]] && printf '%s\n' "$FIRST_OUT"
 
 # ---------------------------------------------------------------------------
-# Canonical folders (7).
+# Canonical folders (5, plus 02-Library's four and the catch-all project).
 # ---------------------------------------------------------------------------
-for d in 02-Sources 03-Concepts 04-Index 01-Projects 05-Tasks Claude-Memory; do
+for d in 01-Projects 02-Library 02-Library/people 02-Library/tools 02-Library/ideas 02-Library/sources 04-Index 05-Tasks Claude-Memory 01-Projects/MISC/conversations; do
   assert_dir "$FAKE_VAULT/$d" "canonical folder created: $d"
+done
+# Library v2 retired these; a fresh install must not create them.
+for d in 02-Sources 03-Concepts; do
+  if [[ -e "$FAKE_VAULT/$d" ]]; then _fail "retired folder created: $d"; else _pass "retired folder not created: $d"; fi
 done
 
 # ---------------------------------------------------------------------------
@@ -107,8 +111,8 @@ done
 # ---------------------------------------------------------------------------
 assert_contains "$FAKE_VAULT/CLAUDE.md" "01-Projects" \
   "CLAUDE.md mentions 01-Projects"
-assert_contains "$FAKE_VAULT/CLAUDE.md" "02-Sources" \
-  "CLAUDE.md mentions 02-Sources"
+assert_contains "$FAKE_VAULT/CLAUDE.md" "02-Library" \
+  "CLAUDE.md mentions 02-Library"
 # Routing headers — check the two most load-bearing section markers. Accept
 # either Markdown H2 or H3 level.
 assert_contains "$FAKE_VAULT/CLAUDE.md" "re:^#+[[:space:]]+Routing" \
@@ -250,7 +254,7 @@ assert_eq "$COUNT_USER_STOP2" "1" "user Stop hook still preserved after re-insta
 assert_json_valid "$SETTINGS" "settings.json still valid after re-install"
 
 # Folders still present (didn't get wiped).
-for d in 02-Sources 03-Concepts 04-Index 01-Projects 05-Tasks Claude-Memory; do
+for d in 01-Projects 02-Library 04-Index 05-Tasks Claude-Memory; do
   assert_dir "$FAKE_VAULT/$d" "folder still present after re-install: $d"
 done
 

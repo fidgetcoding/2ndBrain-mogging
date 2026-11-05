@@ -23,48 +23,59 @@ Concretely: if this is the first session in a new vault, **offer to run `/vault-
 
 The deeper human reference is `docs/MAINTAINING-YOUR-BRAIN.md` in the `2ndBrain-mogging` repo. (It ships with the repo, not necessarily inside an installed vault — so point the operator to `/vault-coach`, which carries the same guidance, and cite the repo doc as further reading.)
 
-## Folder structure (7 folders)
+## Folder structure (5 folders)
 
 ```
 Vault/
-├── 01-Projects/<PROJECT>/conversations/       # agent captures (post-2026-05-08)
-│   └── VAULT/              # meta-conversations ABOUT the vault itself
-│       ├── architecture-sessions/
-│       ├── graph-repairs/
-│       ├── mogging-pack-dev/
-│       └── reports/        # daily / audit / weekly / health reports
-├── 02-Sources/             # literature notes from external content
-├── 03-Concepts/            # atomic permanent notes
-├── 04-Index/               # Maps of Content (MOCs) and master Index
 ├── 01-Projects/            # active projects, each with matching index note
+│   ├── <PROJECT>/
+│   │   ├── <PROJECT>.md    # hub note (filename = folder name)
+│   │   ├── conversations/  # agent captures about this project
+│   │   ├── notes/          # everything written for it, incl. its own sources
+│   │   └── assets/         # images, PDFs, media (no code)
+│   ├── MISC/               # catch-all: conversations that belong to no single project
+│   ├── VAULT/              # meta-conversations ABOUT the vault itself
+│   │   └── conversations/reports/   # daily / audit / weekly / health reports
 │   └── INCUBATOR/          # staging lane for pre-project ideas
+├── 02-Library/             # cross-project reference only
+│   ├── people/             # one note per person
+│   ├── tools/              # one note per tool, app, service, model, library
+│   ├── ideas/              # one idea per note
+│   └── sources/            # outside sources not tied to one project
+├── 04-Index/               # maps of content only (MOCs, master Index)
 ├── 05-Tasks/               # Obsidian Tasks plugin files
 └── Claude-Memory/          # symlinked on install; auto-memory + aliases.yaml
 ```
 
+The 03 slot is empty on purpose. `04-Index/` and `05-Tasks/` keep their numbers.
+
 Folder rules:
 
 - `01-Projects/VAULT/conversations/` is reserved for meta-work about the vault. Never put project content there.
-- `02-Sources/` — one note per source. Filename `LIT-<slug>.md` or `SRC-<YYYY-MM-DD>-<slug>.md`. Source URL in frontmatter.
-- `03-Concepts/` — atomic notes. One idea per file. Filename is kebab-case.
-- `04-Index/` — MOCs, master Index, `Projects-Index.md`, `Map.canvas`.
+- `01-Projects/<project>/conversations/` holds that project's captures. A conversation with no single project goes to the catch-all project (`01-Projects/MISC/` unless `aliases.yaml` names another). Conversations never go in `02-Library/`.
+- `01-Projects/<project>/notes/` holds what's written for the project, including sources tied to it (`type: source`).
+- `02-Library/sources/` — one note per outside source no single project owns. Filename `LIT-<slug>.md` or `SRC-<YYYY-MM-DD>-<slug>.md`. Source URL in frontmatter.
+- `02-Library/ideas/` — atomic notes. One idea per file. Filename is kebab-case. `people/` and `tools/` work the same way (`type: concept`, tagged `person` or `tool`).
+- `04-Index/` — maps of content only: MOCs, master Index, `Projects-Index.md`, `Map.canvas`. Never reports, audits, logs or dailies.
 - `01-Projects/` — every project folder must have an index note whose filename matches the folder name exactly. Do not use a `-Index` suffix.
 - `05-Tasks/` — `TASKS.md` is the hub. Per-area files are `TASKS-<AREA>.md`.
 - `Claude-Memory/` — do not write here unless updating `MEMORY.md`.
 
 ### Retired folders — never write to these
 
-The 2026-04-16 mogging collapsed an older layout into the 7 folders above. These directories are gone and must never be re-created or referenced:
+The 2026-04-16 mogging collapsed an older layout into the folders above. On 2026-11-05 `02-Sources/` and `03-Concepts/` merged into `02-Library/` (Library v2). These directories are retired and must never be re-created or written to:
 
 ```
-00-Inbox/      01-Fleeting/   02-Literature/   03-Permanent/
-04-MOC/        05-Templates/  06-Assets/       07-Projects/   08-Tasks/
+00-Inbox/      01-Fleeting/   02-Literature/   02-Sources/    03-Concepts/
+03-Permanent/  04-MOC/        05-Templates/    06-Assets/     07-Projects/   08-Tasks/
 ```
+
+A vault from before Library v2 may still have `02-Sources/` and `03-Concepts/`. Read them if you need to; never write there. `scripts/migrate-to-library.sh` in the `2ndBrain-mogging` repo moves them into `02-Library/sources/` and `02-Library/ideas/`.
 
 ## Four regimes
 
-1. **Capture** — raw inbound content lands in `01-Projects/<PROJECT>/conversations/` (post-2026-05-08; the old top-level `01-Conversations/` was retired) or `02-Sources/`. Minimal processing.
-2. **Connect** — promote captures into `03-Concepts/` as atomic notes. Link to concepts and to at least one MOC.
+1. **Capture** — raw inbound content lands in `01-Projects/<PROJECT>/conversations/` (post-2026-05-08; the old top-level `01-Conversations/` was retired), the project's `notes/`, or `02-Library/sources/` for a source no single project owns. Minimal processing.
+2. **Connect** — promote captures into `02-Library/ideas/` (or `people/`, `tools/`) as atomic notes. Link to other notes and to at least one MOC.
 3. **Curate** — maintain `04-Index/` and project indexes in `01-Projects/`. Bidirectional links mandatory.
 4. **Complete** — drive tasks through `05-Tasks/` and project indexes. Archive completed projects.
 
@@ -80,7 +91,7 @@ The 2026-04-16 mogging collapsed an older layout into the 7 folders above. These
 | `/tether` | Audits and repairs `01-Projects/` tethering rules. Dry-run default, atomic per-project on `--execute`. |
 | `/backfill` | Ingests historical Claude Code session JSONLs into the vault as structured conversation notes. |
 | `/aliases` | Bootstraps and maintains `Claude-Memory/aliases.yaml` — the entity→project disambiguation registry. |
-| `/autoresearch` | Three-round web research loop with source-freshness hardening and factual-only literature notes. |
+| `/autoresearch` | Three-round web research loop with source-freshness hardening and factual-only source notes in `02-Library/sources/`. |
 | `/canvas` | Generates and maintains Obsidian Canvas files. Central `Map.canvas` uses a Fibonacci-spiral layout. |
 | `/import-claude` | One-shot import of a Claude.ai or ChatGPT data-export zip into the vault. |
 | `/import-notes` | One-shot import of exported notes from Apple Notes, OneNote, Notion, Evernote, or raw files. |
@@ -93,7 +104,7 @@ Each skill's full contract lives in `skills/<name>/SKILL.md`. Read it before cal
 Four launchd agents run on a cron schedule. All are audit-only by default. Each agent's full contract lives in `agents/<name>.md`.
 
 1. **morning** — 8:00 AM ET daily. Pulls today's Morgen events + overdue/today tasks, primes `Claude-Memory/hot.md`, writes `01-Projects/VAULT/conversations/reports/daily-YYYY-MM-DD.md`.
-2. **nightly** — 10:00 PM ET daily. Runs `/wiki audit` on `02-Sources`, `03-Concepts`, `04-Index`. Writes `audit-YYYY-MM-DD.md` + updates `Claude-Memory/lint-counter.json`. No writes to concept or source notes.
+2. **nightly** — 10:00 PM ET daily. Runs `/wiki audit` on `02-Library` and `04-Index`. Writes `audit-YYYY-MM-DD.md` + updates `Claude-Memory/lint-counter.json`. No writes to idea or source notes.
 3. **weekly** — 6:00 PM ET Fridays. Runs `/emerge --days 7 --audit` and writes `weekly-YYYY-WW.md` covering new concepts, killed ideas, contradictions, audit trend.
 4. **health** — 9:00 PM ET Sundays. Four-gate integrity check: symlinks, Obsidian plugins, n8n sync freshness, Morgen↔Obsidian task parity. Writes `health-YYYY-MM-DD.md`.
 
@@ -116,10 +127,10 @@ Four launchd agents run on a cron schedule. All are audit-only by default. Each 
 
 | Task type | Read these first |
 |---|---|
-| Capture a URL | `02-Sources/` existing notes (dedupe), this file § Skills (`/wiki add`) |
+| Capture a URL | `02-Library/sources/` and the project's `notes/` (dedupe), this file § Skills (`/wiki add`) |
 | Add a task | `05-Tasks/TASKS.md`, `05-Tasks/TASKS-<AREA>.md`, § 3 non-negotiables |
 | Create a new project | `04-Index/Projects-Index.md`, `01-Projects/INCUBATOR/`, § Folder rules |
-| Promote capture → concept | `03-Concepts/` existing siblings, target MOC in `04-Index/` |
+| Promote capture → idea | `02-Library/ideas/` existing siblings, target MOC in `04-Index/` |
 | Update a MOC | `04-Index/Index.md`, the specific MOC file |
 | Graph repair | `04-Index/Map.canvas`, `04-Index/Index.md`, § 3 non-negotiables |
 | Sync with external tool | `SOUL.md`, `CRITICAL_FACTS.md`, relevant area task file |
@@ -129,7 +140,7 @@ Four launchd agents run on a cron schedule. All are audit-only by default. Each 
 
 1. Always read a file before editing it.
 2. Never save to the vault root except for the six files named above.
-3. Filenames: kebab-case for concepts, `LIT-` / `SRC-` prefix for sources, `TASKS-` prefix for task area files.
+3. Filenames: kebab-case for ideas, people and tools, `LIT-` / `SRC-` prefix for sources, `TASKS-` prefix for task area files.
 4. Frontmatter is required on every note.
 5. Never use a `-Index` suffix on project index files.
 6. Every project must appear in `04-Index/Projects-Index.md`.

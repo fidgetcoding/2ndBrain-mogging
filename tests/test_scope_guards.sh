@@ -3,9 +3,10 @@
 # /wiki refuses to write into 05-Tasks/.
 # - attempt --target 05-Tasks/INJECTED.md -> rc != 0, TASKS files unchanged
 # - no INJECTED.md exists anywhere in the vault
-# - writing into 02-Sources still works (positive control)
+# - writing into 02-Library/sources still works (positive control)
 # Plus the ways around it: traversal, symlinks, case, absolute paths, and the other
-# regimes a skill must not rewrite. Runs bin/wiki and hooks/vault-guard.sh.
+# regimes a skill must not rewrite, including the retired folders (02-Sources/ and
+# 03-Concepts/ since Library v2). Runs bin/wiki and hooks/vault-guard.sh.
 
 set -u
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -61,12 +62,12 @@ else
 fi
 
 # Each of these resolves into 05-Tasks/ or out of the vault. None may land.
-ln -s "$VAULT/05-Tasks" "$VAULT/02-Sources/tasks-link"
-ln -s "$VAULT/05-Tasks/TASKS-SAMPLE.md" "$VAULT/02-Sources/file-link.md"
+ln -s "$VAULT/05-Tasks" "$VAULT/02-Library/sources/tasks-link"
+ln -s "$VAULT/05-Tasks/TASKS-SAMPLE.md" "$VAULT/02-Library/sources/file-link.md"
 for sneaky in \
-  "02-Sources/../05-Tasks/INJECTED.md" \
-  "02-Sources/tasks-link/INJECTED.md" \
-  "02-Sources/file-link.md" \
+  "02-Library/sources/../05-Tasks/INJECTED.md" \
+  "02-Library/sources/tasks-link/INJECTED.md" \
+  "02-Library/sources/file-link.md" \
   "05-tasks/INJECTED.md" \
   "$VAULT/05-Tasks/INJECTED.md" \
   "../INJECTED.md" \
@@ -102,35 +103,69 @@ assert_eq "$(md5_of "$SAMPLE")" "$(md5_of "$HERE/fixtures/tasks/before.md")" "TA
 # ---------------------------------------------------------------------------
 mkdir -p "$VAULT/01-Projects/ACME"
 printf '# ACME\n' > "$VAULT/01-Projects/ACME/ACME.md"
-printf -- '---\ntitle: "Mine"\nowner: human\n---\nmy words\n' > "$VAULT/03-Concepts/mine.md"
-printf -- '---\ntitle: "Compiled"\nowner: wiki\n---\ncompiled\n' > "$VAULT/03-Concepts/compiled.md"
+printf -- '---\ntitle: "Mine"\nowner: human\n---\nmy words\n' > "$VAULT/02-Library/ideas/mine.md"
+printf -- '---\ntitle: "Compiled"\nowner: wiki\n---\ncompiled\n' > "$VAULT/02-Library/ideas/compiled.md"
 
-for refused in 01-Projects/ACME/ACME.md 03-Concepts/mine.md .env .env.local CLAUDE.md .git/config node_modules/x/y.md; do
+for refused in 01-Projects/ACME/ACME.md 02-Library/ideas/mine.md .env .env.local CLAUDE.md .git/config node_modules/x/y.md; do
   VAULT_DIR="$VAULT" "$WIKI_CMD" check --target "$refused" </dev/null >/dev/null 2>&1
   assert_eq "$?" "3" "wiki check refuses $refused"
 done
-for allowed in 01-Projects/ACME/notes.md 03-Concepts/compiled.md 03-Concepts/new.md 04-Index/Tech-Index.md; do
+for allowed in 01-Projects/ACME/notes.md 02-Library/ideas/compiled.md 02-Library/ideas/new.md 04-Index/Tech-Index.md; do
   VAULT_DIR="$VAULT" "$WIKI_CMD" check --target "$allowed" </dev/null >/dev/null 2>&1
   assert_eq "$?" "0" "wiki check allows $allowed"
 done
 
+# Retired folders (Library v2): a legacy vault may still have them, nothing writes there.
+mkdir -p "$VAULT/02-Sources" "$VAULT/03-Concepts"
+for retired in 02-Sources/SRC-2026-11-05-x.md 03-Concepts/x.md 02-sources/x.md 00-Inbox/x.md 02-Literature/x.md 04-MOC/x.md; do
+  VAULT_DIR="$VAULT" "$WIKI_CMD" check --target "$retired" </dev/null >/dev/null 2>&1
+  assert_eq "$?" "3" "wiki check refuses retired $retired"
+done
+RETIRED_OUT="$(VAULT_DIR="$VAULT" "$WIKI_CMD" add --title x --body y --target 03-Concepts/x.md --yes </dev/null 2>&1)"
+assert_eq "$?" "3" "wiki add refuses a retired folder"
+if printf '%s' "$RETIRED_OUT" | grep -q "02-Library/ideas/"; then _pass "the refusal names the new home"; else _fail "retired refusal: $RETIRED_OUT"; fi
+if [[ -e "$VAULT/03-Concepts/x.md" ]]; then _fail "a note landed in 03-Concepts/"; else _pass "nothing landed in 03-Concepts/"; fi
+for allowed in 02-Library/people/ada.md 02-Library/tools/obsidian.md 02-Library/sources/SRC-2026-11-05-x.md 01-Projects/ACME/notes/SRC-2026-11-05-y.md; do
+  VAULT_DIR="$VAULT" "$WIKI_CMD" check --target "$allowed" </dev/null >/dev/null 2>&1
+  assert_eq "$?" "0" "wiki check allows $allowed"
+done
+
+# add with no --target files a source under 02-Library/sources/; people and tools
+# are concepts with their tag.
+VAULT_DIR="$VAULT" "$WIKI_CMD" add --title "Default Home" --body "where does it land" --yes </dev/null >/dev/null 2>&1
+assert_eq "$?" "0" "wiki add with no --target succeeds"
+DEFAULT_HIT="$(find "$VAULT/02-Library/sources" -name 'SRC-*-default-home.md' | head -n 1)"
+if [[ -n "$DEFAULT_HIT" ]]; then
+  _pass "default target is 02-Library/sources/SRC-<date>-<slug>.md"
+  assert_contains "$DEFAULT_HIT" "type: source" "default note is a source"
+else
+  _fail "no default note under 02-Library/sources/"
+fi
+VAULT_DIR="$VAULT" "$WIKI_CMD" add --title "Ada" --body "a person" --target 02-Library/people/ada.md --yes </dev/null >/dev/null 2>&1
+assert_contains "$VAULT/02-Library/people/ada.md" "type: concept" "a person note is a concept"
+assert_contains "$VAULT/02-Library/people/ada.md" "tags: [person]" "a person note is tagged person"
+VAULT_DIR="$VAULT" "$WIKI_CMD" add --title "Obsidian" --body "a tool" --target 02-Library/tools/obsidian.md --yes </dev/null >/dev/null 2>&1
+assert_contains "$VAULT/02-Library/tools/obsidian.md" "tags: [tool]" "a tool note is tagged tool"
+VAULT_DIR="$VAULT" "$WIKI_CMD" add --title "An idea" --body "an idea" --target 02-Library/ideas/an-idea.md --yes </dev/null >/dev/null 2>&1
+assert_contains "$VAULT/02-Library/ideas/an-idea.md" "type: concept" "an idea note is a concept"
+
 # add never overwrites, even in a regime it owns.
-VAULT_DIR="$VAULT" "$WIKI_CMD" add --title x --body y --target 03-Concepts/compiled.md --yes </dev/null >/dev/null 2>&1
+VAULT_DIR="$VAULT" "$WIKI_CMD" add --title x --body y --target 02-Library/ideas/compiled.md --yes </dev/null >/dev/null 2>&1
 assert_eq "$?" "3" "wiki add refuses to overwrite an existing file"
-assert_contains "$VAULT/03-Concepts/compiled.md" "compiled" "existing file left alone"
+assert_contains "$VAULT/02-Library/ideas/compiled.md" "compiled" "existing file left alone"
 
 # The secret deny list applies to anything written through the gate. The fake key
 # is split so the repo's own secret scanners don't flag this test file.
 FAKE_KEY="sk-ant-""abcdefghijklmnopqrstuvwxyz012345"
 VAULT_DIR="$VAULT" "$WIKI_CMD" add --title "leak" --body "key $FAKE_KEY" \
-  --target 02-Sources/leak.md --yes </dev/null >/dev/null 2>&1
+  --target 02-Library/sources/leak.md --yes </dev/null >/dev/null 2>&1
 assert_eq "$?" "3" "wiki add refuses a body holding a secret"
-if [[ -e "$VAULT/02-Sources/leak.md" ]]; then _fail "secret landed on disk"; else _pass "secret did not land on disk"; fi
+if [[ -e "$VAULT/02-Library/sources/leak.md" ]]; then _fail "secret landed on disk"; else _pass "secret did not land on disk"; fi
 
 # ---------------------------------------------------------------------------
-# Positive control: writing to 02-Sources succeeds.
+# Positive control: writing to 02-Library/sources succeeds.
 # ---------------------------------------------------------------------------
-LEGAL_REL="02-Sources/LIT-legal-target.md"
+LEGAL_REL="02-Library/sources/LIT-legal-target.md"
 rm -f "${VAULT:?}/${LEGAL_REL:?}"
 
 VAULT_DIR="$VAULT" "$WIKI_CMD" add \
@@ -140,7 +175,7 @@ VAULT_DIR="$VAULT" "$WIKI_CMD" add \
   --yes </dev/null >/dev/null 2>&1
 RC2=$?
 
-assert_eq "$RC2" "0" "wiki succeeds on legal target (02-Sources)"
+assert_eq "$RC2" "0" "wiki succeeds on legal target (02-Library/sources)"
 assert_file "$VAULT/$LEGAL_REL" "legal-target file actually created"
 assert_contains "$VAULT/$LEGAL_REL" "owner: wiki" "frontmatter carries owner"
 assert_contains "$VAULT/$LEGAL_REL" "last_confirmed:" "frontmatter carries last_confirmed"
@@ -161,16 +196,22 @@ for skill in wiki autoresearch; do
 done
 wjson "$VAULT/05-tasks/INJECTED.md" | "$GUARD" --skill wiki 2>/dev/null
 assert_eq "$?" "2" "hook blocks the lowercase spelling too"
-wjson "$VAULT/02-Sources/tasks-link/INJECTED.md" | "$GUARD" --skill wiki 2>/dev/null
+wjson "$VAULT/02-Library/sources/tasks-link/INJECTED.md" | "$GUARD" --skill wiki 2>/dev/null
 assert_eq "$?" "2" "hook follows a symlinked folder into 05-Tasks/"
-wjson "$VAULT/02-Sources/../05-Tasks/INJECTED.md" | "$GUARD" --skill wiki 2>/dev/null
+wjson "$VAULT/02-Library/sources/../05-Tasks/INJECTED.md" | "$GUARD" --skill wiki 2>/dev/null
 assert_eq "$?" "2" "hook blocks a path with .. in it"
 wjson "$VAULT/01-Projects/ACME/ACME.md" | "$GUARD" --skill wiki 2>/dev/null
 assert_eq "$?" "2" "hook blocks a project index"
-wjson "$VAULT/03-Concepts/mine.md" | "$GUARD" --skill wiki 2>/dev/null
+wjson "$VAULT/02-Library/ideas/mine.md" | "$GUARD" --skill wiki 2>/dev/null
 assert_eq "$?" "2" "hook blocks an owner: human note"
-wjson "$VAULT/03-Concepts/compiled.md" | "$GUARD" --skill wiki 2>/dev/null
+wjson "$VAULT/02-Library/ideas/compiled.md" | "$GUARD" --skill wiki 2>/dev/null
 assert_eq "$?" "0" "hook allows a wiki-owned note"
+for skill in wiki autoresearch; do
+  wjson "$VAULT/02-Sources/SRC-2026-11-05-z.md" | "$GUARD" --skill "$skill" 2>/dev/null
+  assert_eq "$?" "2" "/$skill hook blocks a write into retired 02-Sources/"
+  wjson "$VAULT/03-Concepts/z.md" | "$GUARD" --skill "$skill" 2>/dev/null
+  assert_eq "$?" "2" "/$skill hook blocks a write into retired 03-Concepts/"
+done
 wjson "$TMPROOT/outside.md" | "$GUARD" --skill wiki 2>/dev/null
 assert_eq "$?" "0" "hook ignores a file outside the vault"
 

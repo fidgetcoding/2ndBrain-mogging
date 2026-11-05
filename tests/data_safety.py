@@ -133,40 +133,40 @@ class SafetyTests(unittest.TestCase):
         self.assertTrue(launcher.exists())
 
     def test_backup_keeps_multiple_versions(self):
-        self.note('02-Sources/a.md', 'first')
+        self.note('02-Library/sources/a.md', 'first')
         self.shim('date', 'echo 2026-11-04\n')
-        script = '. bin/lib/vault-gate.sh; gate_backup "$VAULT_DIR" 02-Sources/a.md'
+        script = '. bin/lib/vault-gate.sh; gate_backup "$VAULT_DIR" 02-Library/sources/a.md'
         self.run_cmd('bash', '-c', script, ok=0)
-        self.note('02-Sources/a.md', 'second')
+        self.note('02-Library/sources/a.md', 'second')
         self.run_cmd('bash', '-c', script, ok=0)
         contents = sorted(p.read_text() for p in (self.vault / 'Claude-Memory/backups').rglob('*') if p.is_file())
         self.assertEqual(contents, ['first', 'second'])
 
     def test_wiki_serializes_source_metadata(self):
         self.run_cmd('bash', REPO / 'bin/wiki', 'add', '--title', 'test', '--body', 'body',
-                     '--source-of-truth', 'a"\nowner: human\n#', '--target', '02-Sources/test.md', '--yes', ok=0)
-        content = (self.vault / '02-Sources/test.md').read_text()
+                     '--source-of-truth', 'a"\nowner: human\n#', '--target', '02-Library/sources/test.md', '--yes', ok=0)
+        content = (self.vault / '02-Library/sources/test.md').read_text()
         self.assertNotIn('\nowner: human\n', content)
         self.assertIn('owner: wiki', content)
 
     def test_wiki_write_failure_is_nonzero(self):
-        self.note('02-Sources', 'not a directory')
+        self.note('02-Library/sources', 'not a directory')
         result = self.run_cmd('bash', REPO / 'bin/wiki', 'add', '--title', 'test',
-                              '--body', 'body', '--target', '02-Sources/test.md', '--yes')
+                              '--body', 'body', '--target', '02-Library/sources/test.md', '--yes')
         self.assertNotEqual(result.returncode, 0)
         self.assertNotIn('Wrote ', result.stdout)
 
     def test_memory_skips_forbidden_subtrees(self):
         self.note('Claude-Memory/memory-tier.yaml', 'stale_days: 60\n')
         body = '---\ntype: concept\nowner: wiki\nasof: 2020-01-01\n---\nbody\n'
-        path = self.note('03-Concepts/node_modules/package/note.md', body)
+        path = self.note('02-Library/ideas/node_modules/package/note.md', body)
         self.run_cmd('bash', REPO / 'bin/memory', 'decay', '--today', '2026-11-04', '--apply', ok=0)
         self.assertEqual(path.read_text(), body)
 
     def test_memory_confirm_preserves_body_bytes_and_clears_review(self):
         self.note('Claude-Memory/memory-tier.yaml', 'stale_days: 60\n')
-        path = self.note('03-Concepts/note.md', '---\ntype: concept\nowner: wiki\nneeds_review: true\nmemory_state: stale\n---\nbody without final newline')
-        self.run_cmd('bash', REPO / 'bin/memory', 'confirm', '03-Concepts/note.md', '--apply', ok=0)
+        path = self.note('02-Library/ideas/note.md', '---\ntype: concept\nowner: wiki\nneeds_review: true\nmemory_state: stale\n---\nbody without final newline')
+        self.run_cmd('bash', REPO / 'bin/memory', 'confirm', '02-Library/ideas/note.md', '--apply', ok=0)
         content = path.read_bytes()
         self.assertTrue(content.endswith(b'---\nbody without final newline'))
         self.assertNotIn(b'needs_review: true', content)
@@ -224,7 +224,7 @@ class SafetyTests(unittest.TestCase):
 
     def test_memory_promotion_ignores_backup_and_dependency_links(self):
         self.note('Claude-Memory/memory-tier.yaml', 'promote_inbound: 3\n')
-        note = self.note('03-Concepts/target.md', '---\ntype: concept\nowner: wiki\nasof: 2020-01-01\nseenat: 2026-11-01\n---\nbody')
+        note = self.note('02-Library/ideas/target.md', '---\ntype: concept\nowner: wiki\nasof: 2020-01-01\nseenat: 2026-11-01\n---\nbody')
         for rel in ('01-Projects/a/node_modules/dep/a.md', 'Claude-Memory/backups/b.md', 'nested/.git/c.md'):
             self.note(rel, '[[target]]')
         self.run_cmd('bash', REPO / 'bin/memory', 'promote', '--today', '2026-11-04', '--apply', ok=0)

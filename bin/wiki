@@ -7,7 +7,7 @@
 #   wiki add --title T (--body B | --body-file F) [--target PATH] [--source-of-truth S]
 #            [--yes] [--vault PATH]
 #       Previews the note, asks, and writes a new file. --target defaults to
-#       02-Sources/SRC-<today>-<slug>.md. Never overwrites an existing file.
+#       02-Library/sources/SRC-<today>-<slug>.md. Never overwrites an existing file.
 set -u
 
 SELF="$0"
@@ -67,7 +67,7 @@ case "$cmd" in
     today="$(date +%Y-%m-%d)"
     if [ -z "$target" ]; then
       slug="$(printf '%s' "$title" | tr '[:upper:]' '[:lower:]' | LC_ALL=C sed -E 's/[^a-z0-9]+/-/g; s/^-+//; s/-+$//')"
-      target="02-Sources/SRC-$today-${slug:-note}.md"
+      target="02-Library/sources/SRC-$today-${slug:-note}.md"
     fi
     verdict="$(gate_check_path wiki "$target" "$vault")" || { echo "$verdict" >&2; exit 3; }
     rel="${verdict#* }"
@@ -81,9 +81,12 @@ $body"; then
       echo "refused: the note matches the secret deny list in config/secrets.patterns." >&2
       exit 3
     fi
-    case "$rel" in
-      03-[Cc]oncepts/*) type=concept ;;
-      04-[Ii]ndex/*) type=index ;;
+    tags="[]"
+    case "$(gate_lower "$rel")" in
+      02-library/ideas/*) type=concept ;;
+      02-library/people/*) type=concept; tags="[person]" ;;
+      02-library/tools/*) type=concept; tags="[tool]" ;;
+      04-index/*) type=index ;;
       *) type=source ;;
     esac
     esc_title="$(printf '%s' "$title" | jq -Rs .)"
@@ -96,7 +99,7 @@ last_confirmed: $today"
     [ -n "$sot" ] && note="$note
 source_of_truth: $(printf '%s' "$sot" | jq -Rs .)"
     note="$note
-tags: []
+tags: $tags
 ---
 
 $body

@@ -132,9 +132,9 @@ BACKUPS="$(find "$VAULT/Claude-Memory/backups" -type f -name '*TASKS-SAMPLE.md.b
 assert_eq "$BACKUPS" "1" "a backup was taken before overwriting"
 
 # write-tasks is only for tasks.
-VAULT_DIR="$VAULT" "$SAVE_CMD" write-tasks --target 02-Sources/not-tasks.md --from "$FIX/before.md" --yes >/dev/null 2>&1
+VAULT_DIR="$VAULT" "$SAVE_CMD" write-tasks --target 02-Library/sources/not-tasks.md --from "$FIX/before.md" --yes >/dev/null 2>&1
 assert_eq "$?" "3" "write-tasks refuses a path outside 05-Tasks/"
-if [[ -e "$VAULT/02-Sources/not-tasks.md" ]]; then _fail "file written outside 05-Tasks/"; else _pass "nothing written outside 05-Tasks/"; fi
+if [[ -e "$VAULT/02-Library/sources/not-tasks.md" ]]; then _fail "file written outside 05-Tasks/"; else _pass "nothing written outside 05-Tasks/"; fi
 
 # ---------------------------------------------------------------------------
 # The hook, with the same JSON Claude Code feeds it on stdin.
@@ -193,14 +193,14 @@ jq -n --arg f "$TASKS_FILE" --arg i "🆔 $UUID2" '{tool_name:"MultiEdit",tool_i
 assert_eq "$?" "2" "hook blocks a MultiEdit that rewrites an ID in a later edit"
 
 # Outside 05-Tasks/ the UUID rule has nothing to say, and neither does the hook.
-write_json "$VAULT/02-Sources/note.md" "$FIX/after-rewritten.md" | hook
+write_json "$VAULT/02-Library/sources/note.md" "$FIX/after-rewritten.md" | hook
 assert_eq "$?" "0" "hook ignores files outside 05-Tasks/"
 write_json "/somewhere/else/entirely.md" "$FIX/after-rewritten.md" | hook
 assert_eq "$?" "0" "hook ignores files outside the vault"
 
 # Symlinks can't dodge it.
-ln -s "$TASKS_FILE" "$VAULT/02-Sources/alias-to-tasks.md"
-write_json "$VAULT/02-Sources/alias-to-tasks.md" "$FIX/after-rewritten.md" | hook
+ln -s "$TASKS_FILE" "$VAULT/02-Library/sources/alias-to-tasks.md"
+write_json "$VAULT/02-Library/sources/alias-to-tasks.md" "$FIX/after-rewritten.md" | hook
 assert_eq "$?" "2" "hook follows a symlink into 05-Tasks/"
 
 # A hook that can't read its input must not block the session.

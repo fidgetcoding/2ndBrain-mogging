@@ -73,7 +73,8 @@ gate_frontmatter() {
 }
 
 # Which of the regimes from PHILOSOPHY.md a vault-relative path falls under, plus
-# FORBIDDEN for the paths no skill may write. Folder names compare lowercased
+# FORBIDDEN for the paths no skill may write and RETIRED for the killed folders
+# (02-Sources/ and 03-Concepts/ among them since Library v2). Folder names compare lowercased
 # because macOS volumes are usually case-insensitive: 05-tasks/x.md IS 05-Tasks.
 gate_regime() {
   local vault="$1" rel="$2" lower base stem dir
@@ -83,6 +84,12 @@ gate_regime() {
   case "$base" in .env|.env.*) echo FORBIDDEN; return ;; esac
   [ "$lower" = "claude.md" ] && { echo FORBIDDEN; return; }
   case "$lower" in 05-tasks|05-tasks/*) echo SYNC; return ;; esac
+  # Retired folders: a legacy vault may still have them, and skills may read
+  # them, but nothing new lands there. scripts/migrate-to-library.sh moves them.
+  case "$lower" in
+    00-inbox/*|00-captures/*|01-fleeting/*|01-conversations/*|02-literature/*|02-sources/*|03-concepts/*|03-permanent/*|04-moc/*|05-templates/*|06-assets/*|07-projects/*|08-tasks/*)
+      echo RETIRED; return ;;
+  esac
   if [ "$(gate_frontmatter "$vault/$rel" owner)" = "human" ]; then
     echo HUMAN
     return
@@ -109,6 +116,10 @@ gate_skill_allows() {
     SYNC)
       [ "$skill" = "save" ] && return 0
       echo "refused: $rel is under 05-Tasks/, which the Obsidian Tasks plugin and the n8n sync own. /$skill may read it and never writes it."
+      return 3
+      ;;
+    RETIRED)
+      echo "refused: $rel is in a retired folder. Sources go to 02-Library/sources/ (or the project's notes/), ideas to 02-Library/ideas/. scripts/migrate-to-library.sh moves a legacy 02-Sources/ and 03-Concepts/."
       return 3
       ;;
     HUMAN)
