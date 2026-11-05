@@ -114,9 +114,9 @@ orgs:
   org_<ORG-A>:
     canonical: <ORG-A>
     aliases: ["<ORG-A>", "<ORG-A>", "<ORG-A>", "<ORG-A> HQ"]
-  org_acme_studio:
+  org_example_foundation:
     canonical: <ORG-E>
-    aliases: ["Acme", "Acme Studio", "acme net", "AcmeNet"]
+    aliases: ["Example", "Example Foundation", "example net", "ExampleNet"]
   org_morgen:
     canonical: MORGEN-MCP
     aliases: ["Morgen", "morgen.so", "Morgen Labs"]
@@ -124,8 +124,8 @@ orgs:
 # Alternate spellings that don't belong to a specific entity but need
 # to be normalized before matching (e.g. autocorrect drift, typos).
 aliases:
-  "the operator": user_nathan
-  "operator@example.com": user_nathan
+  "the operator": user_operator
+  "operator@example.com": user_operator
 ```
 
 ## <PERSON-C> vs <PERSON-B> — canonical disambiguation

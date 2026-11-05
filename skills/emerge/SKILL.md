@@ -12,7 +12,7 @@ The vault gets denser every day. Some of that density is signal — a concept sh
 
 - User runs `/emerge` manually, usually at end of week or start of a review.
 - Scheduled weekly agent (Friday 6pm ET) runs `/emerge --days 7 --audit` non-interactively and writes the report to `01-Projects/VAULT/REPORTS/emerge-YYYY-WW.md`.
-- After a burst of activity (e.g. the operator just closed a Acme deliverable sprint and wants to see what emerged).
+- After a burst of activity (e.g. the operator just closed a client deliverable sprint and wants to see what emerged).
 
 Do NOT auto-run `/emerge` inside another skill's pipeline except the scheduled agent. It's expensive and slow.
 
