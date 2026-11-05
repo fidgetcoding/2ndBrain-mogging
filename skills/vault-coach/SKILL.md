@@ -28,7 +28,7 @@ Trigger: "I added a folder", "I made a new project", "I'm starting X". **Do NOT 
 
 1. **Create the index file with filename = folder name.** `Project-A/Project-A.md` — NEVER `Project-A-Index.md`. The `-Index` suffix breaks `[[Project-A]]` wikilink resolution and silently drifts the project off the graph.
 2. **The index MD must explain** what the folder is, how it functions, what goes in it, and its subfolders — then link **UP** (to `03-Index/Projects-Index.md` and any parent/org hub) AND **DOWN** (to subfolders and key notes). One-way links make islands.
-3. **Register it:** add `[[PROJECT]]` to `03-Index/Projects-Index.md` under the right section (Active / Incubating / Archived). A project not in Projects-Index is orphaned even if its index is perfect.
+3. **Register it:** add `[[PROJECT]]` to `03-Index/Projects-Index.md` under the right section (**Active projects** to start; add one such as **Archived** when you need it). A project not in Projects-Index is orphaned even if its index is perfect.
 4. **If it's a subfolder:** open the PARENT folder's index MD and add the sub-project to its DOWN section, with a back-link from the child UP to the parent.
 5. **Confirm routing:** tell the user `/save` can now classify chats into `01-Projects/<PROJECT>/!!conversations/`.
 

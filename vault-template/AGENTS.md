@@ -72,7 +72,7 @@ The 2026-04-16 mogging collapsed an older layout into the folders above. On 2026
 04-Index/      04-MOC/        05-Tasks/        05-Templates/  06-Assets/     07-Projects/   08-Tasks/
 ```
 
-A vault from before Library v2 may still have `02-Sources/`, `03-Concepts/`, `04-Index/` and `05-Tasks/`. Read them if you need to; never write there. `scripts/migrate-to-library.sh` in the `2ndBrain-mogging` repo moves the first two into `02-Library/sources/` and `02-Library/ideas/` renames the other two to `03-Index/` and `04-Tasks/`, and renames every `conversations/` under `01-Projects/` to `!!conversations/`. Anything outside the vault that names `05-Tasks/` by path has to be updated by hand.
+A vault from before Library v2 may still have `02-Sources/`, `03-Concepts/`, `04-Index/` and `05-Tasks/`. Read them if you need to; never write there. `scripts/migrate-to-library.sh` in the `2ndBrain-mogging` repo moves the first two into `02-Library/sources/` and `02-Library/ideas/`, renames the other two to `03-Index/` and `04-Tasks/`, and renames every `conversations/` under `01-Projects/` to `!!conversations/`. Anything outside the vault that names `05-Tasks/` by path has to be updated by hand.
 
 ## Four regimes
 

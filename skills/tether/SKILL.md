@@ -101,9 +101,9 @@ tether: none
 
 Use sparingly. A `tether: none` project drops off the main graph by design.
 
-## GITHUB subfolder exclusion
+## Git checkout exclusion
 
-Any `01-Projects/<parent>/GITHUB/` hub contains cloned third-party and owned repos. **Never touch anything inside a cloned repo's own subtree** (e.g. `01-Projects/<parent>/GITHUB/<ORG-REPOS>/<repo>/*`). These are cloned git repos — their `.md` files are upstream content, not vault notes. The tether skill only looks at the hub note itself (`01-Projects/<parent>/GITHUB/GITHUB.md`) and the intermediate `01-Projects/<parent>/GITHUB/<ORG-REPOS>/*.md` index notes if they exist. Repo internals are out of scope.
+A project's `REPO/` folder holds its git checkout, any `01-Projects/<parent>/GITHUB/` hub contains cloned third-party and owned repos, and any other folder with its own `.git` entry is a checkout too. **Never touch anything inside a cloned repo's own subtree** (e.g. `01-Projects/<parent>/GITHUB/<ORG-REPOS>/<repo>/*`). These are cloned git repos — their `.md` files are upstream content, not vault notes. The tether skill only looks at the hub note itself (`01-Projects/<parent>/GITHUB/GITHUB.md`) and the intermediate `01-Projects/<parent>/GITHUB/<ORG-REPOS>/*.md` index notes if they exist. Repo internals are out of scope.
 
 ## --dry-run report format
 
@@ -137,7 +137,7 @@ Dry-run output is a grouped violation list:
 ## Invariants
 
 - Never delete notes.
-- Never touch `01-Projects/<parent>/GITHUB/<owner-repos>/<repo>/` contents.
+- Never touch the contents of a git checkout: a project's `REPO/`, `01-Projects/<parent>/GITHUB/<owner-repos>/<repo>/`, or any folder with its own `.git`.
 - Never auto-convert unlinked mentions (surface only).
 - Never bypass `tether: none`.
 - Every `--execute` run is atomic per-project.

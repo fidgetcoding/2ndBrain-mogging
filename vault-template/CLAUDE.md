@@ -151,7 +151,7 @@ For any incoming task, read these files first:
 3. Filenames: kebab-case for ideas, people and tools, `LIT-` / `SRC-` prefix for sources, `TASKS-` prefix for task area files.
 4. Frontmatter is required on every note — at minimum `title`, `type`, `tags`. Add `owner`, `source`, `related`, `last_confirmed` as the note type requires.
 5. Never use a `-Index` suffix on a project index file. Filename must match the folder name.
-6. Every project must appear in `03-Index/Projects-Index.md` under the correct section (Active / Incubating / Archived).
+6. Every project must appear in `03-Index/Projects-Index.md` under the correct section (**Active projects** to start; add one such as **Archived** when you need it).
 7. Bidirectional linking is mandatory. Every link needs a reverse path.
 8. Never commit secrets, credentials, or `.env` files. Scan frontmatter and body before any commit.
 9. Link liberally. Wrap concept mentions in `[[wikilinks]]` — unlinked mentions are free edges left on the table.
